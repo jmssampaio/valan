@@ -16,3 +16,6 @@ supabase/.temp/
 # Claude Code personal files
 .claude/settings.local.json
 CLAUDE.local.md
+
+# Scratch exports from Claude sessions
+Claude outputs/
