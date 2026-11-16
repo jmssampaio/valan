@@ -1,11 +1,13 @@
 import { DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import { Stack } from 'expo-router/stack';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
 import { Colors } from '@/constants/theme';
+import { useWebFonts } from '@/hooks/use-web-fonts';
 
-SplashScreen.preventAutoHideAsync();
+// Keeps the tabs underneath when the app is opened straight into another screen.
+export const unstable_settings = {
+  anchor: '(tabs)',
+};
 
 const navigationTheme = {
   ...DefaultTheme,
@@ -19,11 +21,16 @@ const navigationTheme = {
   },
 };
 
-export default function TabLayout() {
+export default function RootLayout() {
+  useWebFonts();
+
   return (
     <ThemeProvider value={navigationTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="new-listing" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="subscription" options={{ presentation: 'modal' }} />
+      </Stack>
     </ThemeProvider>
   );
 }

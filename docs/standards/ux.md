@@ -30,9 +30,9 @@ Palette: one accent (orange from the logo), one ink colour, one paper colour, an
 
 Type: three faces, each with one job. Fraunces SemiBold (600) for titles and prices; Inter (400 to 700) for reading text and controls; IBM Plex Mono (400, 500) for labels, tags and catalogue numbers. Weights come from the font file named in `theme.ts`, never from `fontWeight`. Titles use tight tracking, body text uses normal tracking.
 
-Shape and depth: one corner radius for the whole app (`Radius` in `theme.ts`, 10). No shadows of our own; native sheets and menus keep the system's. Cards are separated by spacing and a hairline, not by shadows.
+Shape and depth: one corner radius for controls and cards (`Radius.control`, 10); tags and other small marks use `Radius.tag` (4). No other radii. No shadows of our own; native sheets and menus keep the system's. Cards are separated by spacing and a hairline, not by shadows.
 
-Icons: no generic line-icon sets. Use the wave mark and text labels; if an icon is needed, it is drawn for Valan. Exception: system UI (tab bar, navigation bar, native actions such as share and close) uses SF Symbols through `expo-symbols`, so it looks and behaves like iOS.
+Icons: no generic line-icon sets. Use the wave mark and text labels; if an icon is needed, it is drawn for Valan. Exception: system UI (navigation bar, native actions such as share and close) uses SF Symbols through `expo-symbols`, so it looks and behaves like iOS. The tab bar is text only.
 
 Imagery: real sleeve photos from the listing, shown at their true proportions. Empty states use a simple drawn gesture, not a stock illustration.
 
