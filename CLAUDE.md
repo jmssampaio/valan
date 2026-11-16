@@ -50,6 +50,8 @@ Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_B
 - The app never calls eBay or Discogs directly. It calls Supabase Edge Functions, which hold the users' marketplace tokens.
 - Each marketplace is a connector behind one interface: startConnect, finishConnect (OAuth is two steps), publish, update, remove, listOrders, listOffers, respondOffer, plus a declaration of what it supports. Connectors throw only `ConnectorError`, with a `kind` the caller can act on.
 - The app writes only `profiles` (language and currency), `items`, `item_photos` and `push_tokens`. `platform_connections`, `listings`, `offers` and `sales` are written by Edge Functions; the app can read them, except the token columns, so queries on `platform_connections` must name their columns.
+- The app can delete an item only while it is a draft and can never write `items.status`; publishing, selling and removing an item go through Edge Functions, so app inserts and updates on `items` must not send `status`.
+- A sale is a permanent record: it keeps a snapshot (`marketplace`, `item_title`, `item_artist`) and survives the deletion of its listing or item (`listing_id` becomes null). Only deleting the account deletes sales.
 - Every table carries `user_id`; child tables use a composite foreign key so a row cannot belong to a different user than its parent.
 - Money is stored in minor units (`price_minor`, `amount_minor`, `fees_minor`) with a currency code.
 - App configuration: `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.

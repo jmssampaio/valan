@@ -30,8 +30,8 @@ insert into public.listings (id, user_id, item_id, marketplace) values
 insert into public.offers (user_id, listing_id, external_id, amount_minor, currency)
 select user_id, id, 'offer', 1800, 'EUR' from public.listings;
 
-insert into public.sales (user_id, listing_id, external_order_id, price_minor, currency, sold_at)
-select user_id, id, 'order', 2000, 'EUR', now() from public.listings;
+insert into public.sales (user_id, listing_id, marketplace, item_title, external_order_id, price_minor, currency, sold_at)
+select user_id, id, marketplace, 'Record', 'order', 2000, 'EUR', now() from public.listings;
 
 insert into public.push_tokens (user_id, token)
 select id, 'device' from auth.users;
