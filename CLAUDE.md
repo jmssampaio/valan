@@ -23,16 +23,14 @@ Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_B
 
 ## Structure
 
-- `src/app/` — Expo Router routes only: every file is a screen, `_layout.tsx` files define navigators.
-- `src/components/` — reusable UI components; `src/components/ui/` for small building blocks.
-- `src/constants/theme.ts` — design tokens (colors, fonts, spacing). Screens use these, never raw values.
-- `src/hooks/` — React hooks. `*.web.ts(x)` files are web-only variants.
+- `src/app/` — Expo Router routes only: every file is a screen, `_layout.tsx` files define navigators. `(tabs)/` holds the four tabs; `new-listing/` and `subscription` open as modals. No test files here.
+- `src/components/` — base UI components (`Screen`, `ScreenTitle`, `AppText`, `Button`, `ListRow`, `Tag`, `TextTabs`, `SegmentedControl`, `TabBar`). Screens are built from these.
+- `src/constants/theme.ts` — design tokens (colours, text roles, spacing, radii, control heights). Screens use these, never raw values.
 - `src/i18n/` — translations: `t()` and one dictionary per language in `locales/`.
 - `src/services/` (planned) — the service layer; the only place the app calls Supabase.
-- `src/types/database.ts` (planned) — generated Supabase types; never edit by hand.
 - `supabase/` (planned) — migrations, Edge Functions (marketplace connectors) and RLS tests.
-- Tests live next to the code in `__tests__/` folders; `jest/` holds Jest helpers.
-- `expo-env.d.ts` — Expo's type references; committed so `npm run typecheck` works in CI.
+- Tests live next to the code in `__tests__/` folders; navigation tests are in `src/__tests__/`.
+- `src/types/` — `expo.d.ts` loads Expo's ambient types for `npm run typecheck` (Expo's own `expo-env.d.ts` is generated and git-ignored); `database.ts` (planned) holds the generated Supabase types, never edited by hand.
 
 ## Rules (read before writing code)
 
