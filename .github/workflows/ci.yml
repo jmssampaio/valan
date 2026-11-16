@@ -16,3 +16,27 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
+  database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx supabase db start
+      - run: npm run test:db
+      - name: Generated database types are up to date
+        run: |
+          npx supabase gen types typescript --local > src/types/database.ts
+          git diff --exit-code src/types/database.ts
+  functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno test
+        working-directory: supabase/functions

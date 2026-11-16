@@ -7,6 +7,9 @@
     "@expo-google-fonts/ibm-plex-mono": "^0.4.2",
     "@expo-google-fonts/inter": "^0.4.2",
     "@expo/ui": "~58.0.28",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@supabase/supabase-js": "^2.119.0",
+    "aes-js": "^3.1.2",
     "expo": "~58.0.25",
     "expo-constants": "~58.0.16",
     "expo-device": "~58.0.5",
@@ -16,6 +19,7 @@
     "expo-linking": "~58.0.17",
     "expo-localization": "~58.0.5",
     "expo-router": "~58.0.31",
+    "expo-secure-store": "~58.0.3",
     "expo-splash-screen": "~58.0.14",
     "expo-status-bar": "~58.0.5",
     "expo-symbols": "~58.0.5",
@@ -25,6 +29,7 @@
     "react-dom": "19.3.0",
     "react-native": "0.88.1",
     "react-native-gesture-handler": "~3.3.0",
+    "react-native-get-random-values": "^2.1.0",
     "react-native-reanimated": "4.7.1",
     "react-native-safe-area-context": "~5.11.1",
     "react-native-screens": "~4.30.1",
@@ -33,12 +38,14 @@
   },
   "devDependencies": {
     "@testing-library/react-native": "^14.1.0",
+    "@types/aes-js": "^3.1.4",
     "@types/jest": "30.0.0",
     "@types/react": "~19.3.0",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~58.0.4",
     "jest": "~30.5.2",
     "jest-expo": "~58.0.14",
+    "supabase": "^3.2.0",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -48,10 +55,16 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "test:db": "supabase test db",
+    "test:functions": "cd supabase/functions && deno test"
   },
   "private": true,
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/supabase/"
+    ]
   }
 }
