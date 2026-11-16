@@ -2,6 +2,8 @@
 
 Mobile app that lets second-hand sellers publish a listing once and manage it across several marketplaces. First niche: music (vinyl, CDs, audio equipment).
 
+Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_BRIEF.md
+
 ## Stack
 
 - App: React Native with Expo, TypeScript. iOS only in v1.0.
@@ -17,6 +19,7 @@ Mobile app that lets second-hand sellers publish a listing once and manage it ac
 - Type check: `npm run typecheck`
 - Tests: `npm test`
 - Database: `npx supabase db push` · types: `npx supabase gen types typescript --linked > src/types/database.ts`
+- Switch environment: `npx supabase link --project-ref <staging or production ref>`. Database commands act on the linked project, so check which one is linked before pushing.
 
 ## Structure
 
@@ -49,6 +52,7 @@ Mobile app that lets second-hand sellers publish a listing once and manage it ac
 - Home screen is the listings tab with a three-tile summary on top. The connect-platforms screen is shown only once, after sign-up.
 - The paywall appears when publishing the first listing, only to users without a plan.
 - Design source of truth: the Figma file "Valan — Mockups v1.0".
+- Two environments: `staging` and `production`. Each is a separate Supabase project with its own keys and Edge Function secrets, and its own RevenueCat and marketplace credentials (eBay sandbox on staging; Discogs has no sandbox, so staging uses a test account with draft listings). Every change is deployed and checked on staging before production.
 
 ## Do not
 
