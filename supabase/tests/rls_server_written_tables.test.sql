@@ -45,9 +45,9 @@ insert into public.offers (id, user_id, listing_id, external_id, amount_minor, c
   ('60000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', '50000000-0000-0000-0000-00000000000a', 'offer-a', 1800, 'EUR'),
   ('60000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-00000000000b', '50000000-0000-0000-0000-00000000000b', 'offer-b', 1800, 'EUR');
 
-insert into public.sales (id, user_id, listing_id, external_order_id, price_minor, currency, sold_at) values
-  ('70000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', '50000000-0000-0000-0000-00000000000a', 'order-a', 2000, 'EUR', now()),
-  ('70000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-00000000000b', '50000000-0000-0000-0000-00000000000b', 'order-b', 2000, 'EUR', now());
+insert into public.sales (id, user_id, listing_id, marketplace, item_title, external_order_id, price_minor, currency, sold_at) values
+  ('70000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', '50000000-0000-0000-0000-00000000000a', 'ebay', 'Alice record', 'order-a', 2000, 'EUR', now()),
+  ('70000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-00000000000b', '50000000-0000-0000-0000-00000000000b', 'ebay', 'Bob record', 'order-b', 2000, 'EUR', now());
 
 -- Ownership must stay consistent down the chain, even for the server.
 select throws_ok(
@@ -63,8 +63,8 @@ select throws_ok(
   'an offer cannot belong to a different user than its listing'
 );
 select throws_ok(
-  $$ insert into public.sales (user_id, listing_id, external_order_id, price_minor, currency, sold_at)
-     values ('00000000-0000-0000-0000-00000000000a', '50000000-0000-0000-0000-00000000000b', 'order-x', 100, 'EUR', now()) $$,
+  $$ insert into public.sales (user_id, listing_id, marketplace, item_title, external_order_id, price_minor, currency, sold_at)
+     values ('00000000-0000-0000-0000-00000000000a', '50000000-0000-0000-0000-00000000000b', 'ebay', 'Alice record', 'order-x', 100, 'EUR', now()) $$,
   '23503', null,
   'a sale cannot belong to a different user than its listing'
 );
@@ -89,8 +89,8 @@ select throws_ok(
   'the same marketplace offer is recorded once'
 );
 select throws_ok(
-  $$ insert into public.sales (user_id, listing_id, external_order_id, price_minor, currency, sold_at)
-     values ('00000000-0000-0000-0000-00000000000a', '50000000-0000-0000-0000-00000000000a', 'order-a', 2000, 'EUR', now()) $$,
+  $$ insert into public.sales (user_id, listing_id, marketplace, item_title, external_order_id, price_minor, currency, sold_at)
+     values ('00000000-0000-0000-0000-00000000000a', '50000000-0000-0000-0000-00000000000a', 'ebay', 'Alice record', 'order-a', 2000, 'EUR', now()) $$,
   '23505', null,
   'the same marketplace order is recorded once'
 );
@@ -171,8 +171,8 @@ select results_eq(
   'a user reads only their own sales'
 );
 select throws_ok(
-  $$ insert into public.sales (user_id, listing_id, external_order_id, price_minor, currency, sold_at)
-     values ('00000000-0000-0000-0000-00000000000a', '50000000-0000-0000-0000-00000000000a', 'forged', 1, 'EUR', now()) $$,
+  $$ insert into public.sales (user_id, listing_id, marketplace, item_title, external_order_id, price_minor, currency, sold_at)
+     values ('00000000-0000-0000-0000-00000000000a', '50000000-0000-0000-0000-00000000000a', 'ebay', 'Alice record', 'forged', 1, 'EUR', now()) $$,
   '42501', null,
   'a user cannot record a sale from the app'
 );

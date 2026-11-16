@@ -141,14 +141,14 @@ isOneToOne: false
                   ]
                 },"sales": {
                   Row: {
-                    "buyer": string | null,"created_at": string,"currency": string,"external_order_id": string,"fees_minor": number,"id": string,"listing_id": string,"price_minor": number,"sold_at": string,"user_id": string
+                    "buyer": string | null,"created_at": string,"currency": string,"external_order_id": string,"fees_minor": number,"id": string,"item_artist": string | null,"item_title": string,"listing_id": string | null,"marketplace": Database["public"]['Enums']["marketplace"],"price_minor": number,"sold_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "buyer"?: string | null,"created_at"?: string,"currency": string,"external_order_id": string,"fees_minor"?: number,"id"?: string,"listing_id": string,"price_minor": number,"sold_at": string,"user_id": string
+                    "buyer"?: string | null,"created_at"?: string,"currency": string,"external_order_id": string,"fees_minor"?: number,"id"?: string,"item_artist"?: string | null,"item_title": string,"listing_id"?: string | null,"marketplace": Database["public"]['Enums']["marketplace"],"price_minor": number,"sold_at": string,"user_id": string
                   }
                   Update: {
-                    "buyer"?: string | null,"created_at"?: string,"currency"?: string,"external_order_id"?: string,"fees_minor"?: number,"id"?: string,"listing_id"?: string,"price_minor"?: number,"sold_at"?: string,"user_id"?: string
+                    "buyer"?: string | null,"created_at"?: string,"currency"?: string,"external_order_id"?: string,"fees_minor"?: number,"id"?: string,"item_artist"?: string | null,"item_title"?: string,"listing_id"?: string | null,"marketplace"?: Database["public"]['Enums']["marketplace"],"price_minor"?: number,"sold_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
