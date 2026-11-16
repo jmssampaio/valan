@@ -12,7 +12,7 @@ Audience: other sellers (a public product, not a personal tool). Business model:
 
 ## Scope of v1.0
 
-iOS only. Marketplaces: eBay and Discogs. Target: App Store submission about two weeks after development starts.
+iOS only. Marketplaces: eBay and Discogs. Languages: European Portuguese (source), Spanish and English. Target: App Store submission about two weeks after development starts.
 
 ### Features
 1. Account: email, Sign in with Apple and Sign in with Google; delete account inside the app.
@@ -63,7 +63,7 @@ Known constraints to confirm:
 
 ## Screens and flows
 
-Figma file: https://www.figma.com/design/DfsEhL8WD90IkCQ20FcFBu ("Valan — Mockups v1.0"). Pages: Mockups v1.0, Fluxos, Logo. Screen names and copy in the file are in Portuguese.
+Design source of truth: the v2 mockups and logo in `docs/design/` (see its README). The earlier Figma file is no longer used. Screen names and copy in the mockups are in Portuguese.
 
 Screens: 01 Welcome · 02 Connect marketplaces · 03 Listings (home, with a three-tile summary: pending offers, month sales, listings with errors) · 04–07 New listing (catalogue, condition and photos, price and marketplaces, result) · 08 Listing detail · 09 Offers · 10 Sales · 11 Account · 12 Subscription.
 
@@ -75,11 +75,11 @@ Flows:
 - Offer: notification → Offers → accept → sale recorded and listing removed elsewhere.
 - Paywall: appears on "Publish" of the first listing; if closed, the listing is saved as a draft.
 
-Known gaps in the mockups: values are hardcoded (no Figma variables or components yet); white text on the orange button fails contrast (about 3.7:1); small buttons and condition chips are below 44 pt; no empty, loading, error or confirmation states; no email sign-in screen; placeholder prices and data.
+Known gaps in the mockups: loading, offline and error states; the equipment path of the new-listing flow; the email sign-in form; the delete-account confirmation; placeholder prices and data. The v1 contrast and touch-target problems are fixed in v2.
 
 ## Brand
 
-Logo: a straight-line zigzag wave on an orange tile, with the wordmark "VALAN" in spaced capitals below. Current colours: orange `#E4572E`, cream `#F6F2EA`, ink `#16130F`. The primary colour may still change to fix contrast.
+Logo: a straight-line zigzag wave on an orange tile, with the wordmark "VALAN" in spaced capitals below. Colours: orange `#B4460F`, cream `#F5EFE6`, ink `#1E1A17` (full token list and contrast checks in `docs/design/README.md`). Type: Fraunces, Inter and IBM Plex Mono.
 
 ## Suggested build order
 
@@ -105,7 +105,5 @@ Logo: a straight-line zigzag wave on an orange tile, with the wordmark "VALAN" i
 ## Open questions
 
 - Can Discogs offers be accepted or rejected through the API? Can listing photos be uploaded?
-- Final primary colour.
 - Subscription prices (mockup values are placeholders).
-- Launch languages.
 - Whether the name "Valan" is free on the App Store.

@@ -3,7 +3,7 @@
 Written from memory of the App Store Review Guidelines. Check the current guidelines before each submission; the numbers in brackets are the guideline sections to look up.
 
 ## Accounts and sign-in
-- If the app offers any third-party sign-in (Google, Facebook, etc.), it must also offer Sign in with Apple as an equivalent option. [4.8]
+- If the app uses a third-party sign-in (Google, Facebook, etc.) for the user's main account, it must also offer an equivalent login service that limits data to name and email, lets the user hide their email, and does not track for advertising without consent. Sign in with Apple meets this. [4.8]
 - Sign in with Apple: support "Hide My Email" relay addresses; the name is only sent on first sign-in, so store it then.
 - Account deletion must be possible inside the app, easy to find, and must delete the data, not just deactivate. Revoke Sign in with Apple tokens on deletion. [5.1.1(v)]
 - Do not require sign-in for features that do not need an account.
@@ -30,7 +30,8 @@ Written from memory of the App Store Review Guidelines. Check the current guidel
 
 ## Metadata
 - Screenshots show the real app in use. Description and keywords are accurate. [2.3]
-- No mention of other platforms (e.g. Android) or of prices in screenshots. [2.3.10]
+- No mention of other platforms (e.g. Android) in metadata. [2.3.10]
+- No prices in the app name, subtitle, screenshots or previews. [2.3.7]
 - Support URL works. Age rating questionnaire answered truthfully.
 - EU: declare trader status and provide the required contact details.
 

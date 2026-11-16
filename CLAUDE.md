@@ -1,6 +1,6 @@
 # Valan
 
-Mobile app that lets second-hand sellers publish a listing once and manage it across several marketplaces. First niche: music (vinyl, CDs, audio equipment).
+Mobile app that lets second-hand sellers publish a listing once and manage it across several marketplaces. First niche: music (vinyl, CDs, cassettes, audio equipment).
 
 Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_BRIEF.md
 
@@ -27,6 +27,7 @@ Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_B
 - `src/components/` — reusable UI components; `src/components/ui/` for small building blocks.
 - `src/constants/theme.ts` — design tokens (colors, fonts, spacing). Screens use these, never raw values.
 - `src/hooks/` — React hooks. `*.web.ts(x)` files are web-only variants.
+- `src/i18n/` — translations: `t()` and one dictionary per language in `locales/`.
 - `src/services/` (planned) — the service layer; the only place the app calls Supabase.
 - `src/types/database.ts` (planned) — generated Supabase types; never edit by hand.
 - `supabase/` (planned) — migrations, Edge Functions (marketplace connectors) and RLS tests.
@@ -51,7 +52,9 @@ Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_B
 - Sign-in: email, Sign in with Apple and Sign in with Google, all through Supabase Auth. Apple and Google buttons have equal prominence. Account deletion inside the app.
 - Home screen is the listings tab with a three-tile summary on top. The connect-platforms screen is shown only once, after sign-up.
 - The paywall appears when publishing the first listing, only to users without a plan.
-- Design source of truth: the Figma file "Valan — Mockups v1.0".
+- Design source of truth: the mockups and logo in `docs/design/` (tokens and type in its README). Figma is no longer used.
+- Languages: European Portuguese (`pt-PT`, the source), Spanish and English. Strings live in `src/i18n/locales/`; the device language picks one, English is the fallback.
+- v1.0 is light mode only (`userInterfaceStyle: "light"`).
 - Two environments: `staging` and `production`. Each is a separate Supabase project with its own keys and Edge Function secrets, and its own RevenueCat and marketplace credentials (eBay sandbox on staging; Discogs has no sandbox, so staging uses a test account with draft listings). Every change is deployed and checked on staging before production.
 
 ## Do not
