@@ -12,3 +12,7 @@ android/
 .idea/
 .vscode/
 supabase/.temp/
+
+# Claude Code personal files
+.claude/settings.local.json
+CLAUDE.local.md
