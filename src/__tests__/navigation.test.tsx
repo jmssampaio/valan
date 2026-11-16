@@ -57,6 +57,23 @@ describe('navigation', () => {
     expect(screen.getByRole('header', { name: title })).toBeOnTheScreen();
   });
 
+  it('shows the component gallery during development', async () => {
+    await renderRouter(APP_DIR, { initialUrl: '/dev/components' });
+
+    expect(screen.getByRole('header', { name: 'Componentes' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Continuar com Apple' })).toBeOnTheScreen();
+  });
+
+  it('lets the gallery controls be operated', async () => {
+    await renderRouter(APP_DIR, { initialUrl: '/dev/components' });
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Aparelho' }));
+    await fireEvent.press(screen.getByRole('tab', { name: 'Vendidos' }));
+
+    expect(screen.getByRole('radio', { name: 'Aparelho' })).toBeChecked();
+    expect(screen.getByRole('tab', { name: 'Vendidos' })).toBeSelected();
+  });
+
   it('offers a way back to listings from a page that does not exist', async () => {
     await renderRouter(APP_DIR, { initialUrl: '/no-such-page' });
 

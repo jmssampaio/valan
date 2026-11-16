@@ -85,6 +85,13 @@ export const Type = {
   tab: { fontFamily: Fonts.textMedium, fontSize: 14, lineHeight: 20 },
   tabSelected: { fontFamily: Fonts.textSemiBold, fontSize: 14, lineHeight: 20 },
   tag: { fontFamily: Fonts.monoRegular, fontSize: 12, lineHeight: 16 },
+  caption: {
+    fontFamily: Fonts.monoRegular,
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 0.72,
+    textTransform: 'uppercase',
+  },
 } as const satisfies Record<string, TextStyle>;
 
 export type TextVariant = keyof typeof Type;

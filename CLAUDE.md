@@ -26,6 +26,8 @@ Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_B
 - `src/app/` — Expo Router routes only: every file is a screen, `_layout.tsx` files define navigators. `(tabs)/` holds the four tabs; `new-listing/` and `subscription` open as modals. No test files here.
 - `src/components/` — base UI components (`Screen`, `ScreenTitle`, `AppText`, `Button`, `ListRow`, `Tag`, `TextTabs`, `SegmentedControl`, `TabBar`). Screens are built from these.
 - `src/constants/theme.ts` — design tokens (colours, text roles, spacing, radii, control heights). Screens use these, never raw values.
+- `src/hooks/` — React hooks. `*.web.ts` files are the browser variant (the browser is a development preview only).
+- `src/app/dev/` — development-only screens, such as the component gallery at `/dev/components`; they redirect to the home screen in production builds.
 - `src/i18n/` — translations: `t()` and one dictionary per language in `locales/`.
 - `src/services/` (planned) — the service layer; the only place the app calls Supabase.
 - `supabase/` (planned) — migrations, Edge Functions (marketplace connectors) and RLS tests.

@@ -2,6 +2,7 @@ import { DefaultTheme, ThemeProvider } from 'expo-router';
 import { Stack } from 'expo-router/stack';
 
 import { Colors } from '@/constants/theme';
+import { useWebFonts } from '@/hooks/use-web-fonts';
 
 // Keeps the tabs underneath when the app is opened straight into another screen.
 export const unstable_settings = {
@@ -21,6 +22,8 @@ const navigationTheme = {
 };
 
 export default function RootLayout() {
+  useWebFonts();
+
   return (
     <ThemeProvider value={navigationTheme}>
       <Stack screenOptions={{ headerShown: false }}>
