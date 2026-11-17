@@ -39,6 +39,11 @@ export type ListingDraft = {
   name: string;
   /** The catalogue edition the seller chose. With one, the item is a record that Discogs accepts. */
   release: CatalogueRelease | null;
+  /**
+   * The artist of an item saved without a catalogue edition, kept so saving again does not
+   * lose it. The flow has no field for it; a chosen edition's artist takes its place.
+   */
+  artist: string | null;
   /** The seller looked at the editions found and said the item is none of them. */
   declinedCatalogue: boolean;
   /** Asked only when the listing goes on without the catalogue; it picks the condition scale. */
@@ -66,6 +71,7 @@ export function newDraft(id: string): ListingDraft {
 const blankFields: Omit<ListingDraft, 'id'> = {
   name: '',
   release: null,
+  artist: null,
   declinedCatalogue: false,
   kind: null,
   mediaCondition: null,
@@ -213,7 +219,7 @@ export function draftItemFields(draft: ListingDraft): DraftItemFields {
     id: draft.id,
     type,
     title: release?.title ?? draft.name.trim(),
-    artist: release?.artist ?? null,
+    artist: release?.artist ?? draft.artist,
     discogs_release_id: release?.id ?? null,
     format: release?.format ?? null,
     release_year: release?.year ?? null,
@@ -260,6 +266,7 @@ export function draftFromItem(item: ListedItem): ListingDraft {
     ...newDraft(item.id),
     name: item.title,
     release,
+    artist: release ? null : item.artist,
     kind: item.type,
     mediaCondition: item.media_condition,
     sleeveCondition: item.sleeve_condition,

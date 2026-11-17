@@ -1,4 +1,12 @@
-import { draftFromItem, draftItemFields, isWorthSaving, itemType } from '../draft';
+import {
+  draftFromItem,
+  draftItemFields,
+  isWorthSaving,
+  itemType,
+  newDraft,
+  withKind,
+  withRelease,
+} from '../draft';
 
 import type { ListedItem } from '@/services/listings';
 
@@ -113,5 +121,37 @@ describe('draftFromItem', () => {
 
   it('keeps no marketplace switched off', () => {
     expect(draftFromItem(savedItem()).skippedMarketplaces).toEqual([]);
+  });
+});
+
+describe('the artist of a draft', () => {
+  const withoutRelease = { discogs_release_id: null, format: null, release_year: null } as const;
+
+  it('is kept for a record saved without a catalogue edition', () => {
+    const draft = draftFromItem(savedItem(withoutRelease));
+
+    expect(draft.artist).toBe('Os Marés');
+    expect(draftItemFields(draft).artist).toBe('Os Marés');
+  });
+
+  it('is decided by a catalogue edition once the seller picks one', () => {
+    const draft = draftFromItem(savedItem(withoutRelease));
+
+    const linked = withRelease(draft, {
+      id: 1,
+      title: 'Noites de Lisboa',
+      artist: 'Marés',
+      format: 'LP, Album',
+      year: 1978,
+      country: null,
+      label: null,
+      catalogueNumber: null,
+    });
+
+    expect(draftItemFields(linked).artist).toBe('Marés');
+  });
+
+  it('is empty for a draft that starts from nothing', () => {
+    expect(draftItemFields(withKind(newDraft('item-2'), 'record')).artist).toBeNull();
   });
 });
