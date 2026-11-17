@@ -7,6 +7,7 @@ import { Button } from '@/components/button';
 import { CheckRow } from '@/components/check-row';
 import { ChipGrid } from '@/components/chip-grid';
 import { FlowHeader } from '@/components/flow-header';
+import { ItemPhoto } from '@/components/item-photo';
 import { ListRow } from '@/components/list-row';
 import { Notice } from '@/components/notice';
 import { PhotoGrid } from '@/components/photo-grid';
@@ -103,6 +104,13 @@ export default function ComponentGalleryScreen() {
           <View style={styles.inline}>
             <Thumbnail source={samplePhoto} />
             <Thumbnail source={null} />
+          </View>
+        </Section>
+
+        <Section label="ItemPhoto · photo and placeholder">
+          <View style={styles.inline}>
+            <ItemPhoto source={samplePhoto} />
+            <ItemPhoto source={null} />
           </View>
         </Section>
 
@@ -234,6 +242,7 @@ export default function ComponentGalleryScreen() {
           <Button label="Continuar com Apple" variant="ink" onPress={noAction} />
           <Button label="Continuar com email" variant="outline" onPress={noAction} />
           <Button label="Mais tarde" variant="text" onPress={noAction} />
+          <Button label="Remover" variant="danger" onPress={noAction} />
           <Button label="Publicar em 2 plataformas" disabled onPress={noAction} />
         </Section>
 
