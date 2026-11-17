@@ -9,6 +9,8 @@ const record: ListingDraft = {
   title: 'Noites de Lisboa',
   artist: 'Os Marés',
   discogsReleaseId: 249504,
+  format: 'LP, Album',
+  releaseYear: 1978,
   mediaCondition: 'VG+',
   sleeveCondition: 'VG',
   priceMinor: 2000,
@@ -20,6 +22,7 @@ const record: ListingDraft = {
 const turntable: ListingDraft = {
   type: 'equipment',
   title: 'Gira-discos',
+  equipmentCondition: 'good',
   priceMinor: 12000,
   currency: 'EUR',
   acceptsOffers: false,
@@ -52,6 +55,7 @@ function makeHarness(options: FakeConnectorOptions): ContractHarness & { connect
     approvedCallbackParams: (start) => ({ state: start.handshake.state, code: 'approved' }),
     deniedCallbackParams: (start) => ({ state: start.handshake.state, error: 'access_denied' }),
     supportedListing: record,
+    equipmentListing: listsEquipment ? turntable : null,
     unsupportedListing: listsEquipment ? null : turntable,
     offers: { toAccept: 'offer-accept', toReject: 'offer-reject', expired: 'offer-expired' },
     orders: { since: '2026-11-01T00:00:00Z', expectedOrderIds: ['order-new'] },
@@ -101,4 +105,60 @@ Deno.test('fake connector: reports the marketplace as unavailable during an outa
 
   await assertConnectorError(() => connector.publish(credentials, record), 'unavailable');
   await assertConnectorError(() => connector.listOffers(credentials), 'unavailable');
+});
+
+Deno.test('fake connector: keeps the release details of a published record', async () => {
+  const { connector, credentials } = makeHarness(everything);
+
+  const { externalId } = await connector.publish(credentials, record);
+
+  const published = connector.publishedListing(externalId);
+  assertEquals(published?.format, 'LP, Album');
+  assertEquals(published?.releaseYear, 1978);
+});
+
+Deno.test('fake connector: keeps the condition of published equipment', async () => {
+  const { connector, credentials } = makeHarness(everything);
+
+  const { externalId } = await connector.publish(credentials, turntable);
+
+  assertEquals(connector.publishedListing(externalId)?.equipmentCondition, 'good');
+});
+
+Deno.test('fake connector: has no listing once it is removed', async () => {
+  const { connector, credentials } = makeHarness(everything);
+  const { externalId } = await connector.publish(credentials, record);
+
+  await connector.remove(credentials, externalId);
+
+  assertEquals(connector.publishedListing(externalId), undefined);
+});
+
+Deno.test('fake connector: stores the marketplace condition, not Valan\'s', async () => {
+  const { connector, credentials } = makeHarness(everything);
+
+  const { externalId } = await connector.publish(credentials, { ...turntable, equipmentCondition: 'like_new' });
+
+  assertEquals(connector.marketplaceCondition(externalId), 'USED');
+});
+
+Deno.test('fake connector: maps several of Valan\'s conditions to one of the marketplace\'s', async () => {
+  const { connector, credentials } = makeHarness(everything);
+
+  const good = await connector.publish(credentials, { ...turntable, equipmentCondition: 'good' });
+  const fair = await connector.publish(credentials, { ...turntable, equipmentCondition: 'fair' });
+
+  assertEquals(connector.marketplaceCondition(good.externalId), connector.marketplaceCondition(fair.externalId));
+});
+
+Deno.test('fake connector: refuses equipment in a condition it has no mapping for', async () => {
+  const { connector, credentials } = makeHarness({
+    ...everything,
+    equipmentConditions: { new: 'NEW', good: 'USED' },
+  });
+
+  await assertConnectorError(
+    () => connector.publish(credentials, { ...turntable, equipmentCondition: 'for_parts' }),
+    'unsupported',
+  );
 });

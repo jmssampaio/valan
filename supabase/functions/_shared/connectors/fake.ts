@@ -8,6 +8,7 @@ import {
   type ConnectorCapabilities,
   type ConnectorCredentials,
   ConnectorError,
+  type EquipmentCondition,
   type ListingChanges,
   type ListingDraft,
   type Marketplace,
@@ -21,7 +22,18 @@ export interface FakeConnectorOptions {
   readonly marketplace: Marketplace;
   readonly capabilities: ConnectorCapabilities;
   readonly now?: () => Date;
+  /** The marketplace's condition for each of Valan's. Defaults to a complete mapping. */
+  readonly equipmentConditions?: Partial<Record<EquipmentCondition, string>>;
 }
+
+// Like a real marketplace, the fake has fewer conditions than Valan, so several map to one.
+const defaultEquipmentConditions: Record<EquipmentCondition, string> = {
+  new: 'NEW',
+  like_new: 'USED',
+  good: 'USED',
+  fair: 'USED',
+  for_parts: 'FOR_PARTS',
+};
 
 export interface FakeConnector extends Connector {
   /** Credentials as if a seller had already connected. */
@@ -30,6 +42,10 @@ export interface FakeConnector extends Connector {
   /** A pending offer made by a buyer on the marketplace. */
   addOffer(offer: Omit<MarketplaceOffer, 'status'>): void;
   addOrder(order: MarketplaceOrder): void;
+  /** What the marketplace holds for a listing; undefined once it is removed. */
+  publishedListing(externalId: string): ListingDraft | undefined;
+  /** The marketplace's own condition for a published equipment listing. */
+  marketplaceCondition(externalId: string): string | undefined;
   /** Every later call fails as if the marketplace were down. */
   goOffline(): void;
 }
@@ -39,7 +55,9 @@ const baseUrl = 'https://fake-marketplace.test';
 export function createFakeConnector(options: FakeConnectorOptions): FakeConnector {
   const now = options.now ?? (() => new Date());
   const validTokens = new Set<string>();
+  const equipmentConditions = options.equipmentConditions ?? defaultEquipmentConditions;
   const listings = new Map<string, ListingDraft>();
+  const marketplaceConditions = new Map<string, string>();
   const offers = new Map<string, MarketplaceOffer>();
   const orders: MarketplaceOrder[] = [];
   let issuedTokens = 0;
@@ -95,9 +113,20 @@ export function createFakeConnector(options: FakeConnectorOptions): FakeConnecto
       if (!options.capabilities.itemTypes.includes(listing.type)) {
         throw new ConnectorError('unsupported', `This marketplace does not list ${listing.type} items.`);
       }
+      const marketplaceCondition =
+        listing.equipmentCondition === undefined
+          ? undefined
+          : equipmentConditions[listing.equipmentCondition];
+      if (listing.equipmentCondition !== undefined && marketplaceCondition === undefined) {
+        throw new ConnectorError(
+          'unsupported',
+          `This marketplace has no condition for ${listing.equipmentCondition} equipment.`,
+        );
+      }
       publishedListings += 1;
       const externalId = `fake-listing-${publishedListings}`;
       listings.set(externalId, listing);
+      if (marketplaceCondition !== undefined) marketplaceConditions.set(externalId, marketplaceCondition);
       return { externalId, url: `${baseUrl}/listings/${externalId}` };
     },
 
@@ -114,6 +143,7 @@ export function createFakeConnector(options: FakeConnectorOptions): FakeConnecto
     async remove(credentials, externalId): Promise<void> {
       requireAccess(credentials);
       listings.delete(externalId);
+      marketplaceConditions.delete(externalId);
           },
 
     async listOrders(credentials, { since }): Promise<MarketplaceOrder[]> {
@@ -154,6 +184,14 @@ export function createFakeConnector(options: FakeConnectorOptions): FakeConnecto
 
     addOrder(order): void {
       orders.push(order);
+    },
+
+    publishedListing(externalId): ListingDraft | undefined {
+      return listings.get(externalId);
+    },
+
+    marketplaceCondition(externalId): string | undefined {
+      return marketplaceConditions.get(externalId);
     },
 
     goOffline(): void {

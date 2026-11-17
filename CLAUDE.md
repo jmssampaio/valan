@@ -56,6 +56,9 @@ Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_B
 - The app can delete an item only while it is a draft and can never write `items.status`; publishing, selling and removing an item go through Edge Functions, so app inserts and updates on `items` must not send `status`.
 - A sale is a permanent record: it keeps a snapshot (`marketplace`, `item_title`, `item_artist`) and survives the deletion of its listing or item (`listing_id` becomes null). Only deleting the account deletes sales.
 - Every table carries `user_id`; child tables use a composite foreign key so a row cannot belong to a different user than its parent.
+- A record keeps the `format` and `release_year` of its catalogue release and is graded on the Goldmine scale (`media_condition`, `sleeve_condition`). Equipment has its own `equipment_condition` and none of the record fields; check constraints enforce both.
+- The equipment condition is Valan's own scale: new, like_new, good, fair, for_parts, best to worst. The database never stores a marketplace's condition values; each connector maps Valan's scale to its marketplace, and several of ours may map to one of theirs. The contract tests require every connector that lists equipment to map every value. Finer values (excellent, very_good, poor) may be added later, for Reverb; nothing is removed.
+- The eBay connector checks which conditions are valid for the listing's category against the eBay API; it never assumes them.
 - Money is stored in minor units (`price_minor`, `amount_minor`, `fees_minor`) with a currency code.
 - App configuration: `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
 - Data model: profiles, platform_connections, items, item_photos, listings, offers, sales, push_tokens.
