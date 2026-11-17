@@ -42,11 +42,18 @@ export function filterOptions(items: readonly ListedItem[]): ChoiceOption<Listin
   });
 }
 
+/** "LP" from the catalogue's "LP, Album, Reissue": a row has room for the carrier only. */
+function mainFormat(format: string | null): string | null {
+  return format?.split(',')[0].trim() || null;
+}
+
 /** The second line of a row: what the item is, in as much detail as it has so far. */
 export function itemDetail(item: ListedItem): string {
   if (item.type === 'equipment') return t('listings.item.equipment');
 
-  return [item.artist, item.media_condition].filter(Boolean).join(DETAIL_SEPARATOR);
+  return [item.artist, mainFormat(item.format), item.media_condition]
+    .filter(Boolean)
+    .join(DETAIL_SEPARATOR);
 }
 
 export type ListingTag = {

@@ -52,6 +52,8 @@ export const Spacing = {
 export const Size = {
   thumbnail: 56,
   wave: 120,
+  /** One segment of the step progress bar in a multi-step flow. */
+  progress: 4,
 } as const;
 
 export const Radius = {
@@ -66,6 +68,8 @@ export const BorderWidth = {
 
 /** Minimum heights, so controls grow with the system text size instead of clipping. */
 export const ControlHeight = {
+  /** A multi-line text field, before it grows with its text. */
+  area: 96,
   large: 52,
   row: 48,
   small: 44,
@@ -84,17 +88,29 @@ export const Opacity = {
   disabled: 0.4,
 } as const;
 
+const tabularFigures: TextStyle['fontVariant'] = ['tabular-nums'];
+
 /** One bundle per text role. Weight comes from the font file, never from fontWeight. */
 export const Type = {
   screenTitle: { fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, letterSpacing: -0.64 },
   sectionTitle: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.56 },
   body: { fontFamily: Fonts.textRegular, fontSize: 16, lineHeight: 24 },
   summaryValue: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.28 },
-  rowPrice: { fontFamily: Fonts.display, fontSize: 20, lineHeight: 24, letterSpacing: -0.2 },
+  // Inter, not Fraunces: prices stacked in a list are compared digit by digit, so figures share a width.
+  rowPrice: {
+    fontFamily: Fonts.textSemiBold,
+    fontSize: 17,
+    lineHeight: 24,
+    fontVariant: tabularFigures,
+  },
   rowTitle: { fontFamily: Fonts.textSemiBold, fontSize: 16, lineHeight: 20 },
   rowMeta: { fontFamily: Fonts.textRegular, fontSize: 13, lineHeight: 20 },
   button: { fontFamily: Fonts.textSemiBold, fontSize: 16, lineHeight: 20 },
   buttonSmall: { fontFamily: Fonts.textSemiBold, fontSize: 15, lineHeight: 20 },
+  navAction: { fontFamily: Fonts.textMedium, fontSize: 16, lineHeight: 24 },
+  step: { fontFamily: Fonts.monoRegular, fontSize: 13, lineHeight: 16 },
+  chip: { fontFamily: Fonts.monoMedium, fontSize: 13, lineHeight: 16 },
+  tileLabel: { fontFamily: Fonts.textSemiBold, fontSize: 13, lineHeight: 16 },
   option: { fontFamily: Fonts.textMedium, fontSize: 15, lineHeight: 20 },
   optionSelected: { fontFamily: Fonts.textSemiBold, fontSize: 15, lineHeight: 20 },
   tab: { fontFamily: Fonts.textMedium, fontSize: 14, lineHeight: 20 },

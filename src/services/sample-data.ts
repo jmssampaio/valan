@@ -11,7 +11,9 @@ import sleeve6 from '../../assets/samples/sleeve-6.svg';
 
 import type { Enums, Tables } from '@/types/database';
 
-const USER_ID = '00000000-0000-0000-0000-00000000000a';
+const DEFAULT_FORMAT = 'LP, Album';
+const DEFAULT_YEAR = 1978;
+export const USER_ID = '00000000-0000-0000-0000-00000000000a';
 const CREATED_AT = '2026-11-01T10:00:00Z';
 
 type SampleListing = [marketplace: Enums<'marketplace'>, status: Enums<'listing_status'>];
@@ -22,6 +24,8 @@ type SampleItem = {
   priceMinor: number | null;
   artist?: string;
   condition?: Enums<'record_condition'>;
+  /** Records only; most of the samples are plain LPs. */
+  format?: string;
   listings?: SampleListing[];
   photo?: PhotoSource;
 };
@@ -45,11 +49,11 @@ function toItem(sample: SampleItem, index: number): ListedItem {
     title: sample.title,
     artist: sample.artist ?? null,
     discogs_release_id: null,
-    format: null,
-    release_year: null,
+    format: isRecord ? (sample.format ?? DEFAULT_FORMAT) : null,
+    release_year: isRecord ? DEFAULT_YEAR : null,
     media_condition: sample.condition ?? null,
     sleeve_condition: sample.condition ?? null,
-    equipment_condition: null,
+    equipment_condition: isRecord ? null : 'good',
     description: null,
     price_minor: sample.priceMinor,
     currency: 'EUR',
@@ -70,10 +74,10 @@ const ebayOnly: SampleListing[] = [['ebay', 'published']];
 
 const samples: SampleItem[] = [
   { title: 'Noites de Lisboa', artist: 'Os Marés', condition: 'VG+', priceMinor: 2800, status: 'active', listings: everywhere, photo: sleeve1 },
-  { title: 'Blue Harbor Sessions', artist: 'The Lanterns', condition: 'NM', priceMinor: 4500, status: 'active', listings: [['discogs', 'published'], ['ebay', 'error']], photo: sleeve2 },
+  { title: 'Blue Harbor Sessions', artist: 'The Lanterns', condition: 'NM', format: '2×LP, Album', priceMinor: 4500, status: 'active', listings: [['discogs', 'published'], ['ebay', 'error']], photo: sleeve2 },
   { title: 'Gira-discos Aurora', priceMinor: 18000, status: 'active', listings: ebayOnly, photo: sleeve3 },
   { title: 'Verde Mar', artist: 'Quarteto Atlântico', condition: 'VG', priceMinor: 1600, status: 'active', listings: [['discogs', 'pending']], photo: sleeve4 },
-  { title: 'Cartas do Norte', artist: 'Trio Alvorada', condition: 'VG+', priceMinor: 2200, status: 'active', listings: everywhere, photo: sleeve5 },
+  { title: 'Cartas do Norte', artist: 'Trio Alvorada', condition: 'VG+', format: 'CD, Album', priceMinor: 2200, status: 'active', listings: everywhere, photo: sleeve5 },
   { title: 'Paper Lighthouses', artist: 'June & the Tide', condition: 'NM', priceMinor: 3400, status: 'active', listings: everywhere, photo: sleeve6 },
   { title: 'Amplificador Sereno', priceMinor: 24000, status: 'active', listings: ebayOnly, photo: sleeve3 },
   { title: 'Rua das Flores, 12', artist: 'Banda do Cais', condition: 'G+', priceMinor: 900, status: 'active', listings: [['discogs', 'published']], photo: sleeve1 },
@@ -89,6 +93,18 @@ const samples: SampleItem[] = [
 ];
 
 export const sampleItems: ListedItem[] = samples.map(toItem);
+
+// Items saved while the app runs. They are gone on the next launch, like the rest of the samples.
+const savedItems: ListedItem[] = [];
+
+export function rememberItem(item: ListedItem): void {
+  savedItems.unshift(item);
+}
+
+/** The newest saved items first, then the samples. */
+export function allItems(): ListedItem[] {
+  return [...savedItems, ...sampleItems];
+}
 
 const offerStatuses: Enums<'offer_status'>[] = ['pending', 'pending', 'pending', 'accepted'];
 
