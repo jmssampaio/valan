@@ -1,4 +1,4 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
@@ -24,6 +24,7 @@ import { useGuardedAction } from '@/hooks/use-guarded-action';
 import { useIsOnline } from '@/hooks/use-is-online';
 import { useOffers } from '@/hooks/use-offers';
 import { usePendingOffers } from '@/hooks/use-pending-offers';
+import { useRefreshOnFocus } from '@/hooks/use-refresh-on-focus';
 import { t } from '@/i18n';
 import { openExternal } from '@/services/external-link';
 import { OfferError, respondOffer, type OfferResponse, type OfferRow } from '@/services/offers';
@@ -34,21 +35,14 @@ export default function OffersScreen() {
   const pendingOffers = usePendingOffers();
 
   // One refresh for the list and for the count on the tab bar, so they move as one: another
-  // offer may have come in. Coming back from another screen refreshes too; the first focus
-  // is the screen opening, which already loads.
+  // offer may have come in. Coming back from another screen refreshes too.
   const { refresh } = offers;
   const { reload: recount } = pendingOffers;
   const refreshAll = useCallback(() => {
     refresh();
     recount();
   }, [refresh, recount]);
-  const hasOpened = useRef(false);
-  useFocusEffect(
-    useCallback(() => {
-      if (hasOpened.current) refreshAll();
-      hasOpened.current = true;
-    }, [refreshAll]),
-  );
+  useRefreshOnFocus(refreshAll);
 
   const isEmpty = offers.status === 'ready' && offers.offers.length === 0;
 

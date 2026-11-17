@@ -1,6 +1,5 @@
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Stack } from 'expo-router/stack';
-import { useCallback, useRef } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
@@ -34,6 +33,7 @@ import {
 import { useGuardedAction } from '@/hooks/use-guarded-action';
 import { useIsOnline } from '@/hooks/use-is-online';
 import { useListingDetail } from '@/hooks/use-listing-detail';
+import { useRefreshOnFocus } from '@/hooks/use-refresh-on-focus';
 import { t } from '@/i18n';
 import {
   deleteDraft,
@@ -65,15 +65,8 @@ export default function ListingDetailScreen() {
   const listing = useListingDetail(itemId);
 
   // Coming back from another screen, such as Propostas, shows what changed there.
-  // The first focus is the screen opening, which already loads.
   const { refresh } = listing;
-  const hasOpened = useRef(false);
-  useFocusEffect(
-    useCallback(() => {
-      if (hasOpened.current) refresh();
-      hasOpened.current = true;
-    }, [refresh]),
-  );
+  useRefreshOnFocus(refresh);
 
   return (
     <>

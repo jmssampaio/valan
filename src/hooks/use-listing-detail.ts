@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+
+import { useLoadable } from './use-loadable';
 
 import { getListingDetail, type ListingDetail } from '@/services/listing-detail';
 
@@ -24,48 +26,14 @@ export type ListingDetailActions = {
 
 /** Everything the detail screen shows about one item, with ways to load it again. */
 export function useListingDetail(itemId: string): ListingDetailState & ListingDetailActions {
-  const [state, setState] = useState<ListingDetailState>({ status: 'loading' });
-  const [attempt, setAttempt] = useState(0);
+  const load = useCallback(() => getListingDetail(itemId), [itemId]);
+  const loaded = useLoadable(load);
+  const { reload, refresh } = loaded;
 
-  useEffect(() => {
-    let ignore = false;
+  if (loaded.status !== 'ready') return { status: loaded.status, reload, refresh };
+  // The service answers null for an item that does not exist, or that is not the seller's.
+  if (loaded.data === null) return { status: 'notFound', reload, refresh };
 
-    getListingDetail(itemId)
-      .then((detail) => {
-        if (ignore) return;
-        setState(
-          detail === null
-            ? { status: 'notFound' }
-            : { status: 'ready', detail, refreshing: false, refreshFailed: false },
-        );
-      })
-      // The screen turns this into a message; the cause is the service's to report.
-      .catch(() => {
-        if (ignore) return;
-        // A failed refresh keeps what is shown; only a first load has nothing to keep.
-        setState((previous) =>
-          previous.status === 'ready'
-            ? { ...previous, refreshing: false, refreshFailed: true }
-            : { status: 'error' },
-        );
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [itemId, attempt]);
-
-  const reload = useCallback(() => {
-    setState({ status: 'loading' });
-    setAttempt((previous) => previous + 1);
-  }, []);
-
-  const refresh = useCallback(() => {
-    setState((previous) =>
-      previous.status === 'ready' ? { ...previous, refreshing: true } : previous,
-    );
-    setAttempt((previous) => previous + 1);
-  }, []);
-
-  return { ...state, reload, refresh };
+  const { data, refreshing, refreshFailed } = loaded;
+  return { status: 'ready', detail: data, refreshing, refreshFailed, reload, refresh };
 }

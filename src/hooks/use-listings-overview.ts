@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useLoadable } from './use-loadable';
 
 import { listItems, type ListedItem } from '@/services/listings';
 import { listSales } from '@/services/sales';
@@ -35,45 +35,10 @@ export type ListingsOverviewActions = {
 
 /** Everything the listings screen shows, with ways to load it again. */
 export function useListingsOverview(): ListingsOverviewState & ListingsOverviewActions {
-  const [state, setState] = useState<ListingsOverviewState>({ status: 'loading' });
-  const [attempt, setAttempt] = useState(0);
+  const loaded = useLoadable(loadOverview);
+  const { reload, refresh } = loaded;
 
-  useEffect(() => {
-    let ignore = false;
-
-    loadOverview()
-      .then((overview) => {
-        if (!ignore) {
-          setState({ status: 'ready', overview, refreshing: false, refreshFailed: false });
-        }
-      })
-      // The screen turns this into a message; the cause is the service's to report.
-      .catch(() => {
-        if (ignore) return;
-        // A failed refresh keeps the listings already shown; only a first load has nothing to keep.
-        setState((previous) =>
-          previous.status === 'ready'
-            ? { ...previous, refreshing: false, refreshFailed: true }
-            : { status: 'error' },
-        );
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [attempt]);
-
-  const reload = useCallback(() => {
-    setState({ status: 'loading' });
-    setAttempt((previous) => previous + 1);
-  }, []);
-
-  const refresh = useCallback(() => {
-    setState((previous) =>
-      previous.status === 'ready' ? { ...previous, refreshing: true } : previous,
-    );
-    setAttempt((previous) => previous + 1);
-  }, []);
-
-  return { ...state, reload, refresh };
+  if (loaded.status !== 'ready') return { status: loaded.status, reload, refresh };
+  const { data, refreshing, refreshFailed } = loaded;
+  return { status: 'ready', overview: data, refreshing, refreshFailed, reload, refresh };
 }
