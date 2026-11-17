@@ -124,7 +124,7 @@ describe('listingTags', () => {
 
   it('takes the marketplace name from the marketplaces the app supports', () => {
     jest.mocked(supportedMarketplaces).mockReturnValue([
-      { id: 'ebay', name: 'eBay Portugal', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false }, feeRate: 0.1 },
+      { id: 'ebay', name: 'eBay Portugal', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false, respondToOffers: true }, feeRate: 0.1 },
     ]);
 
     expect(listingTags([listing({ marketplace: 'ebay', status: 'error' })])).toEqual([

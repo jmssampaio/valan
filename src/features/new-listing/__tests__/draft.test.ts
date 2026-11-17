@@ -47,20 +47,20 @@ const turntable: ListingDraft = withKind(
 const discogs: MarketplaceInfo = {
   id: 'discogs',
   name: 'Discogs',
-  capabilities: { itemTypes: ['record'], requiresCatalogueRelease: true },
+  capabilities: { itemTypes: ['record'], requiresCatalogueRelease: true, respondToOffers: false },
   feeRate: 0.09,
 };
 const ebay: MarketplaceInfo = {
   id: 'ebay',
   name: 'eBay',
-  capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+  capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false, respondToOffers: true },
   feeRate: 0.13,
 };
 /** A third marketplace, to prove nothing assumes there are only two. */
 const reverb: MarketplaceInfo = {
   id: 'reverb',
   name: 'Reverb',
-  capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+  capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false, respondToOffers: true },
   feeRate: 0.13,
 };
 
@@ -195,7 +195,7 @@ describe('where a listing can go', () => {
   });
 
   it('leaves out a marketplace that does not list that kind of item, and says why', () => {
-    const recordsOnly = { id: 'vinylhub', name: 'VinylHub', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false }, feeRate: 0.1 } as const;
+    const recordsOnly = { id: 'vinylhub', name: 'VinylHub', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false, respondToOffers: true }, feeRate: 0.1 } as const;
 
     expect(reachOf(turntable, [recordsOnly, ebay])).toEqual([
       ['VinylHub', false, 'itemTypeNotListed'],
@@ -208,7 +208,7 @@ describe('where a listing can go', () => {
   });
 
   it('does not rule a marketplace out by kind before the kind is known', () => {
-    const recordsOnly = { id: 'vinylhub', name: 'VinylHub', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false }, feeRate: 0.1 } as const;
+    const recordsOnly = { id: 'vinylhub', name: 'VinylHub', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false, respondToOffers: true }, feeRate: 0.1 } as const;
 
     expect(reachOf(withoutCatalogue(named), [recordsOnly])).toEqual([['VinylHub', true, null]]);
   });

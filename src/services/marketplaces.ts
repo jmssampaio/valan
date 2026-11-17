@@ -5,6 +5,8 @@ export type MarketplaceCapabilities = {
   itemTypes: readonly Enums<'item_type'>[];
   /** True when the marketplace lists only records chosen from the catalogue. */
   requiresCatalogueRelease: boolean;
+  /** False when offers can only be answered on the marketplace's own site. */
+  respondToOffers: boolean;
 };
 
 export type MarketplaceInfo = {
@@ -22,13 +24,17 @@ const marketplaces: readonly MarketplaceInfo[] = [
   {
     id: 'discogs',
     name: 'Discogs',
-    capabilities: { itemTypes: ['record'], requiresCatalogueRelease: true },
+    capabilities: { itemTypes: ['record'], requiresCatalogueRelease: true, respondToOffers: false },
     feeRate: 0.09,
   },
   {
     id: 'ebay',
     name: 'eBay',
-    capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+    capabilities: {
+      itemTypes: ['record', 'equipment'],
+      requiresCatalogueRelease: false,
+      respondToOffers: true,
+    },
     feeRate: 0.13,
   },
 ];

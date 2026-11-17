@@ -115,13 +115,14 @@ export function expiryLabel(expiresAt: string | null, now: Date): string | null 
   return counted(days, 'listingDetail.expires.day', 'listingDetail.expires.days');
 }
 
-export type OfferRow = {
+/** One offer as the detail screen lists it. */
+export type OfferLine = {
   title: string;
   meta: string | undefined;
   price: string;
 };
 
-export function offerRow(offer: Tables<'offers'>, marketplace: string, now: Date): OfferRow {
+export function offerRow(offer: Tables<'offers'>, marketplace: string, now: Date): OfferLine {
   const name = marketplaceName(marketplace);
 
   return {

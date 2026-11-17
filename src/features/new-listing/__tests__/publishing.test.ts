@@ -25,13 +25,13 @@ const release: CatalogueRelease = {
 const discogs: MarketplaceInfo = {
   id: 'discogs',
   name: 'Discogs',
-  capabilities: { itemTypes: ['record'], requiresCatalogueRelease: true },
+  capabilities: { itemTypes: ['record'], requiresCatalogueRelease: true, respondToOffers: false },
   feeRate: 0.09,
 };
 const ebay: MarketplaceInfo = {
   id: 'ebay',
   name: 'eBay',
-  capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+  capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false, respondToOffers: true },
   feeRate: 0.13,
 };
 const marketplaces = [discogs, ebay];

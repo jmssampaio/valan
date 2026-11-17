@@ -1,6 +1,6 @@
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Stack } from 'expo-router/stack';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
@@ -31,6 +31,7 @@ import {
   serverOnlyActions,
   type DetailAction,
 } from '@/features/listing-detail/labels';
+import { useGuardedAction } from '@/hooks/use-guarded-action';
 import { useIsOnline } from '@/hooks/use-is-online';
 import { useListingDetail } from '@/hooks/use-listing-detail';
 import { t } from '@/i18n';
@@ -124,10 +125,7 @@ function ReadyDetail({
   const { item, listings, offers, sale } = detail;
   const actions = availableActions(item, listings);
 
-  // What is being asked of the server right now. A ref, because two presses can land
-  // before the next render, and each must see what the other started.
-  const inFlight = useRef(new Set<string>());
-  const [working, setWorking] = useState<readonly string[]>([]);
+  const { working, run: guarded } = useGuardedAction();
 
   async function run(
     key: string,
@@ -135,20 +133,10 @@ function ReadyDetail({
     request: () => Promise<void>,
     afterwards: () => void,
   ) {
-    if (inFlight.current.has(key)) return;
-    inFlight.current.add(key);
-    setWorking([...inFlight.current]);
-
-    try {
-      await request();
-      afterwards();
-    } catch {
-      // Nothing changed, so the seller keeps what is on screen and may try again.
-      Alert.alert(failedTitle, t('listingDetail.action.failed.body'));
-    } finally {
-      inFlight.current.delete(key);
-      setWorking([...inFlight.current]);
-    }
+    const outcome = await guarded(key, request);
+    if (outcome.status === 'done') afterwards();
+    // Nothing changed, so the seller keeps what is on screen and may try again.
+    if (outcome.status === 'failed') Alert.alert(failedTitle, t('listingDetail.action.failed.body'));
   }
 
   function confirm(title: string, body: string, confirmLabel: string, onConfirm: () => void) {
@@ -255,9 +243,13 @@ function ReadyDetail({
                       trailing={
                         <Button
                           label={t('listingDetail.offer.view')}
+                          accessibilityLabel={t('listingDetail.offer.view.label', {
+                            price: row.price,
+                            title: row.title,
+                          })}
                           variant="outline"
                           size="small"
-                          onPress={() => router.navigate(OFFERS)}
+                          onPress={() => router.navigate({ pathname: OFFERS, params: { offer: offer.id } })}
                         />
                       }
                       divider={index === offers.length - 1 ? 'none' : 'line'}
