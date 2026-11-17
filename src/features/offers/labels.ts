@@ -68,10 +68,13 @@ export type CardFacts = {
 
 export function cardFacts(row: OfferRow, now: Date): CardFacts {
   const { offer, item, marketplace } = row;
+  // How long is left only matters while the offer can still be answered; after that the
+  // outcome says it, and saying it twice is noise.
+  const timeLeft = effectiveStatus(row, now) === 'pending' ? expiryLabel(offer.expires_at, now) : null;
 
   return {
     title: item.title,
-    meta: [offer.buyer, marketplaceName(marketplace), expiryLabel(offer.expires_at, now)]
+    meta: [offer.buyer, marketplaceName(marketplace), timeLeft]
       .filter((part) => part !== null && part !== '')
       .join(META_SEPARATOR),
     asking:

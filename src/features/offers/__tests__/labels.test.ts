@@ -112,8 +112,12 @@ describe('cardFacts', () => {
     expect(cardFacts(row({ buyer: null, expires_at: null }), NOW).meta).toBe('eBay');
   });
 
-  it('says it has expired once it has', () => {
-    expect(cardFacts(row({ expires_at: inHours(-2) }), NOW).meta).toBe('vinil_porto · eBay · Expirou');
+  it('does not repeat that an offer expired: its tag and its note already say so', () => {
+    expect(cardFacts(row({ expires_at: inHours(-2) }), NOW).meta).toBe('vinil_porto · eBay');
+  });
+
+  it('leaves out when it would have expired once the offer was answered', () => {
+    expect(cardFacts(row({ status: 'accepted' }), NOW).meta).toBe('vinil_porto · eBay');
   });
 
   it('has nothing to say about what is asked when the item has no price', () => {

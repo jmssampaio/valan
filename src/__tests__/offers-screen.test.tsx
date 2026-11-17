@@ -171,7 +171,8 @@ describe('offers screen', () => {
     expect(await screen.findByRole('tab', { name: 'Pendentes · 1' })).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('tab', { name: /Respondidas/ }));
 
-    expect(screen.getByText('late_buyer · eBay · Expirou')).toBeOnTheScreen();
+    expect(screen.getByText('late_buyer · eBay')).toBeOnTheScreen();
+    expect(screen.getByText('Expirada')).toBeOnTheScreen();
     expect(screen.getByText('Já não podes responder a esta proposta.')).toBeOnTheScreen();
   });
 });
