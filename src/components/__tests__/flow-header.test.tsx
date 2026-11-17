@@ -24,9 +24,9 @@ describe('FlowHeader', () => {
 
   it('runs its leading action when pressed', async () => {
     const onPress = jest.fn();
-    await render(<FlowHeader {...secondOfFour} leading={{ label: '‹ Voltar', onPress }} />);
+    await render(<FlowHeader {...secondOfFour} leading={{ label: '‹ Voltar', accessibilityLabel: 'Voltar', onPress }} />);
 
-    await fireEvent.press(screen.getByRole('button', { name: '‹ Voltar' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
 
     expect(onPress).toHaveBeenCalledTimes(1);
   });

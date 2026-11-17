@@ -78,7 +78,11 @@ export default function NewListingConditionScreen() {
       header={
         <FlowHeader
           {...stepHeader(2)}
-          leading={{ label: t('common.back'), onPress: () => router.back() }}
+          leading={{
+            label: t('common.back'),
+            accessibilityLabel: t('common.back.spoken'),
+            onPress: () => router.back(),
+          }}
         />
       }
       footer={
@@ -169,7 +173,12 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 
 function Detail({ tone = 'muted', children }: { tone?: 'muted' | 'error'; children: string }) {
   return (
-    <AppText variant="rowMeta" color={tone}>
+    // A problem appears after an action elsewhere on the screen, so it is announced.
+    <AppText
+      variant="rowMeta"
+      color={tone}
+      accessibilityRole={tone === 'error' ? 'alert' : undefined}
+      accessibilityLiveRegion={tone === 'error' ? 'polite' : undefined}>
       {children}
     </AppText>
   );

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
-import { searchReleases, type CatalogueRelease } from '@/services/catalogue';
+import { MIN_QUERY_LENGTH, searchReleases, type CatalogueRelease } from '@/services/catalogue';
 
 export type CatalogueSearch =
-  /** Nothing typed yet. */
+  /** Too little typed to search yet. */
   | { status: 'idle' }
   | { status: 'loading' }
   | { status: 'error' }
@@ -24,9 +24,10 @@ export function useCatalogueSearch(query: string): CatalogueSearch & { retry: ()
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [attempt, setAttempt] = useState(0);
   const wanted = query.trim();
+  const isSearchable = wanted.length >= MIN_QUERY_LENGTH;
 
   useEffect(() => {
-    if (wanted === '') return;
+    if (!isSearchable) return;
 
     let ignore = false;
     const pause = setTimeout(() => {
@@ -44,11 +45,11 @@ export function useCatalogueSearch(query: string): CatalogueSearch & { retry: ()
       ignore = true;
       clearTimeout(pause);
     };
-  }, [wanted, attempt]);
+  }, [wanted, isSearchable, attempt]);
 
   const retry = () => setAttempt((previous) => previous + 1);
 
-  if (wanted === '') return { status: 'idle', retry };
+  if (!isSearchable) return { status: 'idle', retry };
   if (outcome === null || outcome.query !== wanted || outcome.attempt !== attempt) {
     return { status: 'loading', retry };
   }

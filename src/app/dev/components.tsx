@@ -66,7 +66,7 @@ const photoGridLabels = {
   onPressPhoto: noAction,
   addLabel: 'Adicionar\nfoto',
   addAccessibilityLabel: 'Adicionar foto',
-  photoAccessibilityLabel: (position: number) => `Foto `,
+  photoAccessibilityLabel: (position: number) => `Foto ${position}`,
   photoAccessibilityHint: 'Toca para remover',
 };
 

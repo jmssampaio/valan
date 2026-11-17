@@ -15,6 +15,8 @@ export type FlowHeaderProps = {
   /** Leaves the flow on the first step and goes back on the others. */
   leading?: {
     label: string;
+    /** For a label that carries a drawn mark, such as "‹ Back": the words alone. */
+    accessibilityLabel?: string;
     onPress: () => void;
   };
 };
@@ -33,6 +35,7 @@ export function FlowHeader({
         {leading ? (
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={leading.accessibilityLabel}
             onPress={leading.onPress}
             hitSlop={Spacing.x2}
             style={({ pressed }) => [styles.leading, pressed && styles.pressed]}>

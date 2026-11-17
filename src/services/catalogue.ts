@@ -14,7 +14,8 @@ export type CatalogueRelease = {
   catalogueNumber: string | null;
 };
 
-const MIN_QUERY_LENGTH = 2;
+/** A single letter matches half the catalogue, so a search starts at two. */
+export const MIN_QUERY_LENGTH = 2;
 
 /** Lower case and without accents, so "mares" finds "Marés". */
 function simplify(text: string): string {

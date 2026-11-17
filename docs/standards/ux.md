@@ -28,7 +28,7 @@ Point of view: Valan feels like a record shop counter run by someone who knows t
 
 Palette: one accent (orange from the logo), one ink colour, one paper colour, and the neutrals already in `theme.ts` (surface, muted, line); do not add more. Success and error are for status only. No gradients. Every colour used must be a named token in `theme.ts`. Controls (fields, buttons, chips, segmented controls) are edged with ink; the hairline is for dividers only.
 
-Type: three faces, each with one job. Fraunces SemiBold (600) for titles and prices; Inter (400 to 700) for reading text and controls; IBM Plex Mono (400, 500) for labels, tags and catalogue numbers. Weights come from the font file named in `theme.ts`, never from `fontWeight`. Titles use tight tracking, body text uses normal tracking.
+Type: three faces, each with one job. Fraunces SemiBold (600) for titles, summary figures, the sales total and the price field; Inter (400 to 700) for reading text, controls and prices in lists (semi-bold 17 with tabular figures, so stacked amounts line up); IBM Plex Mono (400, 500) for labels, tags and catalogue numbers. Weights come from the font file named in `theme.ts`, never from `fontWeight`. Titles use tight tracking, body text uses normal tracking.
 
 Shape and depth: one corner radius for controls and cards (`Radius.control`, 10); tags and other small marks use `Radius.tag` (4). No other radii. No shadows of our own; native sheets and menus keep the system's. Cards are separated by spacing and a hairline, not by shadows.
 

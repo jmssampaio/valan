@@ -16,7 +16,11 @@ export default function NewListingPriceScreen() {
       header={
         <FlowHeader
           {...stepHeader(3)}
-          leading={{ label: t('common.back'), onPress: () => router.back() }}
+          leading={{
+            label: t('common.back'),
+            accessibilityLabel: t('common.back.spoken'),
+            onPress: () => router.back(),
+          }}
         />
       }
     />

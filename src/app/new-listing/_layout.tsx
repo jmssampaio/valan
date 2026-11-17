@@ -43,6 +43,7 @@ function SaveDraftOnLeave() {
       Alert.alert(t('newListing.leave.failed.title'), t('newListing.leave.failed.body'), [
         { text: t('common.retry'), onPress: () => void saveThenLeave(leave) },
         { text: t('newListing.leave.discard'), style: 'destructive', onPress: release },
+        { text: t('newListing.leave.stay'), style: 'cancel' },
       ]);
     } finally {
       saving.current = false;

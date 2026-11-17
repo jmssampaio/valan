@@ -9,6 +9,7 @@ export const es: Translations = {
   'common.retry': 'Volver a intentar',
   'common.cancel': 'Cancelar',
   'common.back': '‹ Volver',
+  'common.back.spoken': 'Volver',
   'common.continue': 'Continuar',
   'listings.new': 'Crear anuncio',
   'listings.summary.active': 'Activos',
@@ -98,6 +99,7 @@ export const es: Translations = {
   'newListing.leave.failed.body':
     'Vuelve a intentarlo o sal sin guardar. Si sales, pierdes lo que has escrito.',
   'newListing.leave.discard': 'Salir sin guardar',
+  'newListing.leave.stay': 'Seguir editando',
   'listing.title': 'Anuncio',
   'subscription.title': 'Vende en todas partes, desde un solo lugar',
   'notFound.title': 'Esta página no existe',

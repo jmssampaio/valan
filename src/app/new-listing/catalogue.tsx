@@ -105,9 +105,12 @@ function CatalogueResults({
   isOnline: boolean;
   onSelect: (release: CatalogueRelease) => void;
 }) {
-  // The chosen release stays in view while another search is typed or is on its way.
+  // The chosen release stays in view, first, whatever is typed or found afterwards.
+  const found = search.status === 'ready' ? search.releases : [];
   const releases =
-    search.status === 'ready' ? search.releases : selected === null ? [] : [selected];
+    selected === null || found.some((release) => release.id === selected.id)
+      ? found
+      : [selected, ...found];
 
   return (
     <View style={styles.results}>
@@ -147,7 +150,7 @@ function CatalogueResults({
           {t('newListing.search.hint')}
         </AppText>
       ) : null}
-      {search.status === 'ready' && releases.length === 0 ? (
+      {search.status === 'ready' && found.length === 0 ? (
         <AppText color="muted" style={styles.note}>
           {t('newListing.results.none')}
         </AppText>

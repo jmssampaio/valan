@@ -131,6 +131,41 @@ describe('new listing, step 1: what are you selling', () => {
     expect(screen.getByText('Selecionado')).toBeOnTheScreen();
   });
 
+  it('keeps asking for a search while a single letter is typed', async () => {
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+
+    await searchFor('n');
+
+    expect(
+      screen.getByText('Escreve o título ou o artista para encontrares a edição certa.'),
+    ).toBeOnTheScreen();
+    expect(searchReleases).not.toHaveBeenCalled();
+  });
+
+  it('keeps the chosen edition in view when another search does not find it', async () => {
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await searchFor('noites');
+    await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
+    jest.mocked(searchReleases).mockResolvedValue([reissue]);
+
+    await searchFor('reissue');
+
+    expect(await screen.findByRole('button', { name: /1994/ })).not.toBeSelected();
+    expect(screen.getByRole('button', { name: /1978/ })).toBeSelected();
+  });
+
+  it('brings the chosen edition back when the seller switches to equipment and back', async () => {
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await searchFor('noites');
+    await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Aparelho' }));
+    await fireEvent.press(screen.getByRole('radio', { name: 'Disco' }));
+
+    expect(screen.getByRole('button', { name: /1978/ })).toBeSelected();
+    expect(continueButton()).toBeEnabled();
+  });
+
   it('says so when the catalogue has nothing by that name', async () => {
     jest.mocked(searchReleases).mockResolvedValue([]);
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
@@ -231,6 +266,19 @@ describe('new listing, leaving the flow', () => {
     await pressAlertButton('Sair sem guardar');
 
     expect(screen).toHavePathname('/');
+  });
+
+  it('lets the seller stay and keep editing when the draft cannot be saved', async () => {
+    jest.mocked(saveDraft).mockRejectedValue(new Error('server error'));
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await searchFor('noites');
+    await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    await pressAlertButton('Continuar a editar');
+
+    expect(screen).toHavePathname(CATALOGUE);
+    expect(screen.getByRole('button', { name: /1978/ })).toBeSelected();
   });
 
   it('saves on a second try after a failure', async () => {
@@ -347,7 +395,7 @@ describe('new listing, step 2: condition and photos', () => {
     await reachConditionWithRecord();
     await fireEvent.changeText(screen.getByLabelText('Descrição'), 'Primeira edição.');
 
-    await fireEvent.press(screen.getByRole('button', { name: '‹ Voltar' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
 
     expect(screen).toHavePathname(CATALOGUE);
     expect(screen.getByText('Selecionado')).toBeOnTheScreen();
@@ -366,7 +414,7 @@ describe('new listing, step 2: condition and photos', () => {
     await pressAlertButton('Escolher da galeria');
     await fireEvent.changeText(screen.getByLabelText('Descrição'), 'Primeira edição.');
 
-    await fireEvent.press(screen.getByRole('button', { name: '‹ Voltar' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
     await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
 
     expect(jest.mocked(saveDraft).mock.calls[0][0]).toMatchObject({

@@ -31,19 +31,12 @@ export const emptyDraft: ListingDraft = {
   description: '',
 };
 
-/** Changing the type drops what only the other type has; photos and description stay. */
+/**
+ * Each type keeps its own answers, so switching by mistake and back loses nothing.
+ * Only the current type's answers count and are saved (see draftItemFields).
+ */
 export function withType(draft: ListingDraft, type: ListingDraft['type']): ListingDraft {
-  if (draft.type === type) return draft;
-
-  return {
-    ...draft,
-    type,
-    release: null,
-    title: '',
-    mediaCondition: null,
-    sleeveCondition: null,
-    equipmentCondition: null,
-  };
+  return draft.type === type ? draft : { ...draft, type };
 }
 
 function identifiesItem(draft: ListingDraft): boolean {
@@ -81,7 +74,7 @@ export function draftItemFields(draft: ListingDraft): DraftItemFields {
 
   return {
     type: draft.type,
-    title: release?.title ?? draft.title.trim(),
+    title: isRecord ? (release?.title ?? '') : draft.title.trim(),
     artist: release?.artist ?? null,
     discogs_release_id: release?.id ?? null,
     format: release?.format ?? null,

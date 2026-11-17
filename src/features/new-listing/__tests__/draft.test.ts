@@ -50,21 +50,18 @@ describe('leaving the catalogue step', () => {
 });
 
 describe('changing the item type', () => {
-  it('drops the release and the grades when a record becomes equipment', () => {
-    const changed = withType({ ...record, mediaCondition: 'VG+', sleeveCondition: 'VG' }, 'equipment');
+  // Switching by mistake must not cost the seller what they entered: each type keeps its own
+  // answers, and only the current type's are saved (see "saving a draft").
+  it('keeps what was entered for the other type, so switching back restores it', () => {
+    const graded = { ...record, mediaCondition: 'VG+', sleeveCondition: 'VG' } as const;
 
-    expect(changed).toMatchObject({
-      type: 'equipment',
-      release: null,
-      mediaCondition: null,
-      sleeveCondition: null,
-    });
+    const back = withType(withType(graded, 'equipment'), 'record');
+
+    expect(back).toEqual(graded);
   });
 
-  it('drops the title and the condition when equipment becomes a record', () => {
-    const changed = withType({ ...equipment, equipmentCondition: 'good' }, 'record');
-
-    expect(changed).toMatchObject({ type: 'record', title: '', equipmentCondition: null });
+  it('does not let the release of a record count for equipment', () => {
+    expect(canLeaveCatalogue(withType(record, 'equipment'))).toBe(false);
   });
 
   it('keeps the photos and the description', () => {
@@ -166,6 +163,19 @@ describe('saving a draft', () => {
       sleeve_condition: null,
       equipment_condition: 'good',
       description: null,
+    });
+  });
+
+  it('stores nothing of the other type after a switch', () => {
+    const switched = withType({ ...record, mediaCondition: 'VG+' }, 'equipment');
+
+    expect(draftItemFields({ ...switched, title: 'Gira-discos Aurora' })).toMatchObject({
+      type: 'equipment',
+      title: 'Gira-discos Aurora',
+      artist: null,
+      discogs_release_id: null,
+      format: null,
+      media_condition: null,
     });
   });
 
