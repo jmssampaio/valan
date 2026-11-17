@@ -26,15 +26,16 @@ Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_B
 ## Structure
 
 - `src/app/` — Expo Router routes only: every file is a screen, `_layout.tsx` files define navigators. `(tabs)/` holds the four tabs; `new-listing/` and `subscription` open as modals. No test files here.
-- `src/components/` — base UI components (`Screen`, `ScreenTitle`, `AppText`, `Button`, `ListRow`, `Tag`, `TextTabs`, `SegmentedControl`, `TabBar`, `SummaryStrip`, `Thumbnail`, `Wave`, `ScreenMessage`). Screens are built from these. `ScreenMessage` is the shared block for empty, error and offline states.
+- `src/components/` — base UI components (`Screen`, `ScreenTitle`, `AppText`, `Button`, `ListRow`, `Tag`, `TextTabs`, `SegmentedControl`, `TabBar`, `SummaryStrip`, `Thumbnail`, `Wave`, `ScreenMessage`, `TextField`, `ChipGrid`, `PhotoGrid`, `EvenGrid`, `FlowHeader`). Screens are built from these. `Screen` takes an optional `header`, `footer` and `scroll` for the steps of a flow. `ScreenMessage` is the shared block for empty, error and offline states.
 - `src/features/<screen>/` — pure functions a screen needs to turn rows into what it shows (labels, filters, totals), with their tests. No React here.
 - `src/constants/theme.ts` — design tokens (colours, text roles, spacing, radii, control heights). Screens use these, never raw values.
-- `src/hooks/` — React hooks, including the ones that load a screen's data from the services (`use-listings-overview`) and `use-is-online`. `*.web.ts` files are the browser variant (the browser is a development preview only).
+- `src/hooks/` — React hooks, including the ones that load a screen's data from the services (`use-listings-overview`) and `use-is-online`. `use-listing-draft` holds the one draft the new-listing steps share. `*.web.ts` files are the browser variant (the browser is a development preview only).
 - `src/app/dev/` — development-only screens, such as the component gallery at `/dev/components`; they redirect to the home screen in production builds.
 - `src/i18n/` — translations: `t(key, values)` and one dictionary per language in `locales/`; `{name}` in a string is filled from `values`.
 - `assets/images/` — app icons and drawn marks (`wave-line.svg`). `assets/samples/` — stand-in sleeve images used only by the sample data. SVG files are shown through `expo-image`, coloured with theme tokens via `svgVariables`.
+- `assets/locales/` — the iOS permission texts in each language, wired through `locales` in `app.json`.
 - `__mocks__/` — Jest stand-ins for native modules that have none under test (`expo-network`).
-- `src/services/` — the service layer; the only place the app calls Supabase (enforced by a lint rule). `getSupabase()` in `supabase.ts` is the single client; `session-storage.ts` keeps the session encrypted. `listings.ts`, `offers.ts` and `sales.ts` return sample rows from `sample-data.ts` (shaped like the database types) until the real queries replace them.
+- `src/services/` — the service layer; the only place the app calls Supabase (enforced by a lint rule). `getSupabase()` in `supabase.ts` is the single client; `session-storage.ts` keeps the session encrypted. `listings.ts`, `offers.ts`, `sales.ts`, `catalogue.ts` and `drafts.ts` work on sample rows from `sample-data.ts` and `sample-catalogue.ts` (shaped like the database types) until the real queries replace them. `photo-picker.ts` wraps the camera and photo library (`expo-image-picker`).
 - `supabase/migrations/` — schema changes. `supabase/tests/` — pgTAP tests for RLS and data rules.
 - `supabase/functions/` — Edge Functions (Deno, excluded from the app's lint, type check and Jest). `_shared/connectors/` holds the connector interface (`types.ts`), the in-memory `fake.ts`, and `contract.ts`, the test suite every connector must pass.
 - Tests live next to the code in `__tests__/` folders; navigation tests are in `src/__tests__/`.
@@ -65,6 +66,9 @@ Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_B
 - When an item sells on one marketplace, its listing is removed from the others.
 - Records are identified through the Discogs catalogue (search or barcode). Equipment has no catalogue step and goes to eBay only.
 - Sign-in: email, Sign in with Apple and Sign in with Google, all through Supabase Auth. Apple and Google buttons have equal prominence. Account deletion inside the app.
+- The new-listing flow keeps one draft across its steps (`ListingDraftProvider` in `src/app/new-listing/_layout.tsx`). Leaving the flow, by Cancel or by swiping the sheet down, saves it as a draft item when it has a release or a title; if the save fails the seller chooses between retrying and leaving without saving. A draft is not kept if the app is killed mid-flow.
+- A record needs its media condition to move past step 2; the sleeve condition is optional. Photos: up to 8.
+- Prices in lists use Inter semi-bold 17 with tabular figures (`Type.rowPrice`); Fraunces stays for titles, the summary figures, the sales total and the price field.
 - Home screen is the listings tab with a three-tile summary on top. The connect-platforms screen is shown only once, after sign-up.
 - The paywall appears when publishing the first listing, only to users without a plan.
 - Design source of truth: the mockups and logo in `docs/design/` (tokens and type in its README). Figma is no longer used.

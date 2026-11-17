@@ -1,5 +1,5 @@
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
@@ -33,6 +33,17 @@ export default function ListingsScreen() {
   const router = useRouter();
   const isOnline = useIsOnline();
   const listings = useListingsOverview();
+
+  // Coming back from another screen, such as the new-listing flow, shows what changed there.
+  // The first focus is the screen opening, which already loads.
+  const { refresh } = listings;
+  const hasOpened = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (hasOpened.current) refresh();
+      hasOpened.current = true;
+    }, [refresh]),
+  );
 
   const startListing = () => router.push(NEW_LISTING);
   const hasItems = listings.status === 'ready' && listings.overview.items.length > 0;
