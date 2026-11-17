@@ -12,5 +12,5 @@ module.exports = {
   },
   testMatch: ['**/__integration__/**/*.test.ts'],
   globalSetup: '<rootDir>/jest.integration.setup.js',
-  testTimeout: 20000,
+  testTimeout: 30000,
 };

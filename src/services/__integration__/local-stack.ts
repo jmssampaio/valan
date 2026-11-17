@@ -58,8 +58,9 @@ export async function latestEmailTo(address: string): Promise<MailboxMessage> {
     throw new Error('The local mailbox is not available.');
   }
 
-  // The email is sent just after the sign-up request answers, so it may take a moment.
-  for (let attempt = 0; attempt < 20; attempt += 1) {
+  // The email is sent just after the sign-up request answers, and the mail service is slow
+  // in the first seconds after the stack starts (as in CI), so this waits up to 15 seconds.
+  for (let attempt = 0; attempt < 60; attempt += 1) {
     const search = await fetch(`${mailbox}/api/v1/search?query=${encodeURIComponent(`to:${address}`)}`);
     const { messages } = (await search.json()) as { messages: { ID: string }[] };
     if (messages.length > 0) {
