@@ -10,18 +10,21 @@ export type ChoiceOption<Value extends string> = {
 };
 
 export type SegmentedControlProps<Value extends string> = {
+  /** What is being chosen, for screen readers. */
+  label?: string;
   options: readonly ChoiceOption<Value>[];
   value: Value;
   onChange: (value: Value) => void;
 };
 
 export function SegmentedControl<Value extends string>({
+  label,
   options,
   value,
   onChange,
 }: SegmentedControlProps<Value>) {
   return (
-    <View accessibilityRole="radiogroup" style={styles.group}>
+    <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.group}>
       {options.map((option, index) => {
         const selected = option.value === value;
         return (

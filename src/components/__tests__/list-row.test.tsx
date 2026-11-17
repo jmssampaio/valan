@@ -24,4 +24,10 @@ describe('ListRow', () => {
 
     expect(screen.queryByRole('button')).not.toBeOnTheScreen();
   });
+
+  it('says whether it is the chosen row of a list of choices', async () => {
+    await render(<ListRow title="Noites de Lisboa" selected onPress={jest.fn()} />);
+
+    expect(screen.getByRole('button', { name: /Noites de Lisboa/ })).toBeSelected();
+  });
 });

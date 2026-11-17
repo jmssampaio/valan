@@ -4,12 +4,16 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { Button } from '@/components/button';
+import { ChipGrid } from '@/components/chip-grid';
+import { FlowHeader } from '@/components/flow-header';
 import { ListRow } from '@/components/list-row';
+import { PhotoGrid } from '@/components/photo-grid';
 import { Screen } from '@/components/screen';
 import { ScreenMessage } from '@/components/screen-message';
 import { SegmentedControl } from '@/components/segmented-control';
 import { SummaryStrip } from '@/components/summary-strip';
 import { Tag } from '@/components/tag';
+import { TextField } from '@/components/text-field';
 import { TextTabs } from '@/components/text-tabs';
 import { Thumbnail } from '@/components/thumbnail';
 import { Wave } from '@/components/wave';
@@ -29,6 +33,21 @@ const listingFilters = [
   { value: 'sold', label: 'Vendidos' },
 ] as const;
 
+const grades = ['M', 'NM', 'VG+', 'VG', 'G+', 'G', 'F', 'P'].map((grade) => ({
+  value: grade,
+  label: grade,
+}));
+
+const equipmentConditions = ['Novo', 'Como novo', 'Bom', 'Razoável', 'Para peças'].map((label) => ({
+  value: label,
+  label,
+}));
+
+// Flat colour squares as data URIs: stand-ins for photos that need no network or camera.
+const galleryPhotos = ['%231E1A17', '%23B4460F'].map((fill) => ({
+  uri: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect width="1" height="1" fill="${fill}"/></svg>`,
+}));
+
 type ItemType = (typeof itemTypes)[number]['value'];
 type ListingFilter = (typeof listingFilters)[number]['value'];
 
@@ -42,9 +61,24 @@ const samplePhoto = sampleItems[0].photo;
 
 const noAction = () => {};
 
+const photoGridLabels = {
+  onAdd: noAction,
+  onPressPhoto: noAction,
+  addLabel: 'Adicionar\nfoto',
+  addAccessibilityLabel: 'Adicionar foto',
+  photoAccessibilityLabel: (position: number) => `Foto `,
+  photoAccessibilityHint: 'Toca para remover',
+};
+
 export default function ComponentGalleryScreen() {
   const [itemType, setItemType] = useState<ItemType>('record');
   const [listingFilter, setListingFilter] = useState<ListingFilter>('active');
+  const [grade, setGrade] = useState<string | null>('VG+');
+  const [equipmentCondition, setEquipmentCondition] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [description, setDescription] = useState(
+    'Primeira edição. Disco com marcas ligeiras, toca sem saltos.',
+  );
 
   if (!__DEV__) {
     return <Redirect href="/" />;
@@ -89,6 +123,56 @@ export default function ComponentGalleryScreen() {
             body="Algo correu mal do nosso lado. Tenta de novo dentro de momentos."
             action={{ label: 'Tentar de novo', onPress: noAction }}
           />
+        </Section>
+
+        <Section label="FlowHeader">
+          <FlowHeader
+            step={2}
+            steps={4}
+            stepLabel="2/4"
+            stepAccessibilityLabel="Passo 2 de 4"
+            leading={{ label: '‹ Voltar', onPress: noAction }}
+          />
+        </Section>
+
+        <Section label="TextField · search, labelled and multi-line">
+          <TextField
+            label="Procurar no catálogo"
+            labelHidden
+            placeholder="Título, artista ou n.º de catálogo"
+            value={search}
+            onChangeText={setSearch}
+          />
+          <TextField
+            label="Nome do aparelho"
+            placeholder="Marca e modelo"
+            value={search}
+            onChangeText={setSearch}
+          />
+          <TextField label="Descrição" value={description} onChangeText={setDescription} multiline />
+        </Section>
+
+        <Section label="ChipGrid · grades and words">
+          <ChipGrid
+            label="Estado do disco"
+            options={grades}
+            value={grade}
+            onChange={setGrade}
+            columns={4}
+          />
+          <ChipGrid
+            label="Estado do aparelho"
+            options={equipmentConditions}
+            value={equipmentCondition}
+            onChange={setEquipmentCondition}
+            columns={3}
+          />
+        </Section>
+
+        <Section label="PhotoGrid · with photos, adding, full">
+          <PhotoGrid {...photoGridLabels} photos={galleryPhotos} max={8} columns={4} />
+          <PhotoGrid {...photoGridLabels} photos={[]} max={8} columns={4} adding />
+          <PhotoGrid {...photoGridLabels} photos={galleryPhotos} max={2} columns={4} />
         </Section>
 
         <Section label="Button · large">
