@@ -48,7 +48,6 @@ describe('navigation', () => {
     ['/new-listing/catalogue', 'O que vais vender?'],
     ['/new-listing/condition', 'Estado e fotos'],
     ['/new-listing/price', 'Preço e plataformas'],
-    ['/new-listing/result', 'Resultado'],
     ['/listing/abc123', 'Anúncio'],
     ['/subscription', 'Vende em todo o lado, a partir de um só sítio'],
   ])('%s shows its title', async (initialUrl, title) => {

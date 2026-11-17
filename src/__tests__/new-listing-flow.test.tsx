@@ -3,11 +3,13 @@ import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-librar
 import { Alert } from 'react-native';
 
 import { searchReleases, type CatalogueRelease } from '@/services/catalogue';
+import { listConnections, type ConnectionSummary } from '@/services/connections';
 import { saveDraft } from '@/services/drafts';
 import { listItems } from '@/services/listings';
 import { supportedMarketplaces, type MarketplaceInfo } from '@/services/marketplaces';
 import { countPendingOffers } from '@/services/offers';
 import { pickPhotos, takePhoto } from '@/services/photo-picker';
+import { publishItem, retryListing } from '@/services/publishing';
 import { listSales } from '@/services/sales';
 
 // System boundaries: the device language, the network state, the camera and the services.
@@ -22,6 +24,8 @@ jest.mock('@/services/listings');
 jest.mock('@/services/marketplaces');
 jest.mock('@/services/offers');
 jest.mock('@/services/sales');
+jest.mock('@/services/connections');
+jest.mock('@/services/publishing');
 
 const APP_DIR = 'src/app';
 const CATALOGUE = '/new-listing/catalogue';
@@ -49,17 +53,20 @@ const discogs: MarketplaceInfo = {
   id: 'discogs',
   name: 'Discogs',
   capabilities: { itemTypes: ['record'], requiresCatalogueRelease: true },
+  feeRate: 0.09,
 };
 const ebay: MarketplaceInfo = {
   id: 'ebay',
   name: 'eBay',
   capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+  feeRate: 0.13,
 };
 /** A third marketplace that lists both kinds of item, to prove the texts are not written for two. */
 const reverb: MarketplaceInfo = {
   id: 'reverb',
   name: 'Reverb',
   capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+  feeRate: 0.13,
 };
 
 const alert = jest.spyOn(Alert, 'alert');
@@ -101,6 +108,37 @@ async function reachConditionWithAnotherItem() {
   await fireEvent.press(continueButton());
 }
 
+function connection(marketplace: ConnectionSummary['marketplace']): ConnectionSummary {
+  return { id: `connection-`, user_id: 'user-1', marketplace, status: 'connected' };
+}
+
+/** Goes through the first two steps with the first pressing, graded VG+. */
+async function reachPriceWithRecord() {
+  await reachConditionWithRecord();
+  await fireEvent.press(screen.getAllByRole('radio', { name: 'VG+' })[0]);
+  await fireEvent.press(continueButton());
+  await screen.findByRole('checkbox', { name: /eBay/ });
+}
+
+/** Goes through the first two steps with something the catalogue does not have. */
+async function reachPriceWithAnotherItem() {
+  await reachConditionWithAnotherItem();
+  await fireEvent.press(screen.getByRole('radio', { name: 'Bom' }));
+  await fireEvent.press(continueButton());
+  await screen.findByRole('checkbox', { name: /eBay/ });
+}
+
+async function typePrice(price: string) {
+  await fireEvent.changeText(screen.getByLabelText('Preço em EUR'), price);
+}
+
+/** Prices the record at 28 euros and publishes it on both marketplaces. */
+async function publishRecord() {
+  await reachPriceWithRecord();
+  await typePrice('28');
+  await fireEvent.press(screen.getByRole('button', { name: 'Publicar em 2 plataformas' }));
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   setOnline(true);
@@ -110,6 +148,15 @@ beforeEach(() => {
   jest.mocked(listItems).mockResolvedValue([]);
   jest.mocked(countPendingOffers).mockResolvedValue(0);
   jest.mocked(listSales).mockResolvedValue([]);
+  jest.mocked(listConnections).mockResolvedValue([connection('discogs'), connection('ebay')]);
+  jest.mocked(publishItem).mockResolvedValue({
+    itemId: 'item-9',
+    listings: [
+      { marketplace: 'discogs', status: 'published' },
+      { marketplace: 'ebay', status: 'error', reason: 'missingShippingPolicy' },
+    ],
+  });
+  jest.mocked(retryListing).mockResolvedValue({ marketplace: 'ebay', status: 'published' });
 });
 
 describe('new listing, step 1: what are you selling', () => {
@@ -592,5 +639,240 @@ describe('new listing, step 2: condition and photos', () => {
     await fireEvent.press(continueButton());
 
     expect(screen).toHavePathname('/new-listing/price');
+  });
+});
+
+describe('new listing, step 3: price and marketplaces', () => {
+  it('cannot publish until the price makes sense', async () => {
+    await reachPriceWithRecord();
+    const publishButton = () => screen.getByRole('button', { name: 'Publicar em 2 plataformas' });
+
+    expect(publishButton()).toBeDisabled();
+
+    await typePrice('abc');
+    expect(publishButton()).toBeDisabled();
+
+    await typePrice('28,00');
+    expect(publishButton()).toBeEnabled();
+  });
+
+  it('estimates what each marketplace keeps, and says it is an estimate', async () => {
+    await reachPriceWithRecord();
+
+    await typePrice('28');
+
+    expect(screen.getByText('Comissão estimada 2,52 €')).toBeOnTheScreen();
+    expect(screen.getByText('Comissão estimada 3,64 €')).toBeOnTheScreen();
+    expect(screen.getByText(/As comissões são estimativas/)).toBeOnTheScreen();
+  });
+
+  it('publishes only on the marketplaces left ticked, and names the one that is left', async () => {
+    await reachPriceWithRecord();
+    await typePrice('28');
+
+    await fireEvent.press(screen.getByRole('checkbox', { name: /eBay/ }));
+
+    expect(screen.getByRole('checkbox', { name: /eBay/ })).not.toBeChecked();
+    await fireEvent.press(screen.getByRole('button', { name: 'Publicar em Discogs' }));
+    expect(jest.mocked(publishItem).mock.calls[0][0].marketplaces).toEqual(['discogs']);
+  });
+
+  it('cannot publish with every marketplace unticked', async () => {
+    await reachPriceWithRecord();
+    await typePrice('28');
+
+    await fireEvent.press(screen.getByRole('checkbox', { name: /eBay/ }));
+    await fireEvent.press(screen.getByRole('checkbox', { name: /Discogs/ }));
+
+    expect(screen.getByRole('button', { name: 'Publicar' })).toBeDisabled();
+  });
+
+  it('shows a marketplace the listing cannot use, disabled and with the reason', async () => {
+    await reachPriceWithAnotherItem();
+    await typePrice('180');
+
+    const discogsRow = screen.getByRole('checkbox', { name: /Discogs/ });
+    expect(discogsRow).toBeDisabled();
+    expect(discogsRow).not.toBeChecked();
+    expect(screen.getByText('Discogs só aceita discos que existam no seu catálogo.')).toBeOnTheScreen();
+    expect(screen.getByRole('checkbox', { name: /eBay/ })).toBeChecked();
+    expect(screen.getByRole('button', { name: 'Publicar em eBay' })).toBeEnabled();
+  });
+
+  it('shows a marketplace whose account is not connected, disabled and saying what to do', async () => {
+    jest.mocked(listConnections).mockResolvedValue([connection('ebay')]);
+    await reachPriceWithRecord();
+
+    expect(screen.getByRole('checkbox', { name: /Discogs/ })).toBeDisabled();
+    expect(screen.getByText('Liga a tua conta Discogs para publicares aqui.')).toBeOnTheScreen();
+    expect(screen.getByText('Por ligar')).toBeOnTheScreen();
+  });
+
+  it('lists a third marketplace from its capabilities', async () => {
+    jest.mocked(supportedMarketplaces).mockReturnValue([discogs, ebay, { ...reverb, feeRate: 0.05 }]);
+    await reachPriceWithRecord();
+    await typePrice('28');
+
+    // Its account is not connected, so it is shown and cannot be ticked.
+    expect(screen.getByRole('checkbox', { name: /Reverb/ })).toBeDisabled();
+    expect(screen.getByText('Liga a tua conta Reverb para publicares aqui.')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Publicar em 2 plataformas' })).toBeEnabled();
+  });
+
+  it('explains when the connected accounts cannot be loaded, and loads them on retry', async () => {
+    jest.mocked(listConnections).mockRejectedValueOnce(new Error('server error'));
+    await reachConditionWithRecord();
+    await fireEvent.press(screen.getAllByRole('radio', { name: 'VG+' })[0]);
+    await fireEvent.press(continueButton());
+
+    expect(await screen.findByText(/Não conseguimos ver as tuas contas ligadas/)).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
+
+    expect(await screen.findByRole('checkbox', { name: /eBay/ })).toBeOnTheScreen();
+  });
+
+  it('cannot publish without a connection, and says why', async () => {
+    await reachPriceWithRecord();
+    await typePrice('28');
+
+    setOnline(false);
+    await fireEvent.press(screen.getByRole('checkbox', { name: /eBay/ }));
+
+    expect(screen.getByText('Estás sem ligação. Liga-te à internet para publicares.')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Publicar em Discogs' })).toBeDisabled();
+  });
+
+  it('sends the price in cents and whether offers are accepted', async () => {
+    await reachPriceWithRecord();
+    await typePrice('28,50');
+    await fireEvent(screen.getByRole('switch', { name: 'Aceitar propostas' }), 'valueChange', true);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Publicar em 2 plataformas' }));
+
+    const sent = jest.mocked(publishItem).mock.calls[0][0];
+    expect(sent.item).toMatchObject({ price_minor: 2850, currency: 'EUR', accepts_offers: true });
+    expect(sent.item).not.toHaveProperty('status');
+    expect(sent.marketplaces).toEqual(['discogs', 'ebay']);
+  });
+
+  it('saves the price with the draft when the seller leaves instead of publishing', async () => {
+    await reachPriceWithRecord();
+    await typePrice('28');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(jest.mocked(saveDraft).mock.calls[0][0].item).toMatchObject({ price_minor: 2800 });
+    expect(publishItem).not.toHaveBeenCalled();
+  });
+});
+
+describe('new listing, step 4: result', () => {
+  it('says it is publishing until the marketplaces answer', async () => {
+    let answer: (result: Awaited<ReturnType<typeof publishItem>>) => void = () => {};
+    jest.mocked(publishItem).mockReturnValue(new Promise((resolve) => (answer = resolve)));
+    await publishRecord();
+
+    expect(screen.getByRole('header', { name: 'A publicar o anúncio' })).toBeOnTheScreen();
+
+    await act(async () => answer({ itemId: 'item-9', listings: [{ marketplace: 'discogs', status: 'published' }] }));
+
+    expect(screen.getByRole('header', { name: 'Publicado em Discogs' })).toBeOnTheScreen();
+  });
+
+  it('shows what was published and the outcome on each marketplace', async () => {
+    await publishRecord();
+
+    expect(
+      await screen.findByRole('header', { name: 'Publicado em 1 de 2 plataformas' }),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Noites de Lisboa')).toBeOnTheScreen();
+    expect(screen.getByText('Os Marés · LP · VG+')).toBeOnTheScreen();
+    expect(screen.getByText('28 €')).toBeOnTheScreen();
+    expect(screen.getByText('Publicado há instantes')).toBeOnTheScreen();
+    expect(screen.getByText('Falta definir a política de envio na tua conta eBay.')).toBeOnTheScreen();
+    expect(screen.getByText('Erro')).toBeOnTheScreen();
+  });
+
+  it('tries the marketplace that failed again, and counts it once it is published', async () => {
+    await publishRecord();
+    await screen.findByRole('header', { name: 'Publicado em 1 de 2 plataformas' });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
+
+    expect(retryListing).toHaveBeenCalledWith('item-9', 'ebay');
+    expect(
+      await screen.findByRole('header', { name: 'Publicado em 2 de 2 plataformas' }),
+    ).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Tentar de novo' })).not.toBeOnTheScreen();
+  });
+
+  it('keeps the marketplace in error, and retryable, when trying again fails', async () => {
+    jest.mocked(retryListing).mockRejectedValue(new Error('network'));
+    await publishRecord();
+    await screen.findByRole('header', { name: 'Publicado em 1 de 2 plataformas' });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
+
+    expect(await screen.findByText('eBay não aceitou o anúncio. Tenta de novo.')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeEnabled();
+  });
+
+  it('says nothing was published when the request fails, and publishes on retry', async () => {
+    jest.mocked(publishItem).mockRejectedValueOnce(new Error('server error'));
+    await publishRecord();
+
+    expect(
+      await screen.findByRole('header', { name: 'Não conseguimos publicar o anúncio' }),
+    ).toBeOnTheScreen();
+    expect(screen.getByText(/Nada foi publicado/)).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
+
+    expect(
+      await screen.findByRole('header', { name: 'Publicado em 1 de 2 plataformas' }),
+    ).toBeOnTheScreen();
+    expect(jest.mocked(publishItem).mock.calls[1][0].marketplaces).toEqual(['discogs', 'ebay']);
+  });
+
+  it('goes back to the price when the request failed, with what was entered', async () => {
+    jest.mocked(publishItem).mockRejectedValue(new Error('server error'));
+    await publishRecord();
+    await screen.findByRole('header', { name: 'Não conseguimos publicar o anúncio' });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
+
+    expect(screen).toHavePathname('/new-listing/price');
+    expect(screen.getByLabelText('Preço em EUR')).toHaveProp('value', '28');
+  });
+
+  it('opens the published listing, without saving it again as a draft', async () => {
+    await publishRecord();
+    await screen.findByRole('header', { name: 'Publicado em 1 de 2 plataformas' });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Ver anúncio' }));
+
+    expect(screen).toHavePathname('/listing/item-9');
+    expect(saveDraft).not.toHaveBeenCalled();
+  });
+
+  it('starts an empty listing from "create another"', async () => {
+    await publishRecord();
+    await screen.findByRole('header', { name: 'Publicado em 1 de 2 plataformas' });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Criar outro' }));
+
+    expect(screen).toHavePathname(CATALOGUE);
+    expect(screen.getByLabelText('Nome do que vais vender')).toHaveProp('value', '');
+    expect(continueButton()).toBeDisabled();
+    expect(saveDraft).not.toHaveBeenCalled();
+  });
+
+  it('goes to the first step when opened with nothing published', async () => {
+    await renderRouter(APP_DIR, { initialUrl: '/new-listing/result' });
+
+    expect(screen).toHavePathname(CATALOGUE);
   });
 });

@@ -1,18 +1,60 @@
 import { useRouter } from 'expo-router';
+import { ActivityIndicator, StyleSheet, Switch, View } from 'react-native';
 
+import { AppText } from '@/components/app-text';
+import { Button } from '@/components/button';
+import { CheckRow } from '@/components/check-row';
 import { FlowHeader } from '@/components/flow-header';
+import { ListRow } from '@/components/list-row';
+import { PriceField } from '@/components/price-field';
 import { Screen } from '@/components/screen';
+import { Tag } from '@/components/tag';
+import { Colors, Spacing } from '@/constants/theme';
+import { formatPrice } from '@/features/listings/format';
+import { DEFAULT_CURRENCY } from '@/features/new-listing/draft';
 import { stepHeader } from '@/features/new-listing/labels';
+import {
+  canPublish,
+  publishOptions,
+  selectedMarketplaces,
+  toggledMarketplace,
+  type PublishOption,
+} from '@/features/new-listing/publishing';
+import { useConnections } from '@/hooks/use-connections';
+import { useIsOnline } from '@/hooks/use-is-online';
+import { useListingDraft } from '@/hooks/use-listing-draft';
 import { t } from '@/i18n';
+import { supportedMarketplaces } from '@/services/marketplaces';
 
 export default function NewListingPriceScreen() {
   const router = useRouter();
+  const isOnline = useIsOnline();
+  const { draft, change, publish } = useListingDraft();
+  const connections = useConnections();
+
+  const options =
+    connections.status === 'ready'
+      ? publishOptions(draft, supportedMarketplaces(), connections.connections)
+      : [];
+  const chosen = selectedMarketplaces(options);
+  const publishLabel =
+    chosen.length === 0
+      ? t('newListing.publish.none')
+      : chosen.length === 1
+        ? t('newListing.publish.one', { name: chosen[0].name })
+        : t('newListing.publish.many', { count: chosen.length });
+
+  function publishNow() {
+    publish(chosen.map(({ id }) => id));
+    router.push('/new-listing/result');
+  }
 
   return (
     <Screen
       title={t('newListing.price.title')}
       titleSize="medium"
-      titleGap="x5"
+      titleGap="x6"
+      scroll
       header={
         <FlowHeader
           {...stepHeader(3)}
@@ -23,6 +65,158 @@ export default function NewListingPriceScreen() {
           }}
         />
       }
+      footer={
+        <>
+          {isOnline ? null : (
+            <AppText variant="rowMeta" color="muted">
+              {t('newListing.publish.offline')}
+            </AppText>
+          )}
+          <Button
+            label={publishLabel}
+            disabled={!isOnline || !canPublish(draft, options)}
+            onPress={publishNow}
+          />
+        </>
+      }>
+      <View style={styles.sections}>
+        <View>
+          <AppText variant="caption" color="muted">
+            {t('newListing.price.label')}
+          </AppText>
+          <PriceField
+            label={t('newListing.price.spoken', { currency: DEFAULT_CURRENCY })}
+            value={draft.priceText}
+            onChangeText={(priceText) => change((current) => ({ ...current, priceText }))}
+            currency={DEFAULT_CURRENCY}
+            placeholder={t('newListing.price.placeholder')}
+          />
+          <ListRow
+            title={t('newListing.offers.title')}
+            meta={t('newListing.offers.detail')}
+            divider="none"
+            trailing={
+              <Switch
+                accessibilityLabel={t('newListing.offers.title')}
+                value={draft.acceptsOffers}
+                onValueChange={(acceptsOffers) => change((current) => ({ ...current, acceptsOffers }))}
+                trackColor={{ true: Colors.accent, false: Colors.line }}
+              />
+            }
+          />
+        </View>
+        <View>
+          <AppText variant="caption" color="muted">
+            {t('newListing.publishOn')}
+          </AppText>
+          {connections.status === 'loading' ? (
+            <View style={styles.note}>
+              <ActivityIndicator
+                accessibilityLabel={t('newListing.connections.loading')}
+                color={Colors.ink}
+              />
+            </View>
+          ) : null}
+          {connections.status === 'error' ? (
+            <View style={styles.note}>
+              <AppText color="muted">
+                {t(isOnline ? 'newListing.connections.error' : 'newListing.connections.offline')}
+              </AppText>
+              <Button
+                label={t('common.retry')}
+                variant="outline"
+                size="small"
+                onPress={connections.reload}
+              />
+            </View>
+          ) : null}
+          {options.map((option, index) => (
+            <MarketplaceRow
+              key={option.marketplace.id}
+              option={option}
+              isLast={index === options.length - 1}
+              onToggle={() =>
+                change((current) => toggledMarketplace(current, option.marketplace.id))
+              }
+            />
+          ))}
+          {options.length > 0 ? (
+            <AppText variant="rowMeta" color="muted" style={styles.feesNote}>
+              {t('newListing.fees.note')}
+            </AppText>
+          ) : null}
+        </View>
+      </View>
+    </Screen>
+  );
+}
+
+/** A marketplace is always shown: ticked, tickable, or off with the reason. Never hidden. */
+function MarketplaceRow({
+  option: { marketplace, state, reason, selected, feeMinor },
+  isLast,
+  onToggle,
+}: {
+  option: PublishOption;
+  isLast: boolean;
+  onToggle: () => void;
+}) {
+  const { name } = marketplace;
+  const divider = isLast ? 'none' : 'line';
+
+  if (state === 'excluded') {
+    return (
+      <CheckRow
+        title={name}
+        meta={reason ? t(`newListing.reach.reason.${reason}`, { name }) : undefined}
+        checked={false}
+        disabled
+        onChange={onToggle}
+        divider={divider}
+      />
+    );
+  }
+
+  if (state === 'notConnected') {
+    return (
+      <CheckRow
+        title={name}
+        meta={t('newListing.connection.needed', { name })}
+        checked={false}
+        disabled
+        onChange={onToggle}
+        trailing={<Tag label={t('newListing.connection.notConnected')} tone="waiting" />}
+        divider={divider}
+      />
+    );
+  }
+
+  return (
+    <CheckRow
+      title={name}
+      meta={
+        feeMinor === null
+          ? undefined
+          : t('newListing.fee', { amount: formatPrice(feeMinor, DEFAULT_CURRENCY) })
+      }
+      checked={selected}
+      onChange={onToggle}
+      trailing={<Tag label={t('newListing.connection.connected')} tone="success" />}
+      divider={divider}
     />
   );
 }
+
+const styles = StyleSheet.create({
+  sections: {
+    gap: Spacing.x6,
+  },
+  note: {
+    alignItems: 'flex-start',
+    gap: Spacing.x4,
+    paddingVertical: Spacing.x4,
+  },
+  feesNote: {
+    marginTop: Spacing.x3,
+  },
+});
