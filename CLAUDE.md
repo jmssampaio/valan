@@ -26,12 +26,15 @@ Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_B
 ## Structure
 
 - `src/app/` — Expo Router routes only: every file is a screen, `_layout.tsx` files define navigators. `(tabs)/` holds the four tabs; `new-listing/` and `subscription` open as modals. No test files here.
-- `src/components/` — base UI components (`Screen`, `ScreenTitle`, `AppText`, `Button`, `ListRow`, `Tag`, `TextTabs`, `SegmentedControl`, `TabBar`). Screens are built from these.
+- `src/components/` — base UI components (`Screen`, `ScreenTitle`, `AppText`, `Button`, `ListRow`, `Tag`, `TextTabs`, `SegmentedControl`, `TabBar`, `SummaryStrip`, `Thumbnail`, `Wave`, `ScreenMessage`). Screens are built from these. `ScreenMessage` is the shared block for empty, error and offline states.
+- `src/features/<screen>/` — pure functions a screen needs to turn rows into what it shows (labels, filters, totals), with their tests. No React here.
 - `src/constants/theme.ts` — design tokens (colours, text roles, spacing, radii, control heights). Screens use these, never raw values.
-- `src/hooks/` — React hooks. `*.web.ts` files are the browser variant (the browser is a development preview only).
+- `src/hooks/` — React hooks, including the ones that load a screen's data from the services (`use-listings-overview`) and `use-is-online`. `*.web.ts` files are the browser variant (the browser is a development preview only).
 - `src/app/dev/` — development-only screens, such as the component gallery at `/dev/components`; they redirect to the home screen in production builds.
-- `src/i18n/` — translations: `t()` and one dictionary per language in `locales/`.
-- `src/services/` — the service layer; the only place the app calls Supabase (enforced by a lint rule). `getSupabase()` in `supabase.ts` is the single client; `session-storage.ts` keeps the session encrypted.
+- `src/i18n/` — translations: `t(key, values)` and one dictionary per language in `locales/`; `{name}` in a string is filled from `values`.
+- `assets/images/` — app icons and drawn marks (`wave-line.svg`). `assets/samples/` — stand-in sleeve images used only by the sample data. SVG files are shown through `expo-image`, coloured with theme tokens via `svgVariables`.
+- `__mocks__/` — Jest stand-ins for native modules that have none under test (`expo-network`).
+- `src/services/` — the service layer; the only place the app calls Supabase (enforced by a lint rule). `getSupabase()` in `supabase.ts` is the single client; `session-storage.ts` keeps the session encrypted. `listings.ts`, `offers.ts` and `sales.ts` return sample rows from `sample-data.ts` (shaped like the database types) until the real queries replace them.
 - `supabase/migrations/` — schema changes. `supabase/tests/` — pgTAP tests for RLS and data rules.
 - `supabase/functions/` — Edge Functions (Deno, excluded from the app's lint, type check and Jest). `_shared/connectors/` holds the connector interface (`types.ts`), the in-memory `fake.ts`, and `contract.ts`, the test suite every connector must pass.
 - Tests live next to the code in `__tests__/` folders; navigation tests are in `src/__tests__/`.

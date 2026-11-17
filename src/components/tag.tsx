@@ -4,7 +4,7 @@ import { AppText } from './app-text';
 
 import { BorderWidth, Colors, Radius, Spacing, type ThemeColor } from '@/constants/theme';
 
-type TagTone = 'neutral' | 'success' | 'error' | 'waiting' | 'filled';
+export type TagTone = 'neutral' | 'success' | 'error' | 'waiting' | 'filled';
 
 export type TagProps = {
   label: string;
