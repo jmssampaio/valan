@@ -1,4 +1,4 @@
-import { emptyDraft, parsePrice, withKind, withName, withoutCatalogue, withRelease, type ListingDraft } from '../draft';
+import { newDraft, parsePrice, withKind, withName, withoutCatalogue, withRelease, type ListingDraft } from '../draft';
 import {
   canPublish,
   estimateFee,
@@ -40,6 +40,8 @@ const connected: Connection[] = [
   { marketplace: 'discogs', status: 'connected' },
   { marketplace: 'ebay', status: 'connected' },
 ];
+
+const emptyDraft = newDraft('item-1');
 
 const priced = (draft: ListingDraft, priceText = '28,00'): ListingDraft => ({ ...draft, priceText });
 const linked = priced(withRelease(withName(emptyDraft, 'noites'), release));

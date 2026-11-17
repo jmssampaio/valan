@@ -1,12 +1,17 @@
 import type { PhotoSource } from './listings';
-import { rememberItem, USER_ID } from './sample-data';
+import { findSavedItem, upsertItem, USER_ID } from './sample-data';
 
 import type { TablesInsert } from '@/types/database';
 
-/** What the app may write on a draft item. The status is not here: the server decides it. */
+/**
+ * What the app may write on a draft item. The id is made on the device (see newItemId), so
+ * every save and publish of the same draft is about the same item. The status is not here:
+ * the server decides it.
+ */
 export type DraftItemFields = Required<
   Pick<
     TablesInsert<'items'>,
+    | 'id'
     | 'type'
     | 'title'
     | 'artist'
@@ -29,25 +34,22 @@ export type DraftToSave = {
   photos: readonly Extract<PhotoSource, { uri: string }>[];
 };
 
-let savedDrafts = 0;
-
-// Kept in memory until the Supabase insert and the photo upload exist; callers already get
-// the final shape.
+// Kept in memory until the Supabase upsert and the photo upload exist; callers already get
+// the final shape. Saving again updates the same item. An item that was already sent for
+// publishing keeps its status and listings: those are the server's, not the app's, to change.
 export async function saveDraft({ item, photos }: DraftToSave): Promise<{ id: string }> {
-  savedDrafts += 1;
-  const id = `saved-draft-${savedDrafts}`;
+  const existing = findSavedItem(item.id);
   const now = new Date().toISOString();
 
-  rememberItem({
+  upsertItem({
     ...item,
-    id,
     user_id: USER_ID,
-    status: 'draft',
-    created_at: now,
+    status: existing?.status ?? 'draft',
+    created_at: existing?.created_at ?? now,
     updated_at: now,
-    listings: [],
+    listings: existing?.listings ?? [],
     photo: photos[0] ?? null,
   });
 
-  return { id };
+  return { id: item.id };
 }

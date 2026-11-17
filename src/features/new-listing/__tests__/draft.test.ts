@@ -4,11 +4,11 @@ import {
   canLeaveCondition,
   catalogueStep,
   draftItemFields,
-  emptyDraft,
   isWorthSaving,
   itemType,
   marketplaceReach,
   MAX_PHOTOS,
+  newDraft,
   removePhoto,
   withKind,
   withName,
@@ -30,6 +30,8 @@ const release: CatalogueRelease = {
   label: 'Onda Discos',
   catalogueNumber: 'OD 1042',
 };
+
+const emptyDraft = newDraft('item-1');
 
 const named: ListingDraft = withName(emptyDraft, 'noites de lis');
 /** A record chosen from the catalogue. */
@@ -67,6 +69,11 @@ function photos(count: number) {
 }
 
 describe('a new draft', () => {
+  it('carries the id of its item from the start', () => {
+    expect(newDraft('item-7').id).toBe('item-7');
+    expect(draftItemFields(withRelease(newDraft('item-7'), release)).id).toBe('item-7');
+  });
+
   it('starts with nothing filled in and no item type', () => {
     expect(emptyDraft).toMatchObject({ name: '', release: null, kind: null, photos: [], description: '' });
     expect(itemType(emptyDraft)).toBeNull();
@@ -288,6 +295,7 @@ describe('saving a draft', () => {
     });
 
     expect(fields).toEqual({
+      id: 'item-1',
       type: 'record',
       title: 'Noites de Lisboa',
       artist: 'Os Marés',
@@ -308,6 +316,7 @@ describe('saving a draft', () => {
     const fields = draftItemFields({ ...looseRecord, name: ' Noites de Lisboa (promo) ', mediaCondition: 'G+' });
 
     expect(fields).toEqual({
+      id: 'item-1',
       type: 'record',
       title: 'Noites de Lisboa (promo)',
       artist: null,
@@ -328,6 +337,7 @@ describe('saving a draft', () => {
     const fields = draftItemFields({ ...turntable, mediaCondition: 'VG+', equipmentCondition: 'good' });
 
     expect(fields).toEqual({
+      id: 'item-1',
       type: 'equipment',
       title: 'Gira-discos Aurora T-200',
       artist: null,

@@ -97,18 +97,18 @@ export const sampleItems: ListedItem[] = samples.map(toItem);
 // Items saved while the app runs. They are gone on the next launch, like the rest of the samples.
 const savedItems: ListedItem[] = [];
 
-export function rememberItem(item: ListedItem): void {
-  savedItems.unshift(item);
+export function findSavedItem(itemId: string): ListedItem | undefined {
+  return savedItems.find((item) => item.id === itemId);
 }
 
-/** Updates a saved item after one of its listings was tried again. */
-export function replaceItemListings(itemId: string, listings: ListingSummary[]): void {
-  const index = savedItems.findIndex((item) => item.id === itemId);
-  if (index === -1) return;
-
-  const item = savedItems[index];
-  const isListed = listings.some(({ status }) => status === 'published');
-  savedItems[index] = { ...item, listings, status: isListed ? 'active' : item.status };
+/** Adds an item, or replaces the one with the same id: an id never names two items. */
+export function upsertItem(item: ListedItem): void {
+  const index = savedItems.findIndex(({ id }) => id === item.id);
+  if (index === -1) {
+    savedItems.unshift(item);
+  } else {
+    savedItems[index] = item;
+  }
 }
 
 /** The newest saved items first, then the samples. */

@@ -94,9 +94,9 @@ const styles = StyleSheet.create({
   checked: {
     backgroundColor: Colors.ink,
   },
-  // The title in muted text already says the row is off; the box only steps back.
+  // Edged in the muted colour, like the row's title: the divider colour is for dividers only.
   unavailable: {
-    borderColor: Colors.line,
+    borderColor: Colors.muted,
   },
   text: {
     flex: 1,

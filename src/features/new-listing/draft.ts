@@ -29,6 +29,11 @@ export type ItemKind = Enums<'item_type'>;
 
 /** What the seller has entered so far, across every step of the new-listing flow. */
 export type ListingDraft = {
+  /**
+   * The item's id, made on the device when the draft starts. Every save and publish of this
+   * draft carries it, so none of them can create a second item.
+   */
+  id: string;
   /** What the seller typed in "What are you selling?". */
   name: string;
   /** The catalogue edition the seller chose. With one, the item is a record that Discogs accepts. */
@@ -49,7 +54,15 @@ export type ListingDraft = {
   skippedMarketplaces: readonly string[];
 };
 
-export const emptyDraft: ListingDraft = {
+/** An empty draft for the item with this id (see newItemId in the services). */
+export function newDraft(id: string): ListingDraft {
+  return {
+    ...blankFields,
+    id,
+  };
+}
+
+const blankFields: Omit<ListingDraft, 'id'> = {
   name: '',
   release: null,
   declinedCatalogue: false,
@@ -196,6 +209,7 @@ export function draftItemFields(draft: ListingDraft): DraftItemFields {
   const { release } = draft;
 
   return {
+    id: draft.id,
     type,
     title: release?.title ?? draft.name.trim(),
     artist: release?.artist ?? null,

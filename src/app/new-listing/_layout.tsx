@@ -50,17 +50,13 @@ function SaveDraftOnLeave() {
     }
   }
 
-  // A listing that was sent is no longer a draft to save. While it is being sent the flow
-  // stays open, so the seller always sees what became of it.
-  const isPublishing = publication.status === 'publishing';
-  const isPublished = publication.status === 'done';
+  // Once a listing is sent, or on its way, the server has it: there is no draft left to save,
+  // and the seller can always leave. Its state shows in the listings.
+  const isSent = publication.status === 'publishing' || publication.status === 'done';
 
-  usePreventRemove(
-    isPublishing || (isWorthSaving(draft) && !released && !isPublished),
-    ({ repeat }) => {
-      if (!isPublishing) void saveThenLeave(repeat);
-    },
-  );
+  usePreventRemove(isWorthSaving(draft) && !released && !isSent, ({ repeat }) => {
+    void saveThenLeave(repeat);
+  });
 
   return null;
 }

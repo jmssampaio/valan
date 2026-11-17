@@ -1,17 +1,17 @@
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, StyleSheet, Switch, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { Button } from '@/components/button';
 import { CheckRow } from '@/components/check-row';
 import { FlowHeader } from '@/components/flow-header';
-import { ListRow } from '@/components/list-row';
 import { PriceField } from '@/components/price-field';
 import { Screen } from '@/components/screen';
+import { SwitchRow } from '@/components/switch-row';
 import { Tag } from '@/components/tag';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatPrice } from '@/features/listings/format';
-import { DEFAULT_CURRENCY } from '@/features/new-listing/draft';
+import { DEFAULT_CURRENCY, parsePrice } from '@/features/new-listing/draft';
 import { stepHeader } from '@/features/new-listing/labels';
 import {
   canPublish,
@@ -39,6 +39,7 @@ export default function NewListingPriceScreen() {
       ? publishOptions(draft, supportedMarketplaces(), connections.connections)
       : [];
   const chosen = selectedMarketplaces(options);
+  const hasUnreadablePrice = draft.priceText.trim() !== '' && parsePrice(draft.priceText) === null;
   const publishLabel =
     chosen.length === 0
       ? t('newListing.publish.none')
@@ -70,7 +71,7 @@ export default function NewListingPriceScreen() {
       footer={
         <>
           {isOnline ? null : (
-            <AppText variant="rowMeta" color="muted">
+            <AppText variant="rowMeta" color="muted" accessibilityRole="alert">
               {t('newListing.publish.offline')}
             </AppText>
           )}
@@ -96,18 +97,17 @@ export default function NewListingPriceScreen() {
             currency={DEFAULT_CURRENCY}
             placeholder={t('newListing.price.placeholder')}
           />
-          <ListRow
+          {hasUnreadablePrice ? (
+            // Said as soon as it shows: the publish button is off because of it.
+            <AppText variant="rowMeta" color="error" accessibilityRole="alert" style={styles.hint}>
+              {t('newListing.price.invalid')}
+            </AppText>
+          ) : null}
+          <SwitchRow
             title={t('newListing.offers.title')}
             meta={t('newListing.offers.detail')}
-            divider="none"
-            trailing={
-              <Switch
-                accessibilityLabel={t('newListing.offers.title')}
-                value={draft.acceptsOffers}
-                onValueChange={(acceptsOffers) => change((current) => ({ ...current, acceptsOffers }))}
-                trackColor={{ true: Colors.accent, false: Colors.line }}
-              />
-            }
+            value={draft.acceptsOffers}
+            onValueChange={(acceptsOffers) => change((current) => ({ ...current, acceptsOffers }))}
           />
         </View>
         <View>
@@ -124,7 +124,7 @@ export default function NewListingPriceScreen() {
           ) : null}
           {connections.status === 'error' ? (
             <View style={styles.note}>
-              <AppText color="muted">
+              <AppText variant="rowMeta" color="muted" accessibilityRole="alert">
                 {t(isOnline ? 'newListing.connections.error' : 'newListing.connections.offline')}
               </AppText>
               <Button
@@ -220,6 +220,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: Spacing.x4,
     paddingVertical: Spacing.x4,
+  },
+  hint: {
+    marginTop: Spacing.x2,
   },
   feesNote: {
     marginTop: Spacing.x3,

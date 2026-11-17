@@ -1,6 +1,7 @@
 import { createContext, use, useRef, useState, type ReactNode } from 'react';
 
-import { draftItemFields, emptyDraft, type ListingDraft } from '@/features/new-listing/draft';
+import { draftItemFields, newDraft, type ListingDraft } from '@/features/new-listing/draft';
+import { newItemId } from '@/services/ids';
 import {
   publishItem,
   retryListing,
@@ -37,7 +38,7 @@ const NewListingContext = createContext<NewListingContextValue | null>(null);
 
 /** Holds the one draft every step of the new-listing flow shares, and what became of it. */
 export function ListingDraftProvider({ children }: { children: ReactNode }) {
-  const [draft, setDraft] = useState(emptyDraft);
+  const [draft, setDraft] = useState(() => newDraft(newItemId()));
   const [publication, setPublication] = useState<Publication>({ status: 'idle' });
   // What is on its way right now. Refs, because two presses can land before the next render
   // and each must see what the other started.
@@ -95,7 +96,7 @@ export function ListingDraftProvider({ children }: { children: ReactNode }) {
   }
 
   function startOver() {
-    setDraft(emptyDraft);
+    setDraft(newDraft(newItemId()));
     setPublication({ status: 'idle' });
   }
 

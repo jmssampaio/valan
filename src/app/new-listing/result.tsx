@@ -1,5 +1,6 @@
 import { Redirect, useRouter } from 'expo-router';
 import { Stack } from 'expo-router/stack';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
@@ -22,6 +23,8 @@ import { supportedMarketplaces } from '@/services/marketplaces';
 import type { ListingOutcome, PublishResult } from '@/services/publishing';
 
 const STEP = 4;
+// How long publishing may take before the seller is told there is no need to wait.
+const SLOW_AFTER_MS = 30_000;
 const CATALOGUE = '/new-listing/catalogue';
 
 function nameOf(marketplaceId: string): string {
@@ -49,19 +52,7 @@ export default function NewListingResultScreen() {
   }
 
   if (publication.status === 'publishing') {
-    return (
-      <Screen
-        title={t('newListing.result.publishing')}
-        titleSize="medium"
-        titleGap="x6"
-        header={<FlowHeader {...stepHeader(STEP)} />}>
-        {/* Swiping back would land on a publish button that is already at work. */}
-        <Stack.Screen options={{ gestureEnabled: false }} />
-        <View style={styles.working}>
-          <ActivityIndicator accessibilityLabel={t('newListing.result.publishing')} color={Colors.ink} />
-        </View>
-      </Screen>
-    );
+    return <Publishing />;
   }
 
   if (publication.status === 'failed') {
@@ -81,8 +72,15 @@ export default function NewListingResultScreen() {
             }}
           />
         }
-        footer={<Button label={t('common.retry')} onPress={() => publish(marketplaces)} />}>
-        <AppText color="muted">
+        footer={
+          <Button
+            label={t('common.retry')}
+            // The message above already says there is no connection and what to do.
+            disabled={!isOnline}
+            onPress={() => publish(marketplaces)}
+          />
+        }>
+        <AppText color="muted" accessibilityRole="alert">
           {t(isOnline ? 'newListing.result.failed.body' : 'newListing.result.failed.offline')}
         </AppText>
       </Screen>
@@ -121,6 +119,7 @@ export default function NewListingResultScreen() {
             key={outcome.marketplace}
             outcome={outcome}
             isRetrying={retrying.includes(outcome.marketplace)}
+            isOnline={isOnline}
             isLast={index === result.listings.length - 1}
             onRetry={() => retry(outcome.marketplace)}
           />
@@ -153,11 +152,13 @@ function PublishedItem({ draft }: { draft: ListingDraft }) {
 function OutcomeRow({
   outcome,
   isRetrying,
+  isOnline,
   isLast,
   onRetry,
 }: {
   outcome: PublishResult['listings'][number];
   isRetrying: boolean;
+  isOnline: boolean;
   isLast: boolean;
   onRetry: () => void;
 }) {
@@ -187,7 +188,7 @@ function OutcomeRow({
       }
       divider={divider}>
       <View style={styles.problem}>
-        <AppText variant="rowMeta" color="error">
+        <AppText variant="rowMeta" color="error" accessibilityRole="alert">
           {t(`newListing.result.reason.${outcome.reason}`, { name })}
         </AppText>
         <View style={styles.actions}>
@@ -195,10 +196,15 @@ function OutcomeRow({
             label={t('common.retry')}
             variant="outline"
             size="small"
-            disabled={isRetrying}
+            disabled={isRetrying || !isOnline}
             onPress={onRetry}
           />
         </View>
+        {isOnline ? null : (
+          <AppText variant="rowMeta" color="muted" accessibilityRole="alert">
+            {t('newListing.result.offline')}
+          </AppText>
+        )}
       </View>
     </ListRow>
   );
@@ -207,6 +213,7 @@ function OutcomeRow({
 const styles = StyleSheet.create({
   working: {
     alignItems: 'flex-start',
+    gap: Spacing.x4,
   },
   problem: {
     flex: 1,
@@ -216,3 +223,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
 });
+
+/**
+ * Publishing is the server's work: the seller may leave at any time, and each marketplace
+ * shows as "publishing" in the listings until it answers.
+ */
+function Publishing() {
+  const router = useRouter();
+  const [isSlow, setIsSlow] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsSlow(true), SLOW_AFTER_MS);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <Screen
+      title={t('newListing.result.publishing')}
+      titleSize="medium"
+      titleGap="x6"
+      header={
+        <FlowHeader
+          {...stepHeader(STEP)}
+          leading={{ label: t('common.close'), onPress: () => router.dismissTo('/') }}
+        />
+      }>
+      {/* Swiping back would land on a publish button that is already at work. */}
+      <Stack.Screen options={{ gestureEnabled: false }} />
+      <View style={styles.working}>
+        <ActivityIndicator accessibilityLabel={t('newListing.result.publishing')} color={Colors.ink} />
+        {isSlow ? (
+          <AppText color="muted" accessibilityRole="alert">
+            {t('newListing.result.slow', { tab: t('tabs.listings') })}
+          </AppText>
+        ) : null}
+      </View>
+    </Screen>
+  );
+}

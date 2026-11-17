@@ -139,6 +139,8 @@ async function publishRecord() {
   await fireEvent.press(screen.getByRole('button', { name: 'Publicar em 2 plataformas' }));
 }
 
+afterEach(() => jest.useRealTimers());
+
 beforeEach(() => {
   jest.clearAllMocks();
   setOnline(true);
@@ -656,6 +658,18 @@ describe('new listing, step 3: price and marketplaces', () => {
     expect(publishButton()).toBeEnabled();
   });
 
+  it('says how to write a price when what was typed is not one', async () => {
+    await reachPriceWithRecord();
+
+    expect(screen.queryByText('Escreve um preço como 28 ou 28,50.')).not.toBeOnTheScreen();
+
+    await typePrice('12,345');
+    expect(screen.getByText('Escreve um preço como 28 ou 28,50.')).toBeOnTheScreen();
+
+    await typePrice('12,34');
+    expect(screen.queryByText('Escreve um preço como 28 ou 28,50.')).not.toBeOnTheScreen();
+  });
+
   it('estimates what each marketplace keeps, and says it is an estimate', async () => {
     await reachPriceWithRecord();
 
@@ -746,7 +760,7 @@ describe('new listing, step 3: price and marketplaces', () => {
   it('sends the price in cents and whether offers are accepted', async () => {
     await reachPriceWithRecord();
     await typePrice('28,50');
-    await fireEvent(screen.getByRole('switch', { name: 'Aceitar propostas' }), 'valueChange', true);
+    await fireEvent.press(screen.getByRole('switch', { name: /Aceitar propostas/ }));
 
     await fireEvent.press(screen.getByRole('button', { name: 'Publicar em 2 plataformas' }));
 
@@ -780,6 +794,29 @@ describe('new listing, step 4: result', () => {
     await act(async () => answer({ itemId: 'item-9', listings: [{ marketplace: 'discogs', status: 'published' }] }));
 
     expect(screen.getByRole('header', { name: 'Publicado em Discogs' })).toBeOnTheScreen();
+  });
+
+  it('lets the seller leave while it is publishing, without saving a second copy as a draft', async () => {
+    jest.mocked(publishItem).mockReturnValue(new Promise(() => {}));
+    await publishRecord();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Fechar' }));
+
+    expect(screen).toHavePathname('/');
+    expect(saveDraft).not.toHaveBeenCalled();
+  });
+
+  it('says the seller can leave when publishing takes more than 30 seconds', async () => {
+    jest.useFakeTimers();
+    jest.mocked(publishItem).mockReturnValue(new Promise(() => {}));
+    await publishRecord();
+    const notice = 'Ainda a publicar. Podes sair; o estado aparece em Anúncios.';
+
+    await act(async () => jest.advanceTimersByTime(29_000));
+    expect(screen.queryByText(notice)).not.toBeOnTheScreen();
+
+    await act(async () => jest.advanceTimersByTime(1_000));
+    expect(screen.getByText(notice)).toBeOnTheScreen();
   });
 
   it('shows what was published and the outcome on each marketplace', async () => {
@@ -818,6 +855,56 @@ describe('new listing, step 4: result', () => {
 
     expect(await screen.findByText('Não conseguimos chegar a eBay. Tenta de novo.')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeEnabled();
+  });
+
+  it('cannot try a marketplace again without a connection, and says why', async () => {
+    // The connection drops while the listing is being published.
+    let answer: (result: Awaited<ReturnType<typeof publishItem>>) => void = () => {};
+    jest.mocked(publishItem).mockReturnValue(new Promise((resolve) => (answer = resolve)));
+    await publishRecord();
+    setOnline(false);
+    await act(async () =>
+      answer({
+        itemId: 'item-9',
+        listings: [{ marketplace: 'ebay', status: 'error', reason: 'missingShippingPolicy' }],
+      }),
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
+
+    expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeDisabled();
+    expect(
+      screen.getByText('Estás sem ligação. Liga-te à internet para tentares de novo.'),
+    ).toBeOnTheScreen();
+    expect(retryListing).not.toHaveBeenCalled();
+  });
+
+  it('saves the draft under the same item id after a publish attempt that failed', async () => {
+    jest.mocked(publishItem).mockRejectedValue(new Error('timeout'));
+    await publishRecord();
+    await screen.findByRole('header', { name: 'Não conseguimos publicar o anúncio' });
+
+    for (const step of ['Voltar', 'Voltar', 'Voltar', 'Cancelar']) {
+      await fireEvent.press(screen.getByRole('button', { name: step }));
+    }
+
+    const publishedId = jest.mocked(publishItem).mock.calls[0][0].item.id;
+    expect(publishedId).toEqual(expect.any(String));
+    expect(jest.mocked(saveDraft).mock.calls[0][0].item.id).toBe(publishedId);
+  });
+
+  it('gives the next listing its own item id', async () => {
+    await publishRecord();
+    await screen.findByRole('header', { name: 'Publicado em 1 de 2 plataformas' });
+    await fireEvent.press(screen.getByRole('button', { name: 'Criar outro' }));
+    jest.mocked(searchReleases).mockResolvedValue([]);
+
+    await typeName('Colunas Marfim');
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Outro artigo' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    const firstId = jest.mocked(publishItem).mock.calls[0][0].item.id;
+    expect(jest.mocked(saveDraft).mock.calls[0][0].item.id).not.toBe(firstId);
   });
 
   it('says nothing was published when the request fails, and publishes on retry', async () => {

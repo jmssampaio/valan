@@ -15,6 +15,7 @@ import { Screen } from '@/components/screen';
 import { ScreenMessage } from '@/components/screen-message';
 import { SegmentedControl } from '@/components/segmented-control';
 import { SummaryStrip } from '@/components/summary-strip';
+import { SwitchRow } from '@/components/switch-row';
 import { Tag } from '@/components/tag';
 import { TextField } from '@/components/text-field';
 import { TextTabs } from '@/components/text-tabs';
@@ -137,6 +138,15 @@ export default function ComponentGalleryScreen() {
             onChangeText={setPrice}
             currency="EUR"
             placeholder="0,00"
+          />
+        </Section>
+
+        <Section label="SwitchRow">
+          <SwitchRow
+            title="Aceitar propostas"
+            meta="Os compradores podem propor outro preço"
+            value={ticked}
+            onValueChange={setTicked}
           />
         </Section>
 
