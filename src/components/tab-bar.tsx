@@ -108,6 +108,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.x1,
     minHeight: ControlHeight.row,
+    minWidth: ControlHeight.small,
     // Sits on top of the bar's hairline, so the selected indicator replaces it.
     marginTop: -BorderWidth.hairline,
     borderTopWidth: BorderWidth.indicator,
