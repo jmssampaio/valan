@@ -45,14 +45,14 @@ isOneToOne: false
                   ]
                 },"items": {
                   Row: {
-                    "accepts_offers": boolean,"artist": string | null,"created_at": string,"currency": string,"description": string | null,"discogs_release_id": number | null,"id": string,"media_condition": Database["public"]['Enums']["record_condition"] | null,"price_minor": number | null,"sleeve_condition": Database["public"]['Enums']["record_condition"] | null,"status": Database["public"]['Enums']["item_status"],"title": string,"type": Database["public"]['Enums']["item_type"],"updated_at": string,"user_id": string
+                    "accepts_offers": boolean,"artist": string | null,"created_at": string,"currency": string,"description": string | null,"discogs_release_id": number | null,"equipment_condition": Database["public"]['Enums']["equipment_condition"] | null,"format": string | null,"id": string,"media_condition": Database["public"]['Enums']["record_condition"] | null,"price_minor": number | null,"release_year": number | null,"sleeve_condition": Database["public"]['Enums']["record_condition"] | null,"status": Database["public"]['Enums']["item_status"],"title": string,"type": Database["public"]['Enums']["item_type"],"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "accepts_offers"?: boolean,"artist"?: string | null,"created_at"?: string,"currency"?: string,"description"?: string | null,"discogs_release_id"?: number | null,"id"?: string,"media_condition"?: Database["public"]['Enums']["record_condition"] | null,"price_minor"?: number | null,"sleeve_condition"?: Database["public"]['Enums']["record_condition"] | null,"status"?: Database["public"]['Enums']["item_status"],"title": string,"type": Database["public"]['Enums']["item_type"],"updated_at"?: string,"user_id": string
+                    "accepts_offers"?: boolean,"artist"?: string | null,"created_at"?: string,"currency"?: string,"description"?: string | null,"discogs_release_id"?: number | null,"equipment_condition"?: Database["public"]['Enums']["equipment_condition"] | null,"format"?: string | null,"id"?: string,"media_condition"?: Database["public"]['Enums']["record_condition"] | null,"price_minor"?: number | null,"release_year"?: number | null,"sleeve_condition"?: Database["public"]['Enums']["record_condition"] | null,"status"?: Database["public"]['Enums']["item_status"],"title": string,"type": Database["public"]['Enums']["item_type"],"updated_at"?: string,"user_id": string
                   }
                   Update: {
-                    "accepts_offers"?: boolean,"artist"?: string | null,"created_at"?: string,"currency"?: string,"description"?: string | null,"discogs_release_id"?: number | null,"id"?: string,"media_condition"?: Database["public"]['Enums']["record_condition"] | null,"price_minor"?: number | null,"sleeve_condition"?: Database["public"]['Enums']["record_condition"] | null,"status"?: Database["public"]['Enums']["item_status"],"title"?: string,"type"?: Database["public"]['Enums']["item_type"],"updated_at"?: string,"user_id"?: string
+                    "accepts_offers"?: boolean,"artist"?: string | null,"created_at"?: string,"currency"?: string,"description"?: string | null,"discogs_release_id"?: number | null,"equipment_condition"?: Database["public"]['Enums']["equipment_condition"] | null,"format"?: string | null,"id"?: string,"media_condition"?: Database["public"]['Enums']["record_condition"] | null,"price_minor"?: number | null,"release_year"?: number | null,"sleeve_condition"?: Database["public"]['Enums']["record_condition"] | null,"status"?: Database["public"]['Enums']["item_status"],"title"?: string,"type"?: Database["public"]['Enums']["item_type"],"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     
@@ -168,7 +168,7 @@ isOneToOne: false
             [_ in never]: never
           }
           Enums: {
-            "connection_status": "connected"|"expired"|"revoked","item_status": "draft"|"active"|"sold"|"removed","item_type": "record"|"equipment","listing_status": "pending"|"published"|"error"|"paused"|"removed","marketplace": "ebay"|"discogs","offer_status": "pending"|"accepted"|"rejected"|"expired"|"withdrawn","record_condition": "M"|"NM"|"VG+"|"VG"|"G+"|"G"|"F"|"P"
+            "connection_status": "connected"|"expired"|"revoked","equipment_condition": "new"|"like_new"|"good"|"fair"|"for_parts","item_status": "draft"|"active"|"sold"|"removed","item_type": "record"|"equipment","listing_status": "pending"|"published"|"error"|"paused"|"removed","marketplace": "ebay"|"discogs","offer_status": "pending"|"accepted"|"rejected"|"expired"|"withdrawn","record_condition": "M"|"NM"|"VG+"|"VG"|"G+"|"G"|"F"|"P"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -288,7 +288,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "connection_status": ["connected", "expired", "revoked"],"item_status": ["draft", "active", "sold", "removed"],"item_type": ["record", "equipment"],"listing_status": ["pending", "published", "error", "paused", "removed"],"marketplace": ["ebay", "discogs"],"offer_status": ["pending", "accepted", "rejected", "expired", "withdrawn"],"record_condition": ["M", "NM", "VG+", "VG", "G+", "G", "F", "P"]
+            "connection_status": ["connected", "expired", "revoked"],"equipment_condition": ["new", "like_new", "good", "fair", "for_parts"],"item_status": ["draft", "active", "sold", "removed"],"item_type": ["record", "equipment"],"listing_status": ["pending", "published", "error", "paused", "removed"],"marketplace": ["ebay", "discogs"],"offer_status": ["pending", "accepted", "rejected", "expired", "withdrawn"],"record_condition": ["M", "NM", "VG+", "VG", "G+", "G", "F", "P"]
           }
         }
 } as const
