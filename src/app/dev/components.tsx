@@ -4,15 +4,18 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { Button } from '@/components/button';
+import { CheckRow } from '@/components/check-row';
 import { ChipGrid } from '@/components/chip-grid';
 import { FlowHeader } from '@/components/flow-header';
 import { ListRow } from '@/components/list-row';
 import { Notice } from '@/components/notice';
 import { PhotoGrid } from '@/components/photo-grid';
+import { PriceField } from '@/components/price-field';
 import { Screen } from '@/components/screen';
 import { ScreenMessage } from '@/components/screen-message';
 import { SegmentedControl } from '@/components/segmented-control';
 import { SummaryStrip } from '@/components/summary-strip';
+import { SwitchRow } from '@/components/switch-row';
 import { Tag } from '@/components/tag';
 import { TextField } from '@/components/text-field';
 import { TextTabs } from '@/components/text-tabs';
@@ -77,6 +80,8 @@ export default function ComponentGalleryScreen() {
   const [grade, setGrade] = useState<string | null>('VG+');
   const [equipmentCondition, setEquipmentCondition] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [price, setPrice] = useState('28,00');
+  const [ticked, setTicked] = useState(true);
   const [description, setDescription] = useState(
     'Primeira edição. Disco com marcas ligeiras, toca sem saltos.',
   );
@@ -124,6 +129,46 @@ export default function ComponentGalleryScreen() {
             body="Algo correu mal do nosso lado. Tenta de novo dentro de momentos."
             action={{ label: 'Tentar de novo', onPress: noAction }}
           />
+        </Section>
+
+        <Section label="PriceField">
+          <PriceField
+            label="Preço em EUR"
+            value={price}
+            onChangeText={setPrice}
+            currency="EUR"
+            placeholder="0,00"
+          />
+        </Section>
+
+        <Section label="SwitchRow">
+          <SwitchRow
+            title="Aceitar propostas"
+            meta="Os compradores podem propor outro preço"
+            value={ticked}
+            onValueChange={setTicked}
+          />
+        </Section>
+
+        <Section label="CheckRow · ticked, unticked, unavailable">
+          <View>
+            <CheckRow
+              title="Discogs"
+              meta="Comissão estimada 2,52 €"
+              checked={ticked}
+              onChange={setTicked}
+              trailing={<Tag label="Ligado" tone="success" />}
+            />
+            <CheckRow title="eBay" checked={false} onChange={noAction} />
+            <CheckRow
+              title="Discogs"
+              meta="Discogs só aceita discos que existam no seu catálogo."
+              checked={false}
+              disabled
+              onChange={noAction}
+              divider="none"
+            />
+          </View>
         </Section>
 
         <Section label="Notice">

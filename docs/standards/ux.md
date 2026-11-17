@@ -20,7 +20,7 @@ Empty, loading, error (with a way to retry), offline, and success.
 - Short sentences, in the user's voice. Buttons use a verb ("Publish", not "OK").
 - Errors say what happened and what to do next.
 - The app speaks European Portuguese (`pt-PT`), Spanish and English. No user-facing text is written in a screen: every string lives in `src/i18n/locales/`, in all three languages; `pt-PT` is the source.
-- Confirm before destructive actions or actions that involve money.
+- Confirm before actions that cannot be undone or that commit the seller to a sale: accepting an offer, removing a listing, deleting the account. Publishing is not one of them: the price step is the review, its button says exactly what happens ("Publicar em 2 plataformas"), and a listing can be removed afterwards.
 
 ## Visual identity (anti-generic rules)
 

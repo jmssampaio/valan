@@ -97,8 +97,18 @@ export const sampleItems: ListedItem[] = samples.map(toItem);
 // Items saved while the app runs. They are gone on the next launch, like the rest of the samples.
 const savedItems: ListedItem[] = [];
 
-export function rememberItem(item: ListedItem): void {
-  savedItems.unshift(item);
+export function findSavedItem(itemId: string): ListedItem | undefined {
+  return savedItems.find((item) => item.id === itemId);
+}
+
+/** Adds an item, or replaces the one with the same id: an id never names two items. */
+export function upsertItem(item: ListedItem): void {
+  const index = savedItems.findIndex(({ id }) => id === item.id);
+  if (index === -1) {
+    savedItems.unshift(item);
+  } else {
+    savedItems[index] = item;
+  }
 }
 
 /** The newest saved items first, then the samples. */

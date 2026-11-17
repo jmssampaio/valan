@@ -22,7 +22,7 @@ export default function NewListingLayout() {
  * button or swiping the sheet down. If the save fails the seller chooses what happens next.
  */
 function SaveDraftOnLeave() {
-  const { draft } = useListingDraft();
+  const { draft, publication } = useListingDraft();
   // True once the draft is saved or given up: leaving then goes ahead.
   const [released, setReleased] = useState(false);
   const saving = useRef(false);
@@ -50,7 +50,11 @@ function SaveDraftOnLeave() {
     }
   }
 
-  usePreventRemove(isWorthSaving(draft) && !released, ({ repeat }) => {
+  // Once a listing is sent, or on its way, the server has it: there is no draft left to save,
+  // and the seller can always leave. Its state shows in the listings.
+  const isSent = publication.status === 'publishing' || publication.status === 'done';
+
+  usePreventRemove(isWorthSaving(draft) && !released && !isSent, ({ repeat }) => {
     void saveThenLeave(repeat);
   });
 

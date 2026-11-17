@@ -4,11 +4,11 @@ import {
   canLeaveCondition,
   catalogueStep,
   draftItemFields,
-  emptyDraft,
   isWorthSaving,
   itemType,
   marketplaceReach,
   MAX_PHOTOS,
+  newDraft,
   removePhoto,
   withKind,
   withName,
@@ -31,6 +31,8 @@ const release: CatalogueRelease = {
   catalogueNumber: 'OD 1042',
 };
 
+const emptyDraft = newDraft('item-1');
+
 const named: ListingDraft = withName(emptyDraft, 'noites de lis');
 /** A record chosen from the catalogue. */
 const linked: ListingDraft = withRelease(named, release);
@@ -46,17 +48,20 @@ const discogs: MarketplaceInfo = {
   id: 'discogs',
   name: 'Discogs',
   capabilities: { itemTypes: ['record'], requiresCatalogueRelease: true },
+  feeRate: 0.09,
 };
 const ebay: MarketplaceInfo = {
   id: 'ebay',
   name: 'eBay',
   capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+  feeRate: 0.13,
 };
 /** A third marketplace, to prove nothing assumes there are only two. */
 const reverb: MarketplaceInfo = {
   id: 'reverb',
   name: 'Reverb',
   capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+  feeRate: 0.13,
 };
 
 function photos(count: number) {
@@ -64,6 +69,11 @@ function photos(count: number) {
 }
 
 describe('a new draft', () => {
+  it('carries the id of its item from the start', () => {
+    expect(newDraft('item-7').id).toBe('item-7');
+    expect(draftItemFields(withRelease(newDraft('item-7'), release)).id).toBe('item-7');
+  });
+
   it('starts with nothing filled in and no item type', () => {
     expect(emptyDraft).toMatchObject({ name: '', release: null, kind: null, photos: [], description: '' });
     expect(itemType(emptyDraft)).toBeNull();
@@ -185,7 +195,7 @@ describe('where a listing can go', () => {
   });
 
   it('leaves out a marketplace that does not list that kind of item, and says why', () => {
-    const recordsOnly = { id: 'vinylhub', name: 'VinylHub', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false } } as const;
+    const recordsOnly = { id: 'vinylhub', name: 'VinylHub', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false }, feeRate: 0.1 } as const;
 
     expect(reachOf(turntable, [recordsOnly, ebay])).toEqual([
       ['VinylHub', false, 'itemTypeNotListed'],
@@ -198,7 +208,7 @@ describe('where a listing can go', () => {
   });
 
   it('does not rule a marketplace out by kind before the kind is known', () => {
-    const recordsOnly = { id: 'vinylhub', name: 'VinylHub', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false } } as const;
+    const recordsOnly = { id: 'vinylhub', name: 'VinylHub', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false }, feeRate: 0.1 } as const;
 
     expect(reachOf(withoutCatalogue(named), [recordsOnly])).toEqual([['VinylHub', true, null]]);
   });
@@ -285,6 +295,7 @@ describe('saving a draft', () => {
     });
 
     expect(fields).toEqual({
+      id: 'item-1',
       type: 'record',
       title: 'Noites de Lisboa',
       artist: 'Os Marés',
@@ -295,6 +306,9 @@ describe('saving a draft', () => {
       sleeve_condition: 'VG',
       equipment_condition: null,
       description: 'First pressing.',
+      price_minor: null,
+      currency: 'EUR',
+      accepts_offers: false,
     });
   });
 
@@ -302,6 +316,7 @@ describe('saving a draft', () => {
     const fields = draftItemFields({ ...looseRecord, name: ' Noites de Lisboa (promo) ', mediaCondition: 'G+' });
 
     expect(fields).toEqual({
+      id: 'item-1',
       type: 'record',
       title: 'Noites de Lisboa (promo)',
       artist: null,
@@ -312,6 +327,9 @@ describe('saving a draft', () => {
       sleeve_condition: null,
       equipment_condition: null,
       description: null,
+      price_minor: null,
+      currency: 'EUR',
+      accepts_offers: false,
     });
   });
 
@@ -319,6 +337,7 @@ describe('saving a draft', () => {
     const fields = draftItemFields({ ...turntable, mediaCondition: 'VG+', equipmentCondition: 'good' });
 
     expect(fields).toEqual({
+      id: 'item-1',
       type: 'equipment',
       title: 'Gira-discos Aurora T-200',
       artist: null,
@@ -329,10 +348,25 @@ describe('saving a draft', () => {
       sleeve_condition: null,
       equipment_condition: 'good',
       description: null,
+      price_minor: null,
+      currency: 'EUR',
+      accepts_offers: false,
     });
   });
 
   it('never carries a status: the server decides it', () => {
     expect(draftItemFields(linked)).not.toHaveProperty('status');
+  });
+});
+
+describe('saving a priced draft', () => {
+  it('stores the price in cents and whether offers are accepted', () => {
+    const fields = draftItemFields({ ...linked, priceText: '28,50', acceptsOffers: true });
+
+    expect(fields).toMatchObject({ price_minor: 2850, currency: 'EUR', accepts_offers: true });
+  });
+
+  it('stores no price while what was typed is not one', () => {
+    expect(draftItemFields({ ...linked, priceText: 'abc' }).price_minor).toBeNull();
   });
 });
