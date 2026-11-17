@@ -6,15 +6,16 @@
 import type { TextStyle } from 'react-native';
 
 export const Colors = {
-  paper: '#F5EFE6',
+  paper: '#FFFFFF',
+  /** Slightly warm, so fields and cards still read against the white page. */
   surface: '#FBF8F3',
   ink: '#1E1A17',
   muted: '#6B6259',
-  /** Dividers only. Controls are edged with ink: this is too faint (1.4:1) to mark one. */
+  /** Dividers only. Controls are edged with ink: this is too faint (1.6:1) to mark one. */
   line: '#D8CEBF',
   accent: '#B4460F',
   onAccent: '#FFFFFF',
-  onInk: '#F5EFE6',
+  onInk: '#FFFFFF',
   success: '#2C6A3F',
   error: '#A12A1E',
   /** Ink at 15%: the edge that keeps a pale photo from bleeding into the paper. */
@@ -74,6 +75,9 @@ export const ControlHeight = {
 export const MaxFontScale = {
   tabLabel: 1.3,
 } as const;
+
+/** No text is drawn smaller than this, whatever shrinks it to fit (docs/standards/ux.md). */
+export const MinFontSize = 12;
 
 export const Opacity = {
   pressed: 0.7,
