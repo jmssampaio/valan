@@ -142,7 +142,9 @@ export const en: Translations = {
   'newListing.result.published.detail': 'Published a moment ago',
   'newListing.result.error': 'Error',
   'newListing.result.retrying': 'Publishing',
-  'newListing.result.reason.missingShippingPolicy': 'Your {name} account has no shipping policy set.',
+  'newListing.result.reason.missingShippingPolicy':
+    'Your {name} account has no shipping policy set. Set one on {name} and try again.',
+  'newListing.result.reason.unreachable': 'We could not reach {name}. Try again.',
   'newListing.result.reason.unknown': '{name} did not accept the listing. Try again.',
   'newListing.result.view': 'View listing',
   'newListing.result.another': 'Create another',

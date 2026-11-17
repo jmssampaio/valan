@@ -1,8 +1,7 @@
-import { emptyDraft, withKind, withName, withoutCatalogue, withRelease, type ListingDraft } from '../draft';
+import { emptyDraft, parsePrice, withKind, withName, withoutCatalogue, withRelease, type ListingDraft } from '../draft';
 import {
   canPublish,
   estimateFee,
-  parsePrice,
   publishOptions,
   publishSummary,
   toggledMarketplace,

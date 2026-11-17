@@ -1,7 +1,12 @@
-import { createContext, use, useState, type ReactNode } from 'react';
+import { createContext, use, useRef, useState, type ReactNode } from 'react';
 
 import { draftItemFields, emptyDraft, type ListingDraft } from '@/features/new-listing/draft';
-import { publishItem, retryListing, type PublishResult } from '@/services/publishing';
+import {
+  publishItem,
+  retryListing,
+  type ListingOutcome,
+  type PublishResult,
+} from '@/services/publishing';
 
 export type Publication =
   | { status: 'idle' }
@@ -34,40 +39,59 @@ const NewListingContext = createContext<NewListingContextValue | null>(null);
 export function ListingDraftProvider({ children }: { children: ReactNode }) {
   const [draft, setDraft] = useState(emptyDraft);
   const [publication, setPublication] = useState<Publication>({ status: 'idle' });
+  // What is on its way right now. Refs, because two presses can land before the next render
+  // and each must see what the other started.
+  const isPublishing = useRef(false);
+  const retriesInFlight = useRef(new Set<string>());
 
   function publish(marketplaces: readonly string[]) {
+    if (isPublishing.current) return;
+    isPublishing.current = true;
+
     setPublication({ status: 'publishing' });
     publishItem({ item: draftItemFields(draft), photos: draft.photos, marketplaces })
       .then((result) => setPublication({ status: 'done', result, retrying: [] }))
       // The result screen says nothing was published and offers to try again.
-      .catch(() => setPublication({ status: 'failed', marketplaces }));
+      .catch(() => setPublication({ status: 'failed', marketplaces }))
+      .finally(() => {
+        isPublishing.current = false;
+      });
   }
 
   function retry(marketplace: string) {
     if (publication.status !== 'done') return;
     const { itemId } = publication.result;
+    const key = `${itemId}:${marketplace}`;
+    if (retriesInFlight.current.has(key)) return;
+    retriesInFlight.current.add(key);
 
-    const settle = (outcome: PublishResult['listings'][number]) =>
+    type Done = Extract<Publication, { status: 'done' }>;
+    // Applied to the latest state, and only while it is still about this item: the answer
+    // may arrive after other retries, or after the seller has started another listing.
+    const update = (change: (current: Done) => Done) =>
       setPublication((current) =>
-        current.status !== 'done'
-          ? current
-          : {
-              ...current,
-              retrying: current.retrying.filter((id) => id !== marketplace),
-              result: {
-                ...current.result,
-                listings: current.result.listings.map((previous) =>
-                  previous.marketplace === marketplace ? outcome : previous,
-                ),
-              },
-            },
+        current.status === 'done' && current.result.itemId === itemId ? change(current) : current,
       );
 
-    setPublication({ ...publication, retrying: [...publication.retrying, marketplace] });
+    const settle = (outcome: ListingOutcome) => {
+      retriesInFlight.current.delete(key);
+      update((current) => ({
+        ...current,
+        retrying: current.retrying.filter((id) => id !== marketplace),
+        result: {
+          ...current.result,
+          listings: current.result.listings.map((previous) =>
+            previous.marketplace === marketplace ? outcome : previous,
+          ),
+        },
+      }));
+    };
+
+    update((current) => ({ ...current, retrying: [...current.retrying, marketplace] }));
     retryListing(itemId, marketplace)
       .then(settle)
-      // The marketplace stays in error, with words that fit any cause, and can be tried again.
-      .catch(() => settle({ marketplace, status: 'error', reason: 'unknown' }));
+      // The request did not get through, which is not the marketplace refusing the listing.
+      .catch(() => settle({ marketplace, status: 'error', reason: 'unreachable' }));
   }
 
   function startOver() {

@@ -26,7 +26,7 @@ export function PriceField({ label, value, onChangeText, currency, placeholder }
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={Colors.line}
+        placeholderTextColor={Colors.muted}
         selectionColor={Colors.accent}
         keyboardType="decimal-pad"
         maxLength={MAX_LENGTH}

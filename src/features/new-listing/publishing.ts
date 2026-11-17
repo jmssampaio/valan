@@ -4,8 +4,6 @@ import type { MarketplaceInfo } from '@/services/marketplaces';
 import type { ListingOutcome } from '@/services/publishing';
 import type { Tables } from '@/types/database';
 
-export { parsePrice };
-
 /** The seller's account on a marketplace, as far as the app may see it. */
 export type Connection = Pick<Tables<'platform_connections'>, 'marketplace' | 'status'>;
 

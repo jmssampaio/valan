@@ -26,10 +26,12 @@ import { useListingDraft } from '@/hooks/use-listing-draft';
 import { t } from '@/i18n';
 import { supportedMarketplaces } from '@/services/marketplaces';
 
+const STEP = 3;
+
 export default function NewListingPriceScreen() {
   const router = useRouter();
   const isOnline = useIsOnline();
-  const { draft, change, publish } = useListingDraft();
+  const { draft, change, publication, publish } = useListingDraft();
   const connections = useConnections();
 
   const options =
@@ -57,7 +59,7 @@ export default function NewListingPriceScreen() {
       scroll
       header={
         <FlowHeader
-          {...stepHeader(3)}
+          {...stepHeader(STEP)}
           leading={{
             label: t('common.back'),
             accessibilityLabel: t('common.back.spoken'),
@@ -74,7 +76,10 @@ export default function NewListingPriceScreen() {
           )}
           <Button
             label={publishLabel}
-            disabled={!isOnline || !canPublish(draft, options)}
+            // Off while a publish is on its way, so a second press cannot send it twice.
+            disabled={
+              !isOnline || publication.status === 'publishing' || !canPublish(draft, options)
+            }
             onPress={publishNow}
           />
         </>

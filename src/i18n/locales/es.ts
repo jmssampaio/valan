@@ -144,7 +144,9 @@ export const es: Translations = {
   'newListing.result.published.detail': 'Publicado hace un momento',
   'newListing.result.error': 'Error',
   'newListing.result.retrying': 'Publicando',
-  'newListing.result.reason.missingShippingPolicy': 'Falta definir la política de envío en tu cuenta de {name}.',
+  'newListing.result.reason.missingShippingPolicy':
+    'Falta definir la política de envío en tu cuenta de {name}. Defínela en {name} y vuelve a intentarlo.',
+  'newListing.result.reason.unreachable': 'No hemos podido llegar a {name}. Vuelve a intentarlo.',
   'newListing.result.reason.unknown': '{name} no ha aceptado el anuncio. Vuelve a intentarlo.',
   'newListing.result.view': 'Ver anuncio',
   'newListing.result.another': 'Crear otro',

@@ -5,7 +5,11 @@ import { rememberItem, replaceItemListings, USER_ID } from './sample-data';
 import type { Enums } from '@/types/database';
 
 /** Why a marketplace refused a listing, as a code the app has words for. */
-export type PublishFailure = 'missingShippingPolicy' | 'unknown';
+export type PublishFailure =
+  | 'missingShippingPolicy'
+  | 'unknown'
+  /** Set by the app, never by the server: the request did not reach the marketplace. */
+  | 'unreachable';
 
 export type ListingOutcome =
   | { marketplace: string; status: 'published' }

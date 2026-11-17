@@ -42,7 +42,12 @@ export function CheckRow({
       ]}>
       <View style={[styles.box, checked && styles.checked, disabled && styles.unavailable]}>
         {checked ? (
-          <AppText variant="tileLabel" color="onInk">
+          // The row already says "checked"; the mark is for the eye.
+          <AppText
+            variant="tileLabel"
+            color="onInk"
+            accessibilityElementsHidden
+            importantForAccessibility="no">
             {CHECK_MARK}
           </AppText>
         ) : null}

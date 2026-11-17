@@ -792,7 +792,7 @@ describe('new listing, step 4: result', () => {
     expect(screen.getByText('Os Marés · LP · VG+')).toBeOnTheScreen();
     expect(screen.getByText('28 €')).toBeOnTheScreen();
     expect(screen.getByText('Publicado há instantes')).toBeOnTheScreen();
-    expect(screen.getByText('Falta definir a política de envio na tua conta eBay.')).toBeOnTheScreen();
+    expect(screen.getByText(/Falta definir a política de envio na tua conta eBay. Define-a em eBay/)).toBeOnTheScreen();
     expect(screen.getByText('Erro')).toBeOnTheScreen();
   });
 
@@ -816,7 +816,7 @@ describe('new listing, step 4: result', () => {
 
     await fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
 
-    expect(await screen.findByText('eBay não aceitou o anúncio. Tenta de novo.')).toBeOnTheScreen();
+    expect(await screen.findByText('Não conseguimos chegar a eBay. Tenta de novo.')).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeEnabled();
   });
 

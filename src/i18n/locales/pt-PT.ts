@@ -142,7 +142,9 @@ export const ptPT = {
   'newListing.result.published.detail': 'Publicado há instantes',
   'newListing.result.error': 'Erro',
   'newListing.result.retrying': 'A publicar',
-  'newListing.result.reason.missingShippingPolicy': 'Falta definir a política de envio na tua conta {name}.',
+  'newListing.result.reason.missingShippingPolicy':
+    'Falta definir a política de envio na tua conta {name}. Define-a em {name} e tenta de novo.',
+  'newListing.result.reason.unreachable': 'Não conseguimos chegar a {name}. Tenta de novo.',
   'newListing.result.reason.unknown': '{name} não aceitou o anúncio. Tenta de novo.',
   'newListing.result.view': 'Ver anúncio',
   'newListing.result.another': 'Criar outro',
