@@ -59,14 +59,19 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:db": "supabase test db",
+    "test:integration": "jest --config jest.integration.config.js --runInBand",
     "test:functions": "cd supabase/functions && deno test"
   },
   "private": true,
   "jest": {
     "preset": "jest-expo",
+    "setupFiles": [
+      "<rootDir>/jest.setup.js"
+    ],
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "/supabase/"
+      "/supabase/",
+      "/__integration__/"
     ]
   }
 }

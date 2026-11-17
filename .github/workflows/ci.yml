@@ -25,8 +25,11 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
-      - run: npx supabase db start
+      # The whole local stack, not only the database: the integration tests sign real users in.
+      - run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,storage-api,supavisor,postgres-meta
       - run: npm run test:db
+      - name: Services against the local stack
+        run: npm run test:integration
       - name: Generated database types are up to date
         run: |
           npx supabase gen types typescript --local > src/types/database.ts

@@ -1,0 +1,19 @@
+<!-- The confirmation email for a new account. It carries a code to type in the app, not a
+     link, so confirming works the same on every device. The language comes from the
+     device the account was created on. -->
+{{ if eq .Data.language "pt-PT" }}
+<h2>O teu código Valan</h2>
+<p>Escreve este código na app para confirmares o teu email:</p>
+<p style="font-size: 28px; letter-spacing: 4px;"><strong>{{ .Token }}</strong></p>
+<p>O código é válido durante uma hora. Se não criaste uma conta na Valan, ignora este email.</p>
+{{ else if eq .Data.language "es" }}
+<h2>Tu código Valan</h2>
+<p>Escribe este código en la app para confirmar tu email:</p>
+<p style="font-size: 28px; letter-spacing: 4px;"><strong>{{ .Token }}</strong></p>
+<p>El código es válido durante una hora. Si no has creado una cuenta en Valan, ignora este email.</p>
+{{ else }}
+<h2>Your Valan code</h2>
+<p>Enter this code in the app to confirm your email:</p>
+<p style="font-size: 28px; letter-spacing: 4px;"><strong>{{ .Token }}</strong></p>
+<p>The code is valid for one hour. If you did not create a Valan account, ignore this email.</p>
+{{ end }}
