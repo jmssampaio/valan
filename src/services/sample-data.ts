@@ -111,9 +111,35 @@ export function upsertItem(item: ListedItem): void {
   }
 }
 
+// Changes made to the samples while the app runs: an item replaced, or deleted.
+const changedSamples = new Map<string, ListedItem>();
+const deletedSampleIds = new Set<string>();
+
+/** Replaces an item, whether it was saved while the app runs or is one of the samples. */
+export function replaceItem(item: ListedItem): void {
+  if (findSavedItem(item.id)) {
+    upsertItem(item);
+  } else {
+    changedSamples.set(item.id, item);
+  }
+}
+
+export function deleteItem(itemId: string): void {
+  const index = savedItems.findIndex(({ id }) => id === itemId);
+  if (index === -1) {
+    deletedSampleIds.add(itemId);
+  } else {
+    savedItems.splice(index, 1);
+  }
+}
+
 /** The newest saved items first, then the samples. */
 export function allItems(): ListedItem[] {
-  return [...savedItems, ...sampleItems];
+  // A sample saved again while the app runs is a saved item now: it takes the sample's place.
+  const samples = sampleItems
+    .filter(({ id }) => !deletedSampleIds.has(id) && !findSavedItem(id))
+    .map((item) => changedSamples.get(item.id) ?? item);
+  return [...savedItems, ...samples];
 }
 
 const offerStatuses: Enums<'offer_status'>[] = ['pending', 'pending', 'pending', 'accepted'];

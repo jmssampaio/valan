@@ -67,7 +67,7 @@ export function stepHeader(step: number) {
   };
 }
 
-type Carrier = 'vinyl' | 'cd' | 'cassette' | 'unknown';
+export type Carrier = 'vinyl' | 'cd' | 'cassette' | 'unknown';
 
 // Matched against the first part of the catalogue's format ("2×LP" in "2×LP, Album").
 const carrierPatterns: readonly [Carrier, RegExp][] = [
@@ -76,7 +76,7 @@ const carrierPatterns: readonly [Carrier, RegExp][] = [
   ['vinyl', /lp|vinyl|\d+"|\bep\b|single|flexi|shellac/i],
 ];
 
-function carrierOf(format: string | null): Carrier {
+export function carrierOf(format: string | null): Carrier {
   const main = format?.split(',')[0] ?? '';
   return carrierPatterns.find(([, pattern]) => pattern.test(main))?.[0] ?? 'unknown';
 }

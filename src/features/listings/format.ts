@@ -26,3 +26,11 @@ export function formatPrice(
 export function formatMonth(date: Date, language: Language = deviceLanguage): string {
   return new Intl.DateTimeFormat(localeByLanguage[language], { month: 'short' }).format(date);
 }
+
+export function formatDate(date: Date, language: Language = deviceLanguage): string {
+  return new Intl.DateTimeFormat(localeByLanguage[language], {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(date);
+}
