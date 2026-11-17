@@ -17,6 +17,8 @@ type ButtonSize = 'large' | 'small';
 
 export type ButtonProps = {
   label: string;
+  /** What a screen reader says when the label alone does not tell which one this is. */
+  accessibilityLabel?: string;
   onPress: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
@@ -34,6 +36,7 @@ const labelColor: Record<ButtonVariant, ThemeColor> = {
 
 export function Button({
   label,
+  accessibilityLabel,
   onPress,
   variant = 'primary',
   size = 'large',
@@ -42,6 +45,7 @@ export function Button({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}

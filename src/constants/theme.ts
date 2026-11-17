@@ -102,6 +102,8 @@ export const Type = {
   body: { fontFamily: Fonts.textRegular, fontSize: 16, lineHeight: 24 },
   /** The price on an item's own screen: the one figure the seller came to see. */
   heroPrice: { fontFamily: Fonts.display, fontSize: 40, lineHeight: 44, letterSpacing: -0.4 },
+  /** The offered price on an offer card: the one number the card is about. */
+  offerPrice: { fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, letterSpacing: -0.32 },
   summaryValue: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.28 },
   // Inter, not Fraunces: prices stacked in a list are compared digit by digit, so figures share a width.
   rowPrice: {

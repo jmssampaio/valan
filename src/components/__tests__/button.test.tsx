@@ -33,4 +33,12 @@ describe('Button', () => {
 
     expect(screen.getByText('Remover')).toHaveStyle({ color: Colors.error });
   });
+
+  it('can be named for what it acts on, so buttons with the same label can be told apart', async () => {
+    await render(
+      <Button label="Aceitar" accessibilityLabel="Aceitar a proposta de 24 €" onPress={jest.fn()} />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Aceitar a proposta de 24 €' })).toBeOnTheScreen();
+  });
 });
