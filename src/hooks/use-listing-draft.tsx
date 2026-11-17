@@ -37,8 +37,15 @@ type NewListingContextValue = {
 const NewListingContext = createContext<NewListingContextValue | null>(null);
 
 /** Holds the one draft every step of the new-listing flow shares, and what became of it. */
-export function ListingDraftProvider({ children }: { children: ReactNode }) {
-  const [draft, setDraft] = useState(() => newDraft(newItemId()));
+export function ListingDraftProvider({
+  initialDraft,
+  children,
+}: {
+  /** A draft to carry on with; without one the flow starts with an empty draft. */
+  initialDraft?: ListingDraft;
+  children: ReactNode;
+}) {
+  const [draft, setDraft] = useState(() => initialDraft ?? newDraft(newItemId()));
   const [publication, setPublication] = useState<Publication>({ status: 'idle' });
   // What is on its way right now. Refs, because two presses can land before the next render
   // and each must see what the other started.
