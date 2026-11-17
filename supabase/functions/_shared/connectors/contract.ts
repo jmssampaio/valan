@@ -88,6 +88,17 @@ export function testConnectorContract(name: string, makeHarness: () => ContractH
     assertEquals(new URL(published.url).protocol, 'https:');
   });
 
+  test('lists a record without a catalogue release unless it declares that it needs one', async (harness) => {
+    const { discogsReleaseId: _release, ...withoutRelease } = harness.supportedListing;
+    const publish = () => harness.connector.publish(harness.credentials, withoutRelease);
+
+    if (harness.connector.capabilities.requiresCatalogueRelease) {
+      await assertConnectorError(publish, 'unsupported');
+    } else {
+      assert((await publish()).externalId.length > 0);
+    }
+  });
+
   test('rejects an item type it does not support', async (harness) => {
     const unsupported = harness.unsupportedListing;
     if (unsupported === null) return;

@@ -4,11 +4,16 @@ import {
   gradeDetail,
   gradeOptions,
   mediaConditionLabel,
+  reachedNames,
+  reachNotice,
   releaseDetail,
   releaseLabel,
 } from '../labels';
 
+import type { MarketplaceReach } from '../draft';
+
 import type { CatalogueRelease } from '@/services/catalogue';
+import type { MarketplaceInfo } from '@/services/marketplaces';
 
 // The device language is a system boundary: fix it so labels are predictable.
 jest.mock('expo-localization', () => ({
@@ -96,5 +101,66 @@ describe('mediaConditionLabel', () => {
   it('speaks of the medium when the format is unknown or not one of the three', () => {
     expect(mediaConditionLabel(null)).toBe('Estado do suporte');
     expect(mediaConditionLabel('Reel-To-Reel')).toBe('Estado do suporte');
+  });
+});
+
+describe('what the seller is told about where the listing goes', () => {
+  const info = (name: string): MarketplaceInfo => ({
+    id: name.toLowerCase(),
+    name,
+    capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+  });
+  const open = (name: string): MarketplaceReach => ({ marketplace: info(name), available: true, reason: null });
+  const shut = (name: string, reason: MarketplaceReach['reason'] = 'noCatalogueRelease'): MarketplaceReach => ({
+    marketplace: info(name),
+    available: false,
+    reason,
+  });
+
+  it('is nothing when every marketplace is reached', () => {
+    expect(reachNotice([open('Discogs'), open('eBay')], 'declined')).toBeNull();
+  });
+
+  it('says "only" the one marketplace that is left', () => {
+    const notice = reachNotice([shut('Discogs'), open('eBay')], 'declined');
+
+    expect(notice).toEqual({
+      tag: 'Só eBay',
+      title: 'Este anúncio não é publicado em Discogs',
+      body: 'Discogs só aceita discos que existam no seu catálogo. O anúncio é publicado em eBay com o nome que escreveste.',
+    });
+  });
+
+  it('says "without" the excluded marketplace when two or more are left', () => {
+    const notice = reachNotice([shut('Discogs'), open('eBay'), open('Reverb')], 'none');
+
+    expect(notice).toEqual({
+      tag: 'Sem Discogs',
+      title: 'Este anúncio não é publicado em Discogs',
+      body: 'Discogs só aceita discos que existam no seu catálogo. O anúncio é publicado em eBay, Reverb com o nome que escreveste.',
+    });
+  });
+
+  it('gives each excluded marketplace its own reason', () => {
+    const notice = reachNotice(
+      [shut('Discogs'), shut('VinylHub', 'itemTypeNotListed'), open('eBay'), open('Reverb')],
+      'none',
+    );
+
+    expect(notice?.tag).toBe('Sem Discogs, VinylHub');
+    expect(notice?.body).toContain('Discogs só aceita discos que existam no seu catálogo.');
+    expect(notice?.body).toContain('VinylHub não aceita este tipo de artigo.');
+  });
+
+  it('offers another search when the catalogue could not be reached', () => {
+    const notice = reachNotice([shut('Discogs'), open('eBay')], 'failed');
+
+    expect(notice?.body).toBe(
+      'Sem a edição do catálogo, o anúncio só pode ir para eBay. Procura de novo para o publicares também em Discogs, ou continua assim.',
+    );
+  });
+
+  it('lists every marketplace the listing reaches in the footer', () => {
+    expect(reachedNames([shut('Discogs'), open('eBay'), open('Reverb')])).toEqual(['eBay', 'Reverb']);
   });
 });

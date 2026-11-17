@@ -5,6 +5,7 @@ import { Alert } from 'react-native';
 import { searchReleases, type CatalogueRelease } from '@/services/catalogue';
 import { saveDraft } from '@/services/drafts';
 import { listItems } from '@/services/listings';
+import { supportedMarketplaces, type MarketplaceInfo } from '@/services/marketplaces';
 import { countPendingOffers } from '@/services/offers';
 import { pickPhotos, takePhoto } from '@/services/photo-picker';
 import { listSales } from '@/services/sales';
@@ -18,6 +19,7 @@ jest.mock('@/services/catalogue');
 jest.mock('@/services/drafts');
 jest.mock('@/services/photo-picker');
 jest.mock('@/services/listings');
+jest.mock('@/services/marketplaces');
 jest.mock('@/services/offers');
 jest.mock('@/services/sales');
 
@@ -41,6 +43,23 @@ const reissue: CatalogueRelease = {
   year: 1994,
   country: 'Europa',
   catalogueNumber: 'OD 2210',
+};
+
+const discogs: MarketplaceInfo = {
+  id: 'discogs',
+  name: 'Discogs',
+  capabilities: { itemTypes: ['record'], requiresCatalogueRelease: true },
+};
+const ebay: MarketplaceInfo = {
+  id: 'ebay',
+  name: 'eBay',
+  capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+};
+/** A third marketplace that lists both kinds of item, to prove the texts are not written for two. */
+const reverb: MarketplaceInfo = {
+  id: 'reverb',
+  name: 'Reverb',
+  capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
 };
 
 const alert = jest.spyOn(Alert, 'alert');
@@ -85,6 +104,7 @@ async function reachConditionWithAnotherItem() {
 beforeEach(() => {
   jest.clearAllMocks();
   setOnline(true);
+  jest.mocked(supportedMarketplaces).mockReturnValue([discogs, ebay]);
   jest.mocked(searchReleases).mockResolvedValue([firstPressing, reissue]);
   jest.mocked(saveDraft).mockResolvedValue({ id: 'draft-1' });
   jest.mocked(listItems).mockResolvedValue([]);
@@ -114,7 +134,7 @@ describe('new listing, step 1: what are you selling', () => {
     await typeName('n');
 
     expect(
-      screen.getByText('Se for um disco, escolhe a tua edição para publicar também no Discogs.'),
+      screen.getByText('Se for um disco, escolhe a tua edição para publicar também em Discogs.'),
     ).toBeOnTheScreen();
     expect(searchReleases).not.toHaveBeenCalled();
   });
@@ -147,7 +167,7 @@ describe('new listing, step 1: what are you selling', () => {
 
     expect(screen.getByRole('button', { name: /1994/ })).toBeSelected();
     expect(screen.getByLabelText('Publica em: Discogs, eBay')).toBeOnTheScreen();
-    expect(screen.queryByText('Este anúncio não vai para o Discogs')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Este anúncio não é publicado em Discogs')).not.toBeOnTheScreen();
     expect(screen.queryByRole('radio')).not.toBeOnTheScreen();
     expect(continueButton()).toBeEnabled();
   });
@@ -171,8 +191,8 @@ describe('new listing, step 1: what are you selling', () => {
 
     await fireEvent.press(await screen.findByRole('button', { name: /Não é nenhuma destas/ }));
 
-    expect(screen.getByText('Este anúncio não vai para o Discogs')).toBeOnTheScreen();
-    expect(screen.getByText(/O Discogs só aceita discos que existam no seu catálogo/)).toBeOnTheScreen();
+    expect(screen.getByText('Este anúncio não é publicado em Discogs')).toBeOnTheScreen();
+    expect(screen.getByText(/Discogs só aceita discos que existam no seu catálogo/)).toBeOnTheScreen();
     expect(screen.getByLabelText('Publica em: eBay')).toBeOnTheScreen();
   });
 
@@ -197,7 +217,7 @@ describe('new listing, step 1: what are you selling', () => {
 
     await fireEvent.press(screen.getByRole('button', { name: /1978/ }));
 
-    expect(screen.queryByText('Este anúncio não vai para o Discogs')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Este anúncio não é publicado em Discogs')).not.toBeOnTheScreen();
     expect(screen.getByLabelText('Publica em: Discogs, eBay')).toBeOnTheScreen();
   });
 
@@ -208,12 +228,70 @@ describe('new listing, step 1: what are you selling', () => {
     await typeName('Gira-discos Aurora T-200');
 
     expect(await screen.findByText('Nenhuma edição encontrada com este nome.')).toBeOnTheScreen();
-    expect(screen.getByText('Este anúncio não vai para o Discogs')).toBeOnTheScreen();
+    expect(screen.getByText('Este anúncio não é publicado em Discogs')).toBeOnTheScreen();
     expect(screen.getByLabelText('Publica em: eBay')).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('radio', { name: 'Outro artigo' }));
 
     expect(continueButton()).toBeEnabled();
+  });
+
+  it('says "only" the marketplace that is left when there is just one', async () => {
+    jest.mocked(searchReleases).mockResolvedValue([]);
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+
+    await typeName('Gira-discos Aurora T-200');
+
+    expect(await screen.findByText('Só eBay')).toBeOnTheScreen();
+  });
+
+  describe('with a third marketplace that lists both kinds of item', () => {
+    beforeEach(() => {
+      jest.mocked(supportedMarketplaces).mockReturnValue([discogs, ebay, reverb]);
+    });
+
+    it('says which marketplace is left out and lists the ones that apply', async () => {
+      jest.mocked(searchReleases).mockResolvedValue([]);
+      await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+
+      await typeName('Gira-discos Aurora T-200');
+
+      expect(await screen.findByText('Sem Discogs')).toBeOnTheScreen();
+      expect(screen.queryByText(/^Só /)).not.toBeOnTheScreen();
+      expect(screen.getByText('Este anúncio não é publicado em Discogs')).toBeOnTheScreen();
+      expect(
+        screen.getByText(/O anúncio é publicado em eBay, Reverb com o nome que escreveste/),
+      ).toBeOnTheScreen();
+      expect(screen.getByLabelText('Publica em: eBay, Reverb')).toBeOnTheScreen();
+    });
+
+    it('lists all three for a record chosen from the catalogue, with no notice', async () => {
+      await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+      await typeName('noites');
+
+      await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
+
+      expect(screen.getByLabelText('Publica em: Discogs, eBay, Reverb')).toBeOnTheScreen();
+      expect(screen.queryByText(/não é publicado em/)).not.toBeOnTheScreen();
+    });
+  });
+
+  it('names the marketplace that needs the catalogue from its capabilities', async () => {
+    jest.mocked(supportedMarketplaces).mockReturnValue([
+      { ...discogs, id: 'vinylhub', name: 'VinylHub' },
+      ebay,
+    ]);
+    jest.mocked(searchReleases).mockResolvedValue([]);
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+
+    expect(
+      screen.getByText('Se for um disco, escolhe a tua edição para publicar também em VinylHub.'),
+    ).toBeOnTheScreen();
+
+    await typeName('Gira-discos Aurora T-200');
+
+    expect(await screen.findByText('Este anúncio não é publicado em VinylHub')).toBeOnTheScreen();
+    expect(screen.queryByText(/Discogs só aceita/)).not.toBeOnTheScreen();
   });
 
   it('never blocks: a failed search still lets the seller continue without the catalogue', async () => {
@@ -223,7 +301,7 @@ describe('new listing, step 1: what are you selling', () => {
     await typeName('noites');
 
     expect(await screen.findByText('Não conseguimos procurar no catálogo Discogs.')).toBeOnTheScreen();
-    expect(screen.getByText(/Sem a edição do catálogo, o anúncio só pode ir para o eBay/)).toBeOnTheScreen();
+    expect(screen.getByText(/Sem a edição do catálogo, o anúncio só pode ir para eBay/)).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('radio', { name: 'Disco, CD ou cassete' }));
 
@@ -239,7 +317,7 @@ describe('new listing, step 1: what are you selling', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
 
     expect(await screen.findByText('Os Marés · LP, Album · 1978 · Portugal')).toBeOnTheScreen();
-    expect(screen.queryByText('Este anúncio não vai para o Discogs')).not.toBeOnTheScreen();
+    expect(screen.queryByText('Este anúncio não é publicado em Discogs')).not.toBeOnTheScreen();
   });
 
   it('says the device is offline when a search fails without a connection, and still continues', async () => {

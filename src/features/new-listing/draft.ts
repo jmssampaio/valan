@@ -1,5 +1,6 @@
 import type { CatalogueRelease } from '@/services/catalogue';
 import type { DraftItemFields } from '@/services/drafts';
+import type { MarketplaceInfo } from '@/services/marketplaces';
 import type { Enums } from '@/types/database';
 
 export const MAX_PHOTOS = 8;
@@ -102,24 +103,38 @@ export function canLeaveCatalogue(draft: ListingDraft, search: CatalogueSearchOu
 }
 
 export type MarketplaceReach = {
-  marketplace: Enums<'marketplace'>;
+  marketplace: MarketplaceInfo;
   available: boolean;
   /** Why the listing cannot go there; the app always says so. */
-  reason: 'noCatalogueRelease' | null;
+  reason: 'noCatalogueRelease' | 'itemTypeNotListed' | null;
 };
 
-/**
- * Where this listing can be published. A marketplace's requirements may leave it out,
- * but they never stop the seller from listing on the others.
- */
-export function marketplaceReach(draft: ListingDraft): MarketplaceReach[] {
-  const inCatalogue = draft.release !== null;
+function exclusionReason(
+  draft: ListingDraft,
+  { capabilities }: MarketplaceInfo,
+): MarketplaceReach['reason'] {
+  if (capabilities.requiresCatalogueRelease && draft.release === null) return 'noCatalogueRelease';
 
-  return [
-    // Discogs lists only records that exist in its catalogue.
-    { marketplace: 'discogs', available: inCatalogue, reason: inCatalogue ? null : 'noCatalogueRelease' },
-    { marketplace: 'ebay', available: true, reason: null },
-  ];
+  // Until the seller says what the item is, its kind rules nothing out.
+  const type = itemType(draft);
+  if (type !== null && !capabilities.itemTypes.includes(type)) return 'itemTypeNotListed';
+
+  return null;
+}
+
+/**
+ * Where this listing can be published, from what each marketplace declares it can list.
+ * A marketplace's requirements may leave it out, but they never stop the seller from
+ * listing on the others.
+ */
+export function marketplaceReach(
+  draft: ListingDraft,
+  marketplaces: readonly MarketplaceInfo[],
+): MarketplaceReach[] {
+  return marketplaces.map((marketplace) => {
+    const reason = exclusionReason(draft, marketplace);
+    return { marketplace, available: reason === null, reason };
+  });
 }
 
 /** A record can be sold without its sleeve, so only the condition of the item itself is needed. */

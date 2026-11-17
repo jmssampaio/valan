@@ -21,10 +21,10 @@ import {
   withRelease,
   type CatalogueSearchOutcome,
   type CatalogueStep,
-  type ListingDraft,
 } from '@/features/new-listing/draft';
 import {
-  marketplaceName,
+  reachedNames,
+  reachNotice,
   releaseDetail,
   releaseLabel,
   stepHeader,
@@ -33,7 +33,10 @@ import { useCatalogueSearch, type CatalogueSearch } from '@/hooks/use-catalogue-
 import { useIsOnline } from '@/hooks/use-is-online';
 import { useListingDraft } from '@/hooks/use-listing-draft';
 import { t } from '@/i18n';
-import type { CatalogueRelease } from '@/services/catalogue';
+import { CATALOGUE_NAME, type CatalogueRelease } from '@/services/catalogue';
+import { supportedMarketplaces } from '@/services/marketplaces';
+
+const NAME_SEPARATOR = ', ';
 
 function outcomeOf(search: CatalogueSearch): CatalogueSearchOutcome {
   if (search.status !== 'ready') return search.status;
@@ -48,6 +51,16 @@ export default function NewListingCatalogueScreen() {
   const outcome = outcomeOf(search);
   const step = catalogueStep(draft, outcome);
   const isDecided = step.state === 'linked' || step.state === 'unlinked';
+
+  // Every marketplace name and reason below comes from what the marketplaces declare.
+  const marketplaces = supportedMarketplaces();
+  const reach = marketplaceReach(draft, marketplaces);
+  const notice = isDecided
+    ? reachNotice(reach, step.state === 'linked' ? 'linked' : step.why)
+    : null;
+  const needCatalogue = marketplaces
+    .filter(({ capabilities }) => capabilities.requiresCatalogueRelease)
+    .map(({ name }) => name);
 
   return (
     <Screen
@@ -64,7 +77,7 @@ export default function NewListingCatalogueScreen() {
       }
       footer={
         <>
-          {isDecided ? <PublishesOn draft={draft} /> : null}
+          {isDecided ? <PublishesOn names={reachedNames(reach)} /> : null}
           <Button
             label={t('common.continue')}
             disabled={!canLeaveCatalogue(draft, outcome)}
@@ -89,18 +102,13 @@ export default function NewListingCatalogueScreen() {
           step={step}
           selected={draft.release}
           isOnline={isOnline}
+          needCatalogue={needCatalogue}
           onSelect={(release) => change((current) => withRelease(current, release))}
           onDecline={() => change(withoutCatalogue)}
         />
+        {notice ? <Notice tag={notice.tag} title={notice.title} body={notice.body} /> : null}
         {step.state === 'unlinked' ? (
           <>
-            <Notice
-              tag={t('newListing.ebayOnly.tag')}
-              title={t('newListing.ebayOnly.title')}
-              body={t(
-                step.why === 'failed' ? 'newListing.ebayOnly.body.failed' : 'newListing.ebayOnly.body',
-              )}
-            />
             <View style={styles.question}>
               <AppText variant="caption" color="muted">
                 {t('newListing.kind.label')}
@@ -126,15 +134,13 @@ export default function NewListingCatalogueScreen() {
 }
 
 /** The marketplaces this listing can reach, so a limit is never a surprise at the last step. */
-function PublishesOn({ draft }: { draft: ListingDraft }) {
-  const names = marketplaceReach(draft)
-    .filter((reach) => reach.available)
-    .map((reach) => marketplaceName(reach.marketplace));
+function PublishesOn({ names }: { names: readonly string[] }) {
+  if (names.length === 0) return null;
 
   return (
     <View
       accessible
-      accessibilityLabel={`${t('newListing.publishesOn')}: ${names.join(', ')}`}
+      accessibilityLabel={`${t('newListing.publishesOn')}: ${names.join(NAME_SEPARATOR)}`}
       style={styles.publishesOn}>
       <AppText variant="caption" color="muted">
         {t('newListing.publishesOn')}
@@ -151,6 +157,7 @@ function Editions({
   step,
   selected,
   isOnline,
+  needCatalogue,
   onSelect,
   onDecline,
 }: {
@@ -158,6 +165,8 @@ function Editions({
   step: CatalogueStep;
   selected: CatalogueRelease | null;
   isOnline: boolean;
+  /** The marketplaces that list only catalogue editions: what choosing one gains. */
+  needCatalogue: readonly string[];
   onSelect: (release: CatalogueRelease) => void;
   onDecline: () => void;
 }) {
@@ -173,14 +182,20 @@ function Editions({
   return (
     <View>
       <AppText variant="caption" color="muted">
-        {t('newListing.catalogue.heading')}
+        {t('newListing.catalogue.heading', { catalogue: CATALOGUE_NAME })}
       </AppText>
       <AppText variant="rowMeta" color="muted" style={styles.status}>
         {failed
-          ? t(isOnline ? 'newListing.catalogue.error' : 'newListing.catalogue.offline')
+          ? t(isOnline ? 'newListing.catalogue.error' : 'newListing.catalogue.offline', {
+              catalogue: CATALOGUE_NAME,
+            })
           : search.status === 'ready' && found.length === 0
             ? t('newListing.catalogue.none')
-            : t('newListing.catalogue.hint')}
+            : needCatalogue.length > 0
+              ? t('newListing.catalogue.hint', {
+                  marketplaces: needCatalogue.join(NAME_SEPARATOR),
+                })
+              : t('newListing.catalogue.hint.plain')}
       </AppText>
       {failed ? (
         <View style={styles.retry}>
@@ -190,7 +205,7 @@ function Editions({
       {search.status === 'loading' ? (
         <View style={styles.searching}>
           <ActivityIndicator
-            accessibilityLabel={t('newListing.catalogue.loading')}
+            accessibilityLabel={t('newListing.catalogue.loading', { catalogue: CATALOGUE_NAME })}
             color={Colors.ink}
           />
         </View>

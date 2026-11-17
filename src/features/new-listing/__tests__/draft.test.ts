@@ -18,6 +18,7 @@ import {
 } from '../draft';
 
 import type { CatalogueRelease } from '@/services/catalogue';
+import type { MarketplaceInfo } from '@/services/marketplaces';
 
 const release: CatalogueRelease = {
   id: 249504,
@@ -40,6 +41,23 @@ const turntable: ListingDraft = withKind(
   withoutCatalogue(withName(emptyDraft, 'Gira-discos Aurora T-200')),
   'equipment',
 );
+
+const discogs: MarketplaceInfo = {
+  id: 'discogs',
+  name: 'Discogs',
+  capabilities: { itemTypes: ['record'], requiresCatalogueRelease: true },
+};
+const ebay: MarketplaceInfo = {
+  id: 'ebay',
+  name: 'eBay',
+  capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+};
+/** A third marketplace, to prove nothing assumes there are only two. */
+const reverb: MarketplaceInfo = {
+  id: 'reverb',
+  name: 'Reverb',
+  capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+};
 
 function photos(count: number) {
   return Array.from({ length: count }, (_, index) => ({ uri: `file:///photo-${index + 1}.jpg` }));
@@ -145,19 +163,52 @@ describe('leaving the catalogue step', () => {
 });
 
 describe('where a listing can go', () => {
-  it('reaches Discogs and eBay with a catalogue edition', () => {
-    expect(marketplaceReach(linked)).toEqual([
-      { marketplace: 'discogs', available: true, reason: null },
-      { marketplace: 'ebay', available: true, reason: null },
+  const reachOf = (draft: ListingDraft, marketplaces = [discogs, ebay]) =>
+    marketplaceReach(draft, marketplaces).map(({ marketplace, available, reason }) => [
+      marketplace.name,
+      available,
+      reason,
+    ]);
+
+  it('reaches every marketplace with a catalogue edition', () => {
+    expect(reachOf(linked)).toEqual([
+      ['Discogs', true, null],
+      ['eBay', true, null],
     ]);
   });
 
-  it('still reaches eBay without one, and says why Discogs is left out', () => {
-    expect(marketplaceReach(looseRecord)).toEqual([
-      { marketplace: 'discogs', available: false, reason: 'noCatalogueRelease' },
-      { marketplace: 'ebay', available: true, reason: null },
+  it('leaves out a marketplace that needs a catalogue edition, and says why', () => {
+    expect(reachOf(looseRecord)).toEqual([
+      ['Discogs', false, 'noCatalogueRelease'],
+      ['eBay', true, null],
     ]);
-    expect(marketplaceReach(turntable)).toEqual(marketplaceReach(looseRecord));
+  });
+
+  it('leaves out a marketplace that does not list that kind of item, and says why', () => {
+    const recordsOnly = { id: 'vinylhub', name: 'VinylHub', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false } } as const;
+
+    expect(reachOf(turntable, [recordsOnly, ebay])).toEqual([
+      ['VinylHub', false, 'itemTypeNotListed'],
+      ['eBay', true, null],
+    ]);
+    expect(reachOf(looseRecord, [recordsOnly, ebay])).toEqual([
+      ['VinylHub', true, null],
+      ['eBay', true, null],
+    ]);
+  });
+
+  it('does not rule a marketplace out by kind before the kind is known', () => {
+    const recordsOnly = { id: 'vinylhub', name: 'VinylHub', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false } } as const;
+
+    expect(reachOf(withoutCatalogue(named), [recordsOnly])).toEqual([['VinylHub', true, null]]);
+  });
+
+  it('adapts to a third marketplace that lists both kinds of item', () => {
+    expect(reachOf(turntable, [discogs, ebay, reverb])).toEqual([
+      ['Discogs', false, 'noCatalogueRelease'],
+      ['eBay', true, null],
+      ['Reverb', true, null],
+    ]);
   });
 });
 

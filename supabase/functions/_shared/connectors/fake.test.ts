@@ -64,11 +64,11 @@ function makeHarness(options: FakeConnectorOptions): ContractHarness & { connect
 
 const everything: FakeConnectorOptions = {
   marketplace: 'ebay',
-  capabilities: { itemTypes: ['record', 'equipment'], respondToOffers: true },
+  capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false, respondToOffers: true },
 };
 const recordsOnlyNoOfferResponses: FakeConnectorOptions = {
   marketplace: 'discogs',
-  capabilities: { itemTypes: ['record'], respondToOffers: false },
+  capabilities: { itemTypes: ['record'], requiresCatalogueRelease: true, respondToOffers: false },
 };
 
 testConnectorContract('fake connector that supports everything', () => makeHarness(everything));

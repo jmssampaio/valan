@@ -14,6 +14,9 @@ export type CatalogueRelease = {
   catalogueNumber: string | null;
 };
 
+/** Whose catalogue this is. Shown to the seller, so the screens never write the name themselves. */
+export const CATALOGUE_NAME = 'Discogs';
+
 /** A single letter matches half the catalogue, so a search starts at two. */
 export const MIN_QUERY_LENGTH = 2;
 

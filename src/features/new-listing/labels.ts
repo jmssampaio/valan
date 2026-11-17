@@ -1,5 +1,7 @@
 import type { ChoiceOption } from '@/components/segmented-control';
 import { t } from '@/i18n';
+import type { MarketplaceReach } from './draft';
+
 import type { CatalogueRelease } from '@/services/catalogue';
 import type { Enums } from '@/types/database';
 
@@ -65,16 +67,6 @@ export function stepHeader(step: number) {
   };
 }
 
-const marketplaceNames: Record<Enums<'marketplace'>, string> = {
-  discogs: 'Discogs',
-  ebay: 'eBay',
-};
-
-/** Brand names: the same in every language. */
-export function marketplaceName(marketplace: Enums<'marketplace'>): string {
-  return marketplaceNames[marketplace];
-}
-
 type Carrier = 'vinyl' | 'cd' | 'cassette' | 'unknown';
 
 // Matched against the first part of the catalogue's format ("2×LP" in "2×LP, Album").
@@ -95,4 +87,64 @@ function carrierOf(format: string | null): Carrier {
  */
 export function mediaConditionLabel(format: string | null): string {
   return t(`newListing.condition.media.${carrierOf(format)}`);
+}
+
+const NAME_SEPARATOR = ', ';
+
+function namesOf(reach: readonly MarketplaceReach[]): string {
+  return reach.map(({ marketplace }) => marketplace.name).join(NAME_SEPARATOR);
+}
+
+/** The marketplaces the listing reaches, in the order the app lists them. */
+export function reachedNames(reach: readonly MarketplaceReach[]): string[] {
+  return reach.filter(({ available }) => available).map(({ marketplace }) => marketplace.name);
+}
+
+export type ReachNotice = {
+  tag: string;
+  title: string;
+  body: string;
+};
+
+/**
+ * What to tell the seller when some marketplace is left out: which, why, and where the
+ * listing still goes. Null when it reaches them all. The names come from the marketplaces
+ * themselves, so the words follow whatever marketplaces the app supports.
+ *
+ * `why` is how the listing came to be without a catalogue edition, or 'linked' when it has one.
+ */
+export function reachNotice(
+  reach: readonly MarketplaceReach[],
+  why: 'linked' | 'declined' | 'none' | 'failed',
+): ReachNotice | null {
+  const excluded = reach.filter(({ available }) => !available);
+  if (excluded.length === 0) return null;
+
+  const reached = reachedNames(reach);
+  const names = reached.join(NAME_SEPARATOR);
+  const excludedNames = namesOf(excluded);
+
+  const tag =
+    reached.length === 1
+      ? t('newListing.reach.only', { name: names })
+      : t('newListing.reach.without', { names: excludedNames });
+
+  return { tag, title: t('newListing.reach.title', { names: excludedNames }), body: body() };
+
+  function body(): string {
+    if (reached.length === 0) return [...reasons(), t('newListing.reach.nowhere')].join(' ');
+    // The search may work on another try, so the seller is told that before the reasons.
+    if (why === 'failed') return t('newListing.reach.failed', { names, excluded: excludedNames });
+
+    const goes = t(why === 'linked' ? 'newListing.reach.goes.linked' : 'newListing.reach.goes', {
+      names,
+    });
+    return [...reasons(), goes].join(' ');
+  }
+
+  function reasons(): string[] {
+    return excluded.flatMap(({ marketplace, reason }) =>
+      reason === null ? [] : [t(`newListing.reach.reason.${reason}`, { name: marketplace.name })],
+    );
+  }
 }
