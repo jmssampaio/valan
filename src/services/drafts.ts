@@ -17,6 +17,9 @@ export type DraftItemFields = Required<
     | 'sleeve_condition'
     | 'equipment_condition'
     | 'description'
+    | 'price_minor'
+    | 'currency'
+    | 'accepts_offers'
   >
 >;
 
@@ -39,9 +42,6 @@ export async function saveDraft({ item, photos }: DraftToSave): Promise<{ id: st
     ...item,
     id,
     user_id: USER_ID,
-    price_minor: null,
-    currency: 'EUR',
-    accepts_offers: false,
     status: 'draft',
     created_at: now,
     updated_at: now,

@@ -12,6 +12,8 @@ export type MarketplaceInfo = {
   /** The brand name: the same in every language. */
   name: string;
   capabilities: MarketplaceCapabilities;
+  /** The share of the price the marketplace keeps, for the estimate shown before publishing. */
+  feeRate: number;
 };
 
 // Written out here until an Edge Function reports what each connector declares;
@@ -21,11 +23,13 @@ const marketplaces: readonly MarketplaceInfo[] = [
     id: 'discogs',
     name: 'Discogs',
     capabilities: { itemTypes: ['record'], requiresCatalogueRelease: true },
+    feeRate: 0.09,
   },
   {
     id: 'ebay',
     name: 'eBay',
     capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+    feeRate: 0.13,
   },
 ];
 

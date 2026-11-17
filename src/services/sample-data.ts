@@ -101,6 +101,16 @@ export function rememberItem(item: ListedItem): void {
   savedItems.unshift(item);
 }
 
+/** Updates a saved item after one of its listings was tried again. */
+export function replaceItemListings(itemId: string, listings: ListingSummary[]): void {
+  const index = savedItems.findIndex((item) => item.id === itemId);
+  if (index === -1) return;
+
+  const item = savedItems[index];
+  const isListed = listings.some(({ status }) => status === 'published');
+  savedItems[index] = { ...item, listings, status: isListed ? 'active' : item.status };
+}
+
 /** The newest saved items first, then the samples. */
 export function allItems(): ListedItem[] {
   return [...savedItems, ...sampleItems];

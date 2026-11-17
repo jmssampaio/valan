@@ -5,6 +5,25 @@ import type { Enums } from '@/types/database';
 
 export const MAX_PHOTOS = 8;
 
+// The seller's own currency comes with the profile; until then every price is in euros.
+export const DEFAULT_CURRENCY = 'EUR';
+
+// Above this a price is a typing mistake, and it would not fit the database column.
+const MAX_PRICE_MINOR = 99_999_999;
+
+/**
+ * Reads a typed price as minor units (cents): digits with at most two decimals, after a
+ * comma or a point. Null for anything else, for zero and for amounts too large to be meant.
+ */
+export function parsePrice(text: string): number | null {
+  const match = /^(\d+)(?:[.,](\d{1,2}))?$/.exec(text.trim());
+  if (!match) return null;
+
+  const [, units, decimals = ''] = match;
+  const minor = Number(units) * 100 + Number(decimals.padEnd(2, '0'));
+  return minor > 0 && minor <= MAX_PRICE_MINOR ? minor : null;
+}
+
 export type DraftPhoto = { uri: string };
 export type ItemKind = Enums<'item_type'>;
 
@@ -23,6 +42,11 @@ export type ListingDraft = {
   equipmentCondition: Enums<'equipment_condition'> | null;
   photos: readonly DraftPhoto[];
   description: string;
+  /** The price as typed; see parsePrice for what counts as one. */
+  priceText: string;
+  acceptsOffers: boolean;
+  /** Marketplaces the seller chose not to publish on, by id. The others are on by default. */
+  skippedMarketplaces: readonly string[];
 };
 
 export const emptyDraft: ListingDraft = {
@@ -35,6 +59,9 @@ export const emptyDraft: ListingDraft = {
   equipmentCondition: null,
   photos: [],
   description: '',
+  priceText: '',
+  acceptsOffers: false,
+  skippedMarketplaces: [],
 };
 
 /** A new name may match other editions, so an earlier "none of these" no longer stands. */
@@ -179,5 +206,8 @@ export function draftItemFields(draft: ListingDraft): DraftItemFields {
     sleeve_condition: isRecord ? draft.sleeveCondition : null,
     equipment_condition: isRecord ? null : draft.equipmentCondition,
     description: draft.description.trim() || null,
+    price_minor: parsePrice(draft.priceText),
+    currency: DEFAULT_CURRENCY,
+    accepts_offers: draft.acceptsOffers,
   };
 }

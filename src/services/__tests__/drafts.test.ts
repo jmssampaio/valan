@@ -12,6 +12,9 @@ const fields = {
   sleeve_condition: null,
   equipment_condition: null,
   description: null,
+  price_minor: null,
+  currency: 'EUR',
+  accepts_offers: false,
 } as const;
 
 describe('saveDraft', () => {

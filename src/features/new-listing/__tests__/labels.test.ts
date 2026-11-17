@@ -109,6 +109,7 @@ describe('what the seller is told about where the listing goes', () => {
     id: name.toLowerCase(),
     name,
     capabilities: { itemTypes: ['record', 'equipment'], requiresCatalogueRelease: false },
+    feeRate: 0.1,
   });
   const open = (name: string): MarketplaceReach => ({ marketplace: info(name), available: true, reason: null });
   const shut = (name: string, reason: MarketplaceReach['reason'] = 'noCatalogueRelease'): MarketplaceReach => ({
