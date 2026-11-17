@@ -142,21 +142,63 @@ export function allItems(): ListedItem[] {
   return [...savedItems, ...samples];
 }
 
-const offerStatuses: Enums<'offer_status'>[] = ['pending', 'pending', 'pending', 'accepted'];
+type SampleOffer = {
+  /** The sample item and marketplace the offer was made on: its listing. */
+  on: [item: number, marketplace: Enums<'marketplace'>];
+  buyer: string;
+  amountMinor: number;
+  status: Enums<'offer_status'>;
+  /** Hours from now until it expires; negative once it has. Null for an offer that never does. */
+  expiresInHours: number | null;
+  createdAt: string;
+};
 
-export const sampleOffers: Tables<'offers'>[] = offerStatuses.map((status, index) => ({
-  id: `sample-offer-${index + 1}`,
-  user_id: USER_ID,
-  listing_id: `sample-item-${index + 1}-ebay`,
-  external_id: `offer-${index + 1}`,
-  buyer: `buyer-${index + 1}`,
-  amount_minor: 2000,
-  currency: 'EUR',
-  status,
-  expires_at: null,
-  created_at: CREATED_AT,
-  updated_at: CREATED_AT,
-}));
+// The first three are the pending offers of docs/design/mockups/09-propostas.png; the others
+// are answered, one for each way an offer can end.
+const sampleOfferRows: SampleOffer[] = [
+  { on: [1, 'ebay'], buyer: 'vinil_porto', amountMinor: 2400, status: 'pending', expiresInHours: 21, createdAt: '2026-11-16T10:00:00Z' },
+  { on: [3, 'ebay'], buyer: 'hifi.madrid', amountMinor: 15000, status: 'pending', expiresInHours: 50, createdAt: '2026-11-15T10:00:00Z' },
+  { on: [2, 'discogs'], buyer: 'crate_digger', amountMinor: 3800, status: 'pending', expiresInHours: null, createdAt: '2026-11-14T10:00:00Z' },
+  { on: [12, 'ebay'], buyer: 'north_records', amountMinor: 2500, status: 'accepted', expiresInHours: null, createdAt: '2026-11-10T10:00:00Z' },
+  { on: [6, 'ebay'], buyer: 'tape_nord', amountMinor: 2500, status: 'rejected', expiresInHours: null, createdAt: '2026-11-09T10:00:00Z' },
+  { on: [7, 'ebay'], buyer: 'sound_lab', amountMinor: 20000, status: 'expired', expiresInHours: -24, createdAt: '2026-11-08T10:00:00Z' },
+  { on: [11, 'ebay'], buyer: 'lisboa_vinyl', amountMinor: 4000, status: 'withdrawn', expiresInHours: null, createdAt: '2026-11-07T10:00:00Z' },
+];
+
+const HOUR_MS = 3_600_000;
+
+// The sample expiries count from when the app started, so an offer really runs out of time.
+const sampleEpoch = new Date();
+
+function sampleOffers(): Tables<'offers'>[] {
+  return sampleOfferRows.map(({ on: [item, marketplace], buyer, amountMinor, status, expiresInHours, createdAt }, index) => ({
+    id: `sample-offer-${index + 1}`,
+    user_id: USER_ID,
+    listing_id: `sample-item-${item}-${marketplace}`,
+    external_id: `offer-${index + 1}`,
+    buyer,
+    amount_minor: amountMinor,
+    currency: 'EUR',
+    status,
+    expires_at:
+      expiresInHours === null ? null : new Date(sampleEpoch.getTime() + expiresInHours * HOUR_MS).toISOString(),
+    created_at: createdAt,
+    updated_at: createdAt,
+  }));
+}
+
+// Offers answered while the app runs, by id. They are gone on the next launch, like the rest.
+const answeredOffers = new Map<string, Tables<'offers'>>();
+
+/** Replaces an offer, such as one the seller just answered. */
+export function replaceOffer(offer: Tables<'offers'>): void {
+  answeredOffers.set(offer.id, offer);
+}
+
+/** Every offer, with the answers given so far. */
+export function allOffers(): Tables<'offers'>[] {
+  return sampleOffers().map((offer) => answeredOffers.get(offer.id) ?? offer);
+}
 
 /** Dated in the current month, so the summary always has sales to show. */
 export function sampleSales(now: Date = new Date()): Tables<'sales'>[] {
