@@ -54,12 +54,16 @@ function counted(count: number, one: TranslationKey, other: TranslationKey): str
   return t(count === 1 ? one : other, { count });
 }
 
-/** "14 visitas · 1 proposta". */
-export function statsLine(visits: number, offers: number): string {
+/** "14 visitas · 1 proposta", or the offers alone while the marketplace reports no visits. */
+export function statsLine(visits: number | null, offers: number): string {
   return [
-    counted(visits, 'listingDetail.visits.one', 'listingDetail.visits.other'),
+    visits === null
+      ? null
+      : counted(visits, 'listingDetail.visits.one', 'listingDetail.visits.other'),
     counted(offers, 'listingDetail.offers.one', 'listingDetail.offers.other'),
-  ].join(DETAIL_SEPARATOR);
+  ]
+    .filter((part) => part !== null)
+    .join(DETAIL_SEPARATOR);
 }
 
 export type StatusTag = { label: string; tone: TagTone };
@@ -128,6 +132,12 @@ export function offerRow(offer: Tables<'offers'>, marketplace: string, now: Date
 }
 
 export type DetailAction = 'pause' | 'resume' | 'remove' | 'continueDraft' | 'deleteDraft';
+
+/**
+ * Actions that change what is on the marketplaces. Only the server may do that, and it
+ * cannot yet, so the app shows them as coming soon and does nothing when asked.
+ */
+export const serverOnlyActions: readonly DetailAction[] = ['pause', 'resume', 'remove'];
 
 /** What the seller may do with the item. The server checks it again; this only decides what to offer. */
 export function availableActions(

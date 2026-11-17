@@ -24,7 +24,7 @@ import { TextTabs } from '@/components/text-tabs';
 import { Thumbnail } from '@/components/thumbnail';
 import { Wave } from '@/components/wave';
 import { Spacing } from '@/constants/theme';
-import { sampleItems } from '@/services/sample-data';
+import samplePhoto from '../../../assets/samples/sleeve-1.svg';
 
 // Sample copy from docs/design/mockups, written here because this screen never ships:
 // it exists to compare the base components with the mockups during development.
@@ -62,8 +62,6 @@ const summaryTiles = [
   { value: '3', label: 'Propostas' },
   { value: '412 €', label: 'Vendido em nov.' },
 ];
-
-const samplePhoto = sampleItems[0].photo;
 
 const noAction = () => {};
 

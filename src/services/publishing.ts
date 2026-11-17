@@ -1,8 +1,4 @@
-import type { DraftToSave } from './drafts';
-import type { ListingSummary } from './listings';
-import { findSavedItem, upsertItem, USER_ID } from './sample-data';
-
-import type { Enums } from '@/types/database';
+import { saveDraft, type DraftToSave } from './drafts';
 
 /** Why a marketplace refused a listing, as a code the app has words for. */
 export type PublishFailure =
@@ -26,81 +22,47 @@ export type ItemToPublish = DraftToSave & {
   marketplaces: readonly string[];
 };
 
+// Still a stand-in: no marketplace is reached. The item itself is saved for real, as a
+// draft, because only the server may list it or change its status; the outcomes below
+// are invented and kept in memory, so the item shows as a draft in the listings.
+//
 // The sample marketplace behaviour: eBay refuses the first attempt for a missing shipping
 // policy, as in docs/design/mockups/07, and accepts the next. Everything else succeeds.
+const published = new Set<string>();
 const refusedOnce = new Set<string>();
+const sent = new Set<string>();
 
-function attempt(itemId: string, marketplace: string): ListingOutcome {
+/**
+ * Publishes on one marketplace unless the listing is already there: there is one listing
+ * per item and marketplace, so asking again never makes a second one.
+ */
+function publishOn(itemId: string, marketplace: string): ListingOutcome {
   const key = `${itemId}:${marketplace}`;
+  if (published.has(key)) return { marketplace, status: 'published' };
+
   if (marketplace === 'ebay' && !refusedOnce.has(key)) {
     refusedOnce.add(key);
     return { marketplace, status: 'error', reason: 'missingShippingPolicy' };
   }
+  published.add(key);
   return { marketplace, status: 'published' };
 }
 
-function listingId(itemId: string, marketplace: string): string {
-  return `${itemId}-${marketplace}`;
-}
-
-/**
- * Publishes on one marketplace unless the listing is already there. There is one listing per
- * item and marketplace, so asking again never makes a second one.
- */
-function publishOn(itemId: string, marketplace: string, listings: ListingSummary[]): ListingOutcome {
-  const id = listingId(itemId, marketplace);
-  const existing = listings.find((listing) => listing.id === id);
-  if (existing?.status === 'published') return { marketplace, status: 'published' };
-
-  const outcome = attempt(itemId, marketplace);
-  const listing: ListingSummary = {
-    id,
-    marketplace: marketplace as Enums<'marketplace'>,
-    status: outcome.status,
-  };
-  if (existing) {
-    listings[listings.indexOf(existing)] = listing;
-  } else {
-    listings.push(listing);
-  }
-  return outcome;
-}
-
-function statusFor(listings: readonly ListingSummary[], current: Enums<'item_status'>) {
-  return listings.some(({ status }) => status === 'published') ? 'active' : current;
-}
-
-// Kept in memory until the publish Edge Function exists; callers already get the final shape.
-// It is idempotent per item id and marketplace: publishing the same draft again, or a draft
-// that was saved before, updates that item and its listings and never creates a second one.
-// The server decides the item's status: active once it is listed somewhere.
+// Idempotent per item id and marketplace, as the real publish Edge Function must be:
+// publishing the same draft again updates that item and never creates a second one.
 export async function publishItem({ item, photos, marketplaces }: ItemToPublish): Promise<PublishResult> {
-  const existing = findSavedItem(item.id);
-  const now = new Date().toISOString();
-  const listings = [...(existing?.listings ?? [])];
-  const outcomes = marketplaces.map((marketplace) => publishOn(item.id, marketplace, listings));
+  await saveDraft({ item, photos });
+  sent.add(item.id);
 
-  upsertItem({
-    ...item,
-    user_id: USER_ID,
-    status: statusFor(listings, existing?.status ?? 'draft'),
-    created_at: existing?.created_at ?? now,
-    updated_at: now,
-    listings,
-    photo: photos[0] ?? existing?.photo ?? null,
-  });
-
-  return { itemId: item.id, listings: outcomes };
+  return {
+    itemId: item.id,
+    listings: marketplaces.map((marketplace) => publishOn(item.id, marketplace)),
+  };
 }
 
 /** Tries one marketplace again for an item that was already sent. */
 export async function retryListing(itemId: string, marketplace: string): Promise<ListingOutcome> {
-  const item = findSavedItem(itemId);
-  if (!item) throw new Error('This item was never sent for publishing.');
+  if (!sent.has(itemId)) throw new Error('This item was never sent for publishing.');
 
-  const listings = [...item.listings];
-  const outcome = publishOn(itemId, marketplace, listings);
-  upsertItem({ ...item, listings, status: statusFor(listings, item.status) });
-
-  return outcome;
+  return publishOn(itemId, marketplace);
 }

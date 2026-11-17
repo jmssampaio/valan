@@ -1,8 +1,7 @@
-import { sampleSales } from './sample-data';
-
 import type { Tables } from '@/types/database';
 
-// Sample data until the Supabase queries exist; callers already get the final shape.
+// No marketplace is connected for real yet, so no seller has a sale. This reads the real
+// sales once the orders Edge Function records them.
 export async function listSales(): Promise<Tables<'sales'>[]> {
-  return sampleSales();
+  return [];
 }
