@@ -51,6 +51,8 @@ export const Spacing = {
 /** Fixed sizes of drawn or photographic elements. */
 export const Size = {
   thumbnail: 56,
+  /** The long side of the photo on an item's own screen; the short side follows its proportions. */
+  detailPhoto: 120,
   wave: 120,
   /** One segment of the step progress bar in a multi-step flow. */
   progress: 4,
@@ -98,6 +100,8 @@ export const Type = {
   screenTitle: { fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, letterSpacing: -0.64 },
   sectionTitle: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.56 },
   body: { fontFamily: Fonts.textRegular, fontSize: 16, lineHeight: 24 },
+  /** The price on an item's own screen: the one figure the seller came to see. */
+  heroPrice: { fontFamily: Fonts.display, fontSize: 40, lineHeight: 44, letterSpacing: -0.4 },
   summaryValue: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.28 },
   // Inter, not Fraunces: prices stacked in a list are compared digit by digit, so figures share a width.
   rowPrice: {

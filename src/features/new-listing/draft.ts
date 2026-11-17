@@ -1,5 +1,6 @@
 import type { CatalogueRelease } from '@/services/catalogue';
 import type { DraftItemFields } from '@/services/drafts';
+import type { ListedItem } from '@/services/listings';
 import type { MarketplaceInfo } from '@/services/marketplaces';
 import type { Enums } from '@/types/database';
 
@@ -38,6 +39,11 @@ export type ListingDraft = {
   name: string;
   /** The catalogue edition the seller chose. With one, the item is a record that Discogs accepts. */
   release: CatalogueRelease | null;
+  /**
+   * The artist of an item saved without a catalogue edition, kept so saving again does not
+   * lose it. The flow has no field for it; a chosen edition's artist takes its place.
+   */
+  artist: string | null;
   /** The seller looked at the editions found and said the item is none of them. */
   declinedCatalogue: boolean;
   /** Asked only when the listing goes on without the catalogue; it picks the condition scale. */
@@ -65,6 +71,7 @@ export function newDraft(id: string): ListingDraft {
 const blankFields: Omit<ListingDraft, 'id'> = {
   name: '',
   release: null,
+  artist: null,
   declinedCatalogue: false,
   kind: null,
   mediaCondition: null,
@@ -212,7 +219,7 @@ export function draftItemFields(draft: ListingDraft): DraftItemFields {
     id: draft.id,
     type,
     title: release?.title ?? draft.name.trim(),
-    artist: release?.artist ?? null,
+    artist: release?.artist ?? draft.artist,
     discogs_release_id: release?.id ?? null,
     format: release?.format ?? null,
     release_year: release?.year ?? null,
@@ -223,5 +230,50 @@ export function draftItemFields(draft: ListingDraft): DraftItemFields {
     price_minor: parsePrice(draft.priceText),
     currency: DEFAULT_CURRENCY,
     accepts_offers: draft.acceptsOffers,
+  };
+}
+
+/** The inverse of parsePrice for a stored price: "28" or "28,50", as the seller would type it. */
+function priceTextOf(priceMinor: number | null): string {
+  if (priceMinor === null) return '';
+  const units = Math.floor(priceMinor / 100);
+  const cents = priceMinor % 100;
+  return cents === 0 ? String(units) : `${units},${String(cents).padStart(2, '0')}`;
+}
+
+/**
+ * The draft to carry on with from an item saved as a draft, under the same id, so saving
+ * or publishing it again updates that item. A record without a catalogue edition is not
+ * marked as "none of these": the seller can still pick one, which makes Discogs available.
+ * The catalogue's country, label and number are not stored on the item, so they stay empty.
+ */
+export function draftFromItem(item: ListedItem): ListingDraft {
+  const release: CatalogueRelease | null =
+    item.discogs_release_id === null
+      ? null
+      : {
+          id: item.discogs_release_id,
+          title: item.title,
+          artist: item.artist ?? '',
+          format: item.format ?? '',
+          year: item.release_year,
+          country: null,
+          label: null,
+          catalogueNumber: null,
+        };
+
+  return {
+    ...newDraft(item.id),
+    name: item.title,
+    release,
+    artist: release ? null : item.artist,
+    kind: item.type,
+    mediaCondition: item.media_condition,
+    sleeveCondition: item.sleeve_condition,
+    equipmentCondition: item.equipment_condition,
+    photos: item.photo !== null && typeof item.photo === 'object' ? [item.photo] : [],
+    description: item.description ?? '',
+    priceText: priceTextOf(item.price_minor),
+    acceptsOffers: item.accepts_offers,
   };
 }

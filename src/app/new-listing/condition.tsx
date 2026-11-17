@@ -93,7 +93,9 @@ export default function NewListingConditionScreen() {
           leading={{
             label: t('common.back'),
             accessibilityLabel: t('common.back.spoken'),
-            onPress: () => router.back(),
+            // To step 1 by name, not "wherever we came from": a reopened draft may have come
+            // from the listing's own screen, and step 1 is where an edition is picked.
+            onPress: () => router.dismissTo('/new-listing/catalogue'),
           }}
         />
       }

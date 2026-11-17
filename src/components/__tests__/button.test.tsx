@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { Button } from '@/components/button';
+import { Colors } from '@/constants/theme';
 
 describe('Button', () => {
   it('runs its action when pressed', async () => {
@@ -25,5 +26,11 @@ describe('Button', () => {
     await render(<Button label="Continuar" onPress={jest.fn()} disabled />);
 
     expect(screen.getByRole('button', { name: 'Continuar' })).toBeDisabled();
+  });
+
+  it('writes the label of a danger button in the error colour', async () => {
+    await render(<Button label="Remover" variant="danger" onPress={jest.fn()} />);
+
+    expect(screen.getByText('Remover')).toHaveStyle({ color: Colors.error });
   });
 });
