@@ -27,6 +27,7 @@ import {
 } from '@/features/new-listing/labels';
 import { useListingDraft } from '@/hooks/use-listing-draft';
 import { t, type TranslationKey } from '@/i18n';
+import { chooseOne } from '@/services/choice-sheet';
 import { pickPhotos, takePhoto, type PhotoPick } from '@/services/photo-picker';
 
 const GRADE_COLUMNS = 4;
@@ -56,14 +57,17 @@ export default function NewListingConditionScreen() {
 
   function choosePhotoSource() {
     const room = MAX_PHOTOS - draft.photos.length;
-    Alert.alert(t('newListing.photos.add.label'), undefined, [
-      { text: t('newListing.photos.source.camera'), onPress: () => void addFrom(takePhoto) },
-      {
-        text: t('newListing.photos.source.library'),
-        onPress: () => void addFrom(() => pickPhotos(room)),
-      },
-      { text: t('common.cancel'), style: 'cancel' },
-    ]);
+    chooseOne({
+      title: t('newListing.photos.add.label'),
+      choices: [
+        { label: t('newListing.photos.source.camera'), onChoose: () => void addFrom(takePhoto) },
+        {
+          label: t('newListing.photos.source.library'),
+          onChoose: () => void addFrom(() => pickPhotos(room)),
+        },
+      ],
+      cancelLabel: t('common.cancel'),
+    });
   }
 
   function confirmRemoval(uri: string) {

@@ -19,6 +19,16 @@ describe('TabBar badge', () => {
     expect(offersTab).toHaveTextContent('Propostas3');
   });
 
+  it('speaks of one offer in the singular', async () => {
+    pendingOffers.mockResolvedValue(1);
+
+    await renderRouter('src/app');
+
+    expect(
+      await screen.findByRole('tab', { name: 'Propostas', value: { text: '1 proposta por responder' } }),
+    ).toBeOnTheScreen();
+  });
+
   it('shows no badge when no offer is waiting', async () => {
     pendingOffers.mockResolvedValue(0);
 

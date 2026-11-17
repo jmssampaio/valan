@@ -1,6 +1,6 @@
 import { useNetworkState } from 'expo-network';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
-import { Alert } from 'react-native';
+import { ActionSheetIOS, Alert } from 'react-native';
 
 import { searchReleases, type CatalogueRelease } from '@/services/catalogue';
 import { listConnections, type ConnectionSummary } from '@/services/connections';
@@ -77,6 +77,16 @@ async function pressAlertButton(label: string) {
   const button = buttons.find(({ text }) => text === label);
   if (!button) throw new Error(`The alert has no "${label}" button.`);
   await act(async () => button.onPress?.());
+}
+
+const actionSheet = jest.spyOn(ActionSheetIOS, 'showActionSheetWithOptions').mockImplementation(() => {});
+
+/** Chooses an option of the system action sheet that is on screen. */
+async function chooseFromSheet(label: string) {
+  const [sheet, choose] = actionSheet.mock.calls.at(-1) ?? [];
+  const index = sheet?.options.indexOf(label) ?? -1;
+  if (index === -1) throw new Error(`The action sheet has no "" option.`);
+  await act(async () => choose?.(index));
 }
 
 function setOnline(isConnected: boolean) {
@@ -547,11 +557,26 @@ describe('new listing, step 2: condition and photos', () => {
     expect(screen.getByText('Fotos · 0 de 8')).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Adicionar foto' }));
-    await pressAlertButton('Escolher da galeria');
+    await chooseFromSheet('Escolher da galeria');
 
     expect(pickPhotos).toHaveBeenCalledWith(8);
     expect(screen.getByText('Fotos · 2 de 8')).toBeOnTheScreen();
     expect(screen.getByLabelText('Foto 2 de 2')).toBeOnTheScreen();
+  });
+
+  it('offers the camera and the library in a system action sheet, with a way to cancel', async () => {
+    await reachConditionWithRecord();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Adicionar foto' }));
+
+    const [sheet] = actionSheet.mock.calls.at(-1) ?? [];
+    expect(sheet?.options).toEqual(['Tirar foto', 'Escolher da galeria', 'Cancelar']);
+    expect(sheet?.cancelButtonIndex).toBe(2);
+
+    await chooseFromSheet('Cancelar');
+
+    expect(pickPhotos).not.toHaveBeenCalled();
+    expect(takePhoto).not.toHaveBeenCalled();
   });
 
   it('says what to do when the camera is not allowed', async () => {
@@ -559,7 +584,7 @@ describe('new listing, step 2: condition and photos', () => {
     await reachConditionWithRecord();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Adicionar foto' }));
-    await pressAlertButton('Tirar foto');
+    await chooseFromSheet('Tirar foto');
 
     expect(screen.getByText(/Dá-lhe acesso nas Definições/)).toBeOnTheScreen();
   });
@@ -569,7 +594,7 @@ describe('new listing, step 2: condition and photos', () => {
     await reachConditionWithRecord();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Adicionar foto' }));
-    await pressAlertButton('Tirar foto');
+    await chooseFromSheet('Tirar foto');
 
     expect(screen.getByText('Não conseguimos adicionar a foto. Tenta de novo.')).toBeOnTheScreen();
   });
@@ -578,7 +603,7 @@ describe('new listing, step 2: condition and photos', () => {
     jest.mocked(pickPhotos).mockResolvedValue({ status: 'picked', photos: [{ uri: 'file:///front.jpg' }] });
     await reachConditionWithRecord();
     await fireEvent.press(screen.getByRole('button', { name: 'Adicionar foto' }));
-    await pressAlertButton('Escolher da galeria');
+    await chooseFromSheet('Escolher da galeria');
 
     await fireEvent.press(screen.getByLabelText('Foto 1 de 1'));
 
@@ -596,7 +621,7 @@ describe('new listing, step 2: condition and photos', () => {
     });
     await reachConditionWithRecord();
     await fireEvent.press(screen.getByRole('button', { name: 'Adicionar foto' }));
-    await pressAlertButton('Escolher da galeria');
+    await chooseFromSheet('Escolher da galeria');
 
     expect(screen.getByText('Fotos · 8 de 8')).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: 'Adicionar foto' })).not.toBeOnTheScreen();
@@ -622,7 +647,7 @@ describe('new listing, step 2: condition and photos', () => {
     await fireEvent.press(screen.getAllByRole('radio', { name: 'VG+' })[0]);
     await fireEvent.press(screen.getAllByRole('radio', { name: 'VG' })[1]);
     await fireEvent.press(screen.getByRole('button', { name: 'Adicionar foto' }));
-    await pressAlertButton('Escolher da galeria');
+    await chooseFromSheet('Escolher da galeria');
     await fireEvent.changeText(screen.getByLabelText('Descrição'), 'Primeira edição.');
 
     await fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));

@@ -77,6 +77,8 @@ Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_B
 - Publishing belongs to the server. Each marketplace's listing is `pending` until the marketplace answers, and meanwhile the item shows in Anúncios with the "a publicar" tag. The seller can always leave: the result screen has a way out while publishing, and after 30 seconds without an answer it says so ("Ainda a publicar. Podes sair; o estado aparece em Anúncios."). The real publish function must therefore create the item and its pending listings first and answer per marketplace afterwards, and must not depend on the app staying open.
 - No confirmation before publishing; confirmations are for actions that cannot be undone or that commit the seller to a sale (see `docs/standards/ux.md`).
 - Prices in lists use Inter semi-bold 17 with tabular figures (`Type.rowPrice`); Fraunces stays for titles, the summary figures, the sales total and the price field.
+- The pending-offers count has one source, `PendingOffersProvider` in the tabs layout (`src/hooks/use-pending-offers.tsx`). The tab badge and the listings summary both read it, and a refresh of the listings recounts it.
+- A question with a few actions to pick from ("camera or library?") uses the iOS action sheet through `chooseOne` in `src/services/choice-sheet.ts`; alerts are for confirmations and failures.
 - Home screen is the listings tab with a three-tile summary on top. The connect-platforms screen is shown only once, after sign-up.
 - The paywall appears when publishing the first listing, only to users without a plan.
 - Design source of truth: the mockups and logo in `docs/design/` (tokens and type in its README). Figma is no longer used.

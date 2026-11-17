@@ -56,6 +56,7 @@ function setOnline(isConnected: boolean) {
 }
 
 beforeEach(() => {
+  jest.clearAllMocks();
   setOnline(true);
   jest.mocked(listItems).mockResolvedValue(items);
   jest.mocked(countPendingOffers).mockResolvedValue(3);
@@ -171,6 +172,26 @@ describe('listings screen', () => {
 
     expect(await screen.findByText('Fado Elétrico')).toBeOnTheScreen();
     expect(screen.queryByText('Noites de Lisboa')).not.toBeOnTheScreen();
+  });
+
+  it('shows the same number of pending offers on the tab and in the summary after a refresh', async () => {
+    await renderRouter(APP_DIR);
+    await screen.findByLabelText('Propostas: 3');
+    jest.mocked(countPendingOffers).mockResolvedValue(5);
+
+    await fireEvent(screen.getByTestId('listings-list'), 'refresh');
+
+    expect(await screen.findByLabelText('Propostas: 5')).toBeOnTheScreen();
+    expect(
+      screen.getByRole('tab', { name: 'Propostas', value: { text: '5 propostas por responder' } }),
+    ).toBeOnTheScreen();
+  });
+
+  it('asks for the pending offers once, for both the tab and the summary', async () => {
+    await renderRouter(APP_DIR);
+    await screen.findByLabelText('Propostas: 3');
+
+    expect(countPendingOffers).toHaveBeenCalledTimes(1);
   });
 
   it('keeps the listings and says so when pulling down fails to update them', async () => {

@@ -1,15 +1,25 @@
 import { Tabs } from 'expo-router/js-tabs';
 
 import { TabBar } from '@/components/tab-bar';
-import { usePendingOffersCount } from '@/hooks/use-pending-offers-count';
+import { PendingOffersProvider, usePendingOffers } from '@/hooks/use-pending-offers';
 import { t } from '@/i18n';
 
 export default function TabsLayout() {
-  const pendingOffers = usePendingOffersCount();
+  return (
+    <PendingOffersProvider>
+      <TabsWithBadges />
+    </PendingOffersProvider>
+  );
+}
+
+function TabsWithBadges() {
+  const pendingOffers = usePendingOffers().count ?? 0;
   const badges = {
     offers: {
       count: pendingOffers,
-      accessibilityLabel: t('tabs.offers.badge', { count: pendingOffers }),
+      accessibilityLabel: t(pendingOffers === 1 ? 'tabs.offers.badge.one' : 'tabs.offers.badge.other', {
+        count: pendingOffers,
+      }),
     },
   };
 
