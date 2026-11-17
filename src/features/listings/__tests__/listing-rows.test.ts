@@ -78,10 +78,10 @@ describe('itemDetail', () => {
     expect(itemDetail(item({ artist: null, format: null, media_condition: null }))).toBe('');
   });
 
-  it('describes equipment by its type', () => {
+  it('describes an item that is not a record as another item, as step 1 of a new listing does', () => {
     const turntable = item({ type: 'equipment', artist: null, media_condition: null });
 
-    expect(itemDetail(turntable)).toBe('Aparelho');
+    expect(itemDetail(turntable)).toBe('Outro artigo');
   });
 });
 
