@@ -107,3 +107,12 @@ Logo: a straight-line zigzag wave on an orange tile, with the wordmark "VALAN" i
 - Can Discogs offers be accepted or rejected through the API? Can listing photos be uploaded?
 - Subscription prices (mockup values are placeholders).
 - Whether the name "Valan" is free on the App Store.
+
+## Open items before release
+
+- **Custom SMTP and the code email template on staging and production.** Supabase's built-in email sender is rate-limited (a few emails an hour), meant for testing only, and on the free plan does not allow changing the email templates. So staging still sends the default email with a link, and the 6-digit code flow is built and tested against the local stack, where emails are captured. The founder sets up a domain and an email-sending account and enters the SMTP credentials in the Supabase dashboard (never in the repository). Only then is `supabase config push` run, which applies the code template, the 6-digit length and the ten-minute expiry.
+- **Password reset:** not built yet. It will use the same emailed code as sign-up confirmation, and must exist before release.
+- **Breached-password rejection:** to be turned on in the Supabase dashboard (staging and production).
+- **Account deletion inside the app:** required by the App Store; not built yet.
+- **Terms and privacy policy pages:** the entry screen mentions them; they need real pages and links.
+- **Sign in with Apple and Google:** shown as "em breve" until the developer accounts exist.

@@ -28,6 +28,7 @@ import {
   marketplaceName,
   offerRow,
   saleLines,
+  serverOnlyActions,
   type DetailAction,
 } from '@/features/listing-detail/labels';
 import { useGuardedAction } from '@/hooks/use-guarded-action';
@@ -36,10 +37,6 @@ import { useListingDetail } from '@/hooks/use-listing-detail';
 import { t } from '@/i18n';
 import {
   deleteDraft,
-  pauseItem,
-  removeItem,
-  resumeItem,
-  retryFailedListing,
   type DetailListing,
   type ListingDetail,
 } from '@/services/listing-detail';
@@ -151,19 +148,13 @@ function ReadyDetail({
 
   const leave = () => router.dismissTo(LISTINGS);
 
+  // Pausing, resuming and removing are shown but do nothing yet (see serverOnlyActions).
+  const notYet = () => {};
+
   const doAction: Record<DetailAction, () => void> = {
-    pause: () =>
-      void run('pause', t('listingDetail.failed.pause'), () => pauseItem(item.id), onChanged),
-    resume: () =>
-      void run('resume', t('listingDetail.failed.resume'), () => resumeItem(item.id), onChanged),
-    remove: () =>
-      confirm(
-        t('listingDetail.remove.title'),
-        t('listingDetail.remove.body'),
-        t('listingDetail.action.remove'),
-        () =>
-          void run('remove', t('listingDetail.failed.remove'), () => removeItem(item.id), leave),
-      ),
+    pause: notYet,
+    resume: notYet,
+    remove: notYet,
     continueDraft: () =>
       router.push({ pathname: REOPEN_DRAFT, params: { draft: item.id } }),
     deleteDraft: () =>
@@ -231,19 +222,7 @@ function ReadyDetail({
                     key={listing.id}
                     listing={listing}
                     offers={offers.filter(({ listing_id }) => listing_id === listing.id).length}
-                    isRetrying={working.includes(`retry:${listing.marketplace}`)}
-                    isOnline={isOnline}
                     isLast={index === listings.length - 1}
-                    onRetry={() =>
-                      void run(
-                        `retry:${listing.marketplace}`,
-                        t('listingDetail.failed.retry', {
-                          name: marketplaceName(listing.marketplace),
-                        }),
-                        () => retryFailedListing(item.id, listing.marketplace),
-                        onChanged,
-                      )
-                    }
                   />
                 ))}
               </Section>
@@ -336,21 +315,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function ListingRow({
   listing,
   offers,
-  isRetrying,
-  isOnline,
   isLast,
-  onRetry,
 }: {
   listing: DetailListing;
   offers: number;
-  isRetrying: boolean;
-  isOnline: boolean;
   isLast: boolean;
-  onRetry: () => void;
 }) {
-  const tag = isRetrying
-    ? { label: t('newListing.result.retrying'), tone: 'waiting' as const }
-    : (listingStatusTag(listing.status) ?? undefined);
+  const tag = listingStatusTag(listing.status) ?? undefined;
   const meta = listingMeta(listing, offers);
 
   return (
@@ -362,7 +333,8 @@ function ListingRow({
         listing.status === 'error' && meta
           ? {
               reason: meta,
-              retry: { label: t('common.retry'), onPress: onRetry, disabled: isRetrying || !isOnline },
+              // Trying again is the server's to do, and it cannot yet: shown, not available.
+              retry: { label: t('common.retry'), onPress: () => {}, disabled: true },
             }
           : undefined
       }
@@ -386,13 +358,22 @@ function Actions({
       <Button
         label={t(`listingDetail.action.${action}`)}
         variant={buttonVariant[action]}
-        disabled={disabled}
+        disabled={disabled || serverOnlyActions.includes(action)}
         onPress={() => onPress(action)}
       />
     </View>
   ));
 
-  return <View style={isDraft ? undefined : styles.actionRow}>{buttons}</View>;
+  return (
+    <>
+      {actions.some((action) => serverOnlyActions.includes(action)) ? (
+        <AppText variant="rowMeta" color="muted">
+          {t('listingDetail.action.soon')}
+        </AppText>
+      ) : null}
+      <View style={isDraft ? undefined : styles.actionRow}>{buttons}</View>
+    </>
+  );
 }
 
 const buttonVariant = {

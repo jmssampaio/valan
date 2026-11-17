@@ -51,9 +51,11 @@ export const Spacing = {
 /** Fixed sizes of drawn or photographic elements. */
 export const Size = {
   thumbnail: 56,
+  logo: 56,
   /** The long side of the photo on an item's own screen; the short side follows its proportions. */
   detailPhoto: 120,
   wave: 120,
+  heroWave: 152,
   /** One segment of the step progress bar in a multi-step flow. */
   progress: 4,
   checkbox: 24,
@@ -124,6 +126,8 @@ export const Type = {
     letterSpacing: 0.84,
     textTransform: 'uppercase',
   },
+  // The logo's wordmark: Inter Bold with wide tracking (0.32 em), as in docs/design/README.md.
+  wordmark: { fontFamily: Fonts.textBold, fontSize: 22, lineHeight: 28, letterSpacing: 7.04 },
   navAction: { fontFamily: Fonts.textMedium, fontSize: 16, lineHeight: 24 },
   step: { fontFamily: Fonts.monoRegular, fontSize: 13, lineHeight: 16 },
   chip: { fontFamily: Fonts.monoMedium, fontSize: 13, lineHeight: 16 },
