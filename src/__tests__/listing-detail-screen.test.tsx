@@ -190,6 +190,8 @@ describe('listing detail screen', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Ver' }));
 
     expect(screen).toHavePathname('/offers');
+    // The offer is named, so the inbox can bring it into view.
+    expect(screen).toHaveSearchParams({ offer: 'offer-1' });
   });
 
   it('leaves out the offers section when there are none', async () => {

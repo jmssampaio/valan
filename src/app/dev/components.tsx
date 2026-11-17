@@ -9,6 +9,7 @@ import { ChipGrid } from '@/components/chip-grid';
 import { FlowHeader } from '@/components/flow-header';
 import { ItemPhoto } from '@/components/item-photo';
 import { ListRow } from '@/components/list-row';
+import { OfferCard } from '@/components/offer-card';
 import { Notice } from '@/components/notice';
 import { PhotoGrid } from '@/components/photo-grid';
 import { PriceField } from '@/components/price-field';
@@ -244,6 +245,35 @@ export default function ComponentGalleryScreen() {
           <Button label="Mais tarde" variant="text" onPress={noAction} />
           <Button label="Remover" variant="danger" onPress={noAction} />
           <Button label="Publicar em 2 plataformas" disabled onPress={noAction} />
+        </Section>
+
+        <Section label="OfferCard · waiting, from outside, answered">
+          <OfferCard
+            title="Noites de Lisboa"
+            meta="vinil_porto · eBay · Expira em 21 h"
+            asking="Pedes 28 €"
+            price="24 €"
+            actions={[
+              { label: 'Rejeitar', onPress: noAction },
+              { label: 'Aceitar', onPress: noAction, primary: true },
+            ]}
+          />
+          <OfferCard
+            title="Blue Harbor Sessions"
+            meta="crate_digger · Discogs"
+            asking="Pedes 45 €"
+            price="38 €"
+            actions={[{ label: 'Responder em Discogs ↗', onPress: noAction }]}
+          />
+          <OfferCard
+            title="Night Ferry"
+            meta="north_records · eBay"
+            asking="Pedes 27,50 €"
+            price="25 €"
+            tag={{ label: 'Aceite', tone: 'success' }}
+            actions={[]}
+            isLast
+          />
         </Section>
 
         <Section label="Button · small">
