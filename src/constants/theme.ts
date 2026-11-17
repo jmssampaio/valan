@@ -54,6 +54,7 @@ export const Size = {
   wave: 120,
   /** One segment of the step progress bar in a multi-step flow. */
   progress: 4,
+  checkbox: 24,
 } as const;
 
 export const Radius = {
@@ -78,6 +79,8 @@ export const ControlHeight = {
 /** Upper limit on system text scaling, for labels that share a fixed width and cannot wrap. */
 export const MaxFontScale = {
   tabLabel: 1.3,
+  /** For the largest figures, which would leave the screen if they grew much further. */
+  display: 1.3,
 } as const;
 
 /** No text is drawn smaller than this, whatever shrinks it to fit (docs/standards/ux.md). */
@@ -107,6 +110,14 @@ export const Type = {
   rowMeta: { fontFamily: Fonts.textRegular, fontSize: 13, lineHeight: 20 },
   button: { fontFamily: Fonts.textSemiBold, fontSize: 16, lineHeight: 20 },
   buttonSmall: { fontFamily: Fonts.textSemiBold, fontSize: 15, lineHeight: 20 },
+  priceInput: { fontFamily: Fonts.display, fontSize: 60, lineHeight: 64, letterSpacing: -0.6 },
+  priceCurrency: {
+    fontFamily: Fonts.monoRegular,
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: 0.84,
+    textTransform: 'uppercase',
+  },
   navAction: { fontFamily: Fonts.textMedium, fontSize: 16, lineHeight: 24 },
   step: { fontFamily: Fonts.monoRegular, fontSize: 13, lineHeight: 16 },
   chip: { fontFamily: Fonts.monoMedium, fontSize: 13, lineHeight: 16 },
