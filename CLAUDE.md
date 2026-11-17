@@ -13,7 +13,7 @@ Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_B
 
 ## Commands
 
-- Install: `npm install`
+- Node 22 or later (`.nvmrc`; CI reads the same file). Install: `npm install`
 - Run: `npx expo start`
 - Lint: `npm run lint`
 - Type check: `npm run typecheck`
@@ -71,6 +71,7 @@ Full product brief (scope, flows, marketplaces, open questions): @docs/PROJECT_B
 - Sign-in: email, Sign in with Apple and Sign in with Google, all through Supabase Auth. Apple and Google buttons have equal prominence. Account deletion inside the app.
 - Email sign-up is confirmed with a 6-digit code typed in the app, not a link (`otp_length = 6` and `supabase/templates/confirmation.html`, which picks its language from the device that signed up). Sign-up answers the same for a new and an existing email, and sign-in gives one message for a wrong email or password, so the app never reveals whether an account exists. The one exception is by design: with the right password and an unconfirmed email, the seller is told to confirm.
 - `src/services/auth.ts` is the only place that talks to Supabase Auth; it returns outcomes with a reason (`AuthFailure` in `src/features/auth/rules.ts`), never raw errors. `SessionProvider` (`src/hooks/use-session.tsx`) holds who is signed in. The root layout shows nothing until the stored session is read, then only the screens that fit: `src/app/welcome/` (entry, email form, code) for a signed-out visitor, everything else for a signed-in seller. Hiding screens is for the seller's sake; the database is what protects the data. A new top-level route must be added to the right `Stack.Protected` group in `src/app/_layout.tsx`.
+- Staging stays on Supabase's default email sender until the founder configures a custom SMTP provider in the dashboard; the default sender does not allow the code template. Until then the code flow is tested only against the local stack, and `supabase config push` must not be run: `supabase/config.toml` is ahead of staging on purpose (code length, expiry, template).
 - Unit tests never reach Supabase: `jest.setup.js` replaces the auth service with a signed-in stand-in. Services are tested for real against the local stack (`npm run test:integration`, which refuses any URL that is not local and reads the local keys at run time, never from a file).
 - The new-listing flow keeps one draft across its steps (`ListingDraftProvider` in `src/app/new-listing/_layout.tsx`). Leaving the flow, by Cancel or by swiping the sheet down, saves it as a draft item when it has a release or a title; if the save fails the seller chooses between retrying and leaving without saving. A draft is not kept if the app is killed mid-flow.
 - A record needs its media condition to move past step 2; the sleeve condition is optional. Photos: up to 8.

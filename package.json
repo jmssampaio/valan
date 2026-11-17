@@ -63,6 +63,9 @@
     "test:functions": "cd supabase/functions && deno test"
   },
   "private": true,
+  "engines": {
+    "node": ">=22"
+  },
   "jest": {
     "preset": "jest-expo",
     "setupFiles": [

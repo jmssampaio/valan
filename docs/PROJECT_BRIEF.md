@@ -110,7 +110,7 @@ Logo: a straight-line zigzag wave on an orange tile, with the wordmark "VALAN" i
 
 ## Open items before release
 
-- **Email delivery:** staging uses Supabase's built-in email sender, which is rate-limited (a few emails an hour) and meant for testing only. A custom SMTP provider must be configured before real users sign up.
+- **Custom SMTP and the code email template on staging and production.** Supabase's built-in email sender is rate-limited (a few emails an hour), meant for testing only, and on the free plan does not allow changing the email templates. So staging still sends the default email with a link, and the 6-digit code flow is built and tested against the local stack, where emails are captured. The founder sets up a domain and an email-sending account and enters the SMTP credentials in the Supabase dashboard (never in the repository). Only then is `supabase config push` run, which applies the code template, the 6-digit length and the ten-minute expiry.
 - **Password reset:** not built yet. It will use the same emailed code as sign-up confirmation, and must exist before release.
 - **Breached-password rejection:** to be turned on in the Supabase dashboard (staging and production).
 - **Account deletion inside the app:** required by the App Store; not built yet.
