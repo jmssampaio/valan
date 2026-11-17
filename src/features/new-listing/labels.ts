@@ -74,3 +74,25 @@ const marketplaceNames: Record<Enums<'marketplace'>, string> = {
 export function marketplaceName(marketplace: Enums<'marketplace'>): string {
   return marketplaceNames[marketplace];
 }
+
+type Carrier = 'vinyl' | 'cd' | 'cassette' | 'unknown';
+
+// Matched against the first part of the catalogue's format ("2×LP" in "2×LP, Album").
+const carrierPatterns: readonly [Carrier, RegExp][] = [
+  ['cd', /cd/i],
+  ['cassette', /cass/i],
+  ['vinyl', /lp|vinyl|\d+"|\bep\b|single|flexi|shellac/i],
+];
+
+function carrierOf(format: string | null): Carrier {
+  const main = format?.split(',')[0] ?? '';
+  return carrierPatterns.find(([, pattern]) => pattern.test(main))?.[0] ?? 'unknown';
+}
+
+/**
+ * A record can be vinyl, a CD or a cassette, so the condition of the medium is named
+ * after what the catalogue says it is; without that, it is just "the medium".
+ */
+export function mediaConditionLabel(format: string | null): string {
+  return t(`newListing.condition.media.${carrierOf(format)}`);
+}

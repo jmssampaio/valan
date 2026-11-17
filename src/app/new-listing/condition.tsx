@@ -22,6 +22,7 @@ import {
   equipmentConditionOptions,
   gradeDetail,
   gradeOptions,
+  mediaConditionLabel,
   stepHeader,
 } from '@/features/new-listing/labels';
 import { useListingDraft } from '@/hooks/use-listing-draft';
@@ -35,6 +36,7 @@ const PHOTO_COLUMNS = 4;
 export default function NewListingConditionScreen() {
   const router = useRouter();
   const { draft, change } = useListingDraft();
+  const mediaLabel = mediaConditionLabel(draft.release?.format ?? null);
   const [addingPhoto, setAddingPhoto] = useState(false);
   const [photoProblem, setPhotoProblem] = useState<TranslationKey | null>(null);
 
@@ -101,9 +103,9 @@ export default function NewListingConditionScreen() {
       <View style={styles.sections}>
         {itemType(draft) === 'record' ? (
           <>
-            <Section label={t('newListing.condition.media')}>
+            <Section label={mediaLabel}>
               <ChipGrid
-                label={t('newListing.condition.media')}
+                label={mediaLabel}
                 options={gradeOptions}
                 value={draft.mediaCondition}
                 onChange={(mediaCondition) => change((current) => ({ ...current, mediaCondition }))}

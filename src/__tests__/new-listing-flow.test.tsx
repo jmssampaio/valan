@@ -181,11 +181,11 @@ describe('new listing, step 1: what are you selling', () => {
     await typeName('noites');
     await fireEvent.press(await screen.findByRole('button', { name: /Não é nenhuma destas/ }));
 
-    expect(screen.getByRole('radio', { name: 'Disco' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Disco, CD ou cassete' })).not.toBeChecked();
     expect(screen.getByRole('radio', { name: 'Outro artigo' })).not.toBeChecked();
     expect(continueButton()).toBeDisabled();
 
-    await fireEvent.press(screen.getByRole('radio', { name: 'Disco' }));
+    await fireEvent.press(screen.getByRole('radio', { name: 'Disco, CD ou cassete' }));
 
     expect(continueButton()).toBeEnabled();
   });
@@ -225,7 +225,7 @@ describe('new listing, step 1: what are you selling', () => {
     expect(await screen.findByText('Não conseguimos procurar no catálogo Discogs.')).toBeOnTheScreen();
     expect(screen.getByText(/Sem a edição do catálogo, o anúncio só pode ir para o eBay/)).toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByRole('radio', { name: 'Disco' }));
+    await fireEvent.press(screen.getByRole('radio', { name: 'Disco, CD ou cassete' }));
 
     expect(continueButton()).toBeEnabled();
   });
@@ -251,7 +251,7 @@ describe('new listing, step 1: what are you selling', () => {
 
     expect(await screen.findByText(/Estás sem ligação/)).toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByRole('radio', { name: 'Disco' }));
+    await fireEvent.press(screen.getByRole('radio', { name: 'Disco, CD ou cassete' }));
 
     expect(continueButton()).toBeEnabled();
   });
@@ -391,11 +391,23 @@ describe('new listing, step 2: condition and photos', () => {
     jest.mocked(searchReleases).mockResolvedValue([]);
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
     await typeName('Noites de Lisboa (promo)');
-    await fireEvent.press(await screen.findByRole('radio', { name: 'Disco' }));
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Disco, CD ou cassete' }));
     await fireEvent.press(continueButton());
 
-    expect(screen.getByLabelText('Estado do disco')).toBeOnTheScreen();
+    // Nothing says whether it is vinyl, a CD or a cassette.
+    expect(screen.getByLabelText('Estado do suporte')).toBeOnTheScreen();
     expect(screen.getByLabelText('Estado da capa')).toBeOnTheScreen();
+  });
+
+  it('names the condition after the carrier of the chosen edition', async () => {
+    jest.mocked(searchReleases).mockResolvedValue([{ ...firstPressing, id: 249506, format: 'CD', year: 2003 }]);
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await typeName('noites');
+    await fireEvent.press(await screen.findByRole('button', { name: /2003/ }));
+    await fireEvent.press(continueButton());
+
+    expect(screen.getByLabelText('Estado do CD')).toBeOnTheScreen();
+    expect(screen.queryByLabelText('Estado do disco')).not.toBeOnTheScreen();
   });
 
   it('adds the photos chosen from the library and counts them', async () => {

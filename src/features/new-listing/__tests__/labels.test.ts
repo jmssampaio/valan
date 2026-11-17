@@ -3,6 +3,7 @@ import {
   equipmentConditionOptions,
   gradeDetail,
   gradeOptions,
+  mediaConditionLabel,
   releaseDetail,
   releaseLabel,
 } from '../labels';
@@ -73,5 +74,27 @@ describe('equipment conditions', () => {
 
   it('are explained in the seller\'s language', () => {
     expect(equipmentConditionDetail('for_parts')).toBe('Para peças · não funciona ou precisa de reparação.');
+  });
+});
+
+describe('mediaConditionLabel', () => {
+  it.each([
+    ['LP, Album', 'Estado do disco'],
+    ['2×LP, Album, Reissue', 'Estado do disco'],
+    ['7", Single', 'Estado do disco'],
+    ['12", Maxi-Single', 'Estado do disco'],
+    ['Vinyl', 'Estado do disco'],
+    ['CD', 'Estado do CD'],
+    ['CD, Album', 'Estado do CD'],
+    ['2×CD, Compilation', 'Estado do CD'],
+    ['Cassette, Album', 'Estado da cassete'],
+    ['Cass, Single', 'Estado da cassete'],
+  ])('names the carrier of a "%s" release: %s', (format, label) => {
+    expect(mediaConditionLabel(format)).toBe(label);
+  });
+
+  it('speaks of the medium when the format is unknown or not one of the three', () => {
+    expect(mediaConditionLabel(null)).toBe('Estado do suporte');
+    expect(mediaConditionLabel('Reel-To-Reel')).toBe('Estado do suporte');
   });
 });
