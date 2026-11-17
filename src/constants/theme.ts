@@ -17,6 +17,8 @@ export const Colors = {
   onInk: '#F5EFE6',
   success: '#2C6A3F',
   error: '#A12A1E',
+  /** Ink at 15%: the edge that keeps a pale photo from bleeding into the paper. */
+  photoEdge: 'rgba(30, 26, 23, 0.15)',
   transparent: 'transparent',
 } as const;
 
@@ -42,6 +44,13 @@ export const Spacing = {
   x5: 20,
   x6: 24,
   x8: 32,
+  x30: 120,
+} as const;
+
+/** Fixed sizes of drawn or photographic elements. */
+export const Size = {
+  thumbnail: 56,
+  wave: 120,
 } as const;
 
 export const Radius = {
@@ -76,6 +85,8 @@ export const Type = {
   screenTitle: { fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, letterSpacing: -0.64 },
   sectionTitle: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.56 },
   body: { fontFamily: Fonts.textRegular, fontSize: 16, lineHeight: 24 },
+  summaryValue: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.28 },
+  rowPrice: { fontFamily: Fonts.display, fontSize: 20, lineHeight: 24, letterSpacing: -0.2 },
   rowTitle: { fontFamily: Fonts.textSemiBold, fontSize: 16, lineHeight: 20 },
   rowMeta: { fontFamily: Fonts.textRegular, fontSize: 13, lineHeight: 20 },
   button: { fontFamily: Fonts.textSemiBold, fontSize: 16, lineHeight: 20 },
@@ -84,6 +95,7 @@ export const Type = {
   optionSelected: { fontFamily: Fonts.textSemiBold, fontSize: 15, lineHeight: 20 },
   tab: { fontFamily: Fonts.textMedium, fontSize: 14, lineHeight: 20 },
   tabSelected: { fontFamily: Fonts.textSemiBold, fontSize: 14, lineHeight: 20 },
+  tabBadge: { fontFamily: Fonts.monoMedium, fontSize: 12, lineHeight: 16 },
   tag: { fontFamily: Fonts.monoRegular, fontSize: 12, lineHeight: 16 },
   caption: {
     fontFamily: Fonts.monoRegular,
