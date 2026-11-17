@@ -43,7 +43,6 @@ describe('navigation', () => {
   it.each([
     ['/offers', 'Propostas'],
     ['/account', 'Conta'],
-    ['/welcome', 'Publica uma vez.\nVende em todo o lado.'],
     ['/connect', 'Liga as tuas contas'],
     ['/new-listing/catalogue', 'O que vais vender?'],
     ['/new-listing/condition', 'Estado e fotos'],

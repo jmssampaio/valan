@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
+import { BackLink } from '@/components/back-link';
 import { Button } from '@/components/button';
 import { CheckRow } from '@/components/check-row';
 import { ChipGrid } from '@/components/chip-grid';
@@ -127,8 +128,13 @@ export default function ComponentGalleryScreen() {
           </ListRow>
         </Section>
 
-        <Section label="Wave">
+        <Section label="Wave · quiet and hero">
           <Wave />
+          <Wave variant="hero" />
+        </Section>
+
+        <Section label="BackLink">
+          <BackLink label="‹ Voltar" accessibilityLabel="Voltar" onPress={noAction} />
         </Section>
 
         <Section label="ScreenMessage · with action">

@@ -238,9 +238,10 @@ secure_password_change = true
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
 max_frequency = "1m0s"
 # Number of characters used in the email OTP.
-otp_length = 8
-# Number of seconds before the email OTP expires (defaults to 1 hour).
-otp_expiry = 3600
+otp_length = 6
+# Number of seconds before the email OTP expires (defaults to 1 hour). Ten minutes here: a
+# 6-digit code must not stay valid long enough to be guessed.
+otp_expiry = 600
 
 # Use a production-ready SMTP server
 # [auth.email.smtp]
@@ -251,6 +252,12 @@ otp_expiry = 3600
 # pass = "env(SENDGRID_API_KEY)"
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
+
+# The confirmation email carries a 6-digit code to type in the app (see otp_length above),
+# in the language of the device the account was created on.
+[auth.email.template.confirmation]
+subject = "Valan: código de confirmação · código de confirmación · confirmation code"
+content_path = "./supabase/templates/confirmation.html"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]
