@@ -12,7 +12,7 @@ import {
   type ThemeColor,
 } from '@/constants/theme';
 
-type ButtonVariant = 'primary' | 'ink' | 'outline' | 'text';
+type ButtonVariant = 'primary' | 'ink' | 'outline' | 'text' | 'danger';
 type ButtonSize = 'large' | 'small';
 
 export type ButtonProps = {
@@ -28,6 +28,8 @@ const labelColor: Record<ButtonVariant, ThemeColor> = {
   ink: 'onInk',
   outline: 'ink',
   text: 'ink',
+  // For an action that cannot be undone: it is written in the error colour, without a box.
+  danger: 'error',
 };
 
 export function Button({
@@ -103,4 +105,5 @@ const variantStyles = StyleSheet.create<Record<ButtonVariant, ViewStyle>>({
     borderColor: Colors.ink,
   },
   text: {},
+  danger: {},
 });

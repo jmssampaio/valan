@@ -7,8 +7,8 @@ import { AppText } from '@/components/app-text';
 import { Button } from '@/components/button';
 import { FlowHeader } from '@/components/flow-header';
 import { ListRow } from '@/components/list-row';
+import { MarketplaceRow } from '@/components/marketplace-row';
 import { Screen } from '@/components/screen';
-import { Tag } from '@/components/tag';
 import { Thumbnail } from '@/components/thumbnail';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatPrice } from '@/features/listings/format';
@@ -163,50 +163,33 @@ function OutcomeRow({
   onRetry: () => void;
 }) {
   const name = nameOf(outcome.marketplace);
-  const divider = isLast ? 'none' : 'line';
 
   if (outcome.status === 'published') {
     return (
-      <ListRow
-        title={name}
+      <MarketplaceRow
+        name={name}
         meta={t('newListing.result.published.detail')}
-        trailing={<Tag label={t('newListing.result.published')} tone="success" />}
-        divider={divider}
+        tag={{ label: t('newListing.result.published'), tone: 'success' }}
+        isLast={isLast}
       />
     );
   }
 
   return (
-    <ListRow
-      title={name}
-      trailing={
-        isRetrying ? (
-          <Tag label={t('newListing.result.retrying')} tone="waiting" />
-        ) : (
-          <Tag label={t('newListing.result.error')} tone="error" />
-        )
+    <MarketplaceRow
+      name={name}
+      tag={
+        isRetrying
+          ? { label: t('newListing.result.retrying'), tone: 'waiting' }
+          : { label: t('newListing.result.error'), tone: 'error' }
       }
-      divider={divider}>
-      <View style={styles.problem}>
-        <AppText variant="rowMeta" color="error" accessibilityRole="alert">
-          {t(`newListing.result.reason.${outcome.reason}`, { name })}
-        </AppText>
-        <View style={styles.actions}>
-          <Button
-            label={t('common.retry')}
-            variant="outline"
-            size="small"
-            disabled={isRetrying || !isOnline}
-            onPress={onRetry}
-          />
-        </View>
-        {isOnline ? null : (
-          <AppText variant="rowMeta" color="muted" accessibilityRole="alert">
-            {t('newListing.result.offline')}
-          </AppText>
-        )}
-      </View>
-    </ListRow>
+      refusal={{
+        reason: t(`newListing.result.reason.${outcome.reason}`, { name }),
+        retry: { label: t('common.retry'), onPress: onRetry, disabled: isRetrying || !isOnline },
+        note: isOnline ? undefined : t('newListing.result.offline'),
+      }}
+      isLast={isLast}
+    />
   );
 }
 
@@ -214,13 +197,6 @@ const styles = StyleSheet.create({
   working: {
     alignItems: 'flex-start',
     gap: Spacing.x4,
-  },
-  problem: {
-    flex: 1,
-    gap: Spacing.x3,
-  },
-  actions: {
-    flexDirection: 'row',
   },
 });
 
