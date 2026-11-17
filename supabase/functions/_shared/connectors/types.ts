@@ -17,6 +17,12 @@ export type OfferResponse = 'accept' | 'reject';
 export interface ConnectorCapabilities {
   /** Item types this marketplace can list. */
   readonly itemTypes: readonly ItemType[];
+  /**
+   * True when the marketplace lists only records chosen from the catalogue (a draft with a
+   * discogsReleaseId). The app reads this to say where a listing can go and why not; it
+   * never assumes it from the marketplace's name.
+   */
+  readonly requiresCatalogueRelease: boolean;
   /** False when offers can only be answered on the marketplace's own site. */
   readonly respondToOffers: boolean;
 }

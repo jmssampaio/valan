@@ -113,6 +113,9 @@ export function createFakeConnector(options: FakeConnectorOptions): FakeConnecto
       if (!options.capabilities.itemTypes.includes(listing.type)) {
         throw new ConnectorError('unsupported', `This marketplace does not list ${listing.type} items.`);
       }
+      if (options.capabilities.requiresCatalogueRelease && listing.discogsReleaseId === undefined) {
+        throw new ConnectorError('unsupported', 'This marketplace lists only records from the catalogue.');
+      }
       const marketplaceCondition =
         listing.equipmentCondition === undefined
           ? undefined

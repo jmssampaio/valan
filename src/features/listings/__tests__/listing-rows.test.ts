@@ -64,13 +64,18 @@ function sale(overrides: Partial<Tables<'sales'>> = {}): Tables<'sales'> {
 }
 
 describe('itemDetail', () => {
-  it('describes a record by its artist and media condition', () => {
-    expect(itemDetail(item())).toBe('Os Marés · VG+');
+  it('describes a record by its artist, format and media condition', () => {
+    expect(itemDetail(item())).toBe('Os Marés · LP · VG+');
+  });
+
+  it('shows only the main part of a long format', () => {
+    expect(itemDetail(item({ format: '2×LP, Album, Reissue' }))).toBe('Os Marés · 2×LP · VG+');
   });
 
   it('leaves out what a record does not have yet', () => {
-    expect(itemDetail(item({ artist: null }))).toBe('VG+');
-    expect(itemDetail(item({ artist: null, media_condition: null }))).toBe('');
+    expect(itemDetail(item({ format: null }))).toBe('Os Marés · VG+');
+    expect(itemDetail(item({ artist: null, format: null }))).toBe('VG+');
+    expect(itemDetail(item({ artist: null, format: null, media_condition: null }))).toBe('');
   });
 
   it('describes equipment by its type', () => {

@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "NSCameraUsageDescription": "A Valan usa a câmara para tirares fotos dos artigos que vais vender.",
+    "NSPhotoLibraryUsageDescription": "A Valan acede às tuas fotos para escolheres as dos artigos que vais vender."
+  }
+}

@@ -8,7 +8,15 @@
     "scheme": "valan",
     "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true
+      }
+    },
+    "locales": {
+      "pt-PT": "./assets/locales/pt-PT.json",
+      "es": "./assets/locales/es.json",
+      "en": "./assets/locales/en.json"
     },
     "android": {
       "adaptiveIcon": {
@@ -57,7 +65,15 @@
           ]
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Valan uses the camera so you can take photos of the items you are selling.",
+          "photosPermission": "Valan accesses your photos so you can choose the ones of the items you are selling.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

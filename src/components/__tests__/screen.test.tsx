@@ -18,4 +18,19 @@ describe('Screen', () => {
     expect(screen.getByRole('header', { name: 'Anúncios' })).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Criar anúncio' })).toBeOnTheScreen();
   });
+
+  it('shows a header above the title and a footer below the content', async () => {
+    await render(
+      <Screen
+        title="Estado e fotos"
+        scroll
+        header={<Button label="Voltar" variant="text" onPress={jest.fn()} />}
+        footer={<Button label="Continuar" onPress={jest.fn()} />}
+      />,
+    );
+
+    expect(screen.getByRole('header', { name: 'Estado e fotos' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Voltar' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Continuar' })).toBeOnTheScreen();
+  });
 });

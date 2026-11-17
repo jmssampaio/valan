@@ -186,6 +186,16 @@ describe('listings screen', () => {
     expect(screen.getByText('Noites de Lisboa')).toBeOnTheScreen();
   });
 
+  it('loads the listings again when the seller comes back from creating one', async () => {
+    await renderRouter(APP_DIR);
+    await fireEvent.press(await screen.findByRole('button', { name: 'Criar anúncio' }));
+    jest.mocked(listItems).mockResolvedValue([...items, item({ id: 'item-9', title: 'Fado Elétrico' })]);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(await screen.findByText('Fado Elétrico')).toBeOnTheScreen();
+  });
+
   it('keeps the listings and warns they may be out of date when the connection drops', async () => {
     setOnline(false);
     await renderRouter(APP_DIR);

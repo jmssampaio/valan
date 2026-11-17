@@ -16,6 +16,8 @@ export type ListRowProps = {
   children?: ReactNode;
   /** The last row of a list has no divider; a row that closes a summary uses ink. */
   divider?: Divider;
+  /** For a row that is one choice in a list: tells screen readers whether it is the chosen one. */
+  selected?: boolean;
   onPress?: () => void;
 };
 
@@ -26,6 +28,7 @@ export function ListRow({
   trailing,
   children,
   divider = 'line',
+  selected,
   onPress,
 }: ListRowProps) {
   const rowStyle = [styles.row, dividerStyles[divider]];
@@ -54,6 +57,7 @@ export function ListRow({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={selected === undefined ? undefined : { selected }}
       onPress={onPress}
       style={({ pressed }) => [rowStyle, pressed && styles.pressed]}>
       {content}
