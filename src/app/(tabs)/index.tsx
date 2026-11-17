@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
 import { Button } from '@/components/button';
@@ -57,7 +57,13 @@ export default function ListingsScreen() {
           action={{ label: t('common.retry'), onPress: listings.reload }}
         />
       ) : hasItems ? (
-        <ListingsOverviewContent overview={listings.overview} isOnline={isOnline} />
+        <ListingsOverviewContent
+          overview={listings.overview}
+          isOnline={isOnline}
+          refreshing={listings.refreshing}
+          refreshFailed={listings.refreshFailed}
+          onRefresh={listings.refresh}
+        />
       ) : (
         <ScreenMessage
           illustration={<Wave />}
@@ -73,23 +79,35 @@ export default function ListingsScreen() {
 function ListingsOverviewContent({
   overview,
   isOnline,
+  refreshing,
+  refreshFailed,
+  onRefresh,
 }: {
   overview: ListingsOverview;
   isOnline: boolean;
+  refreshing: boolean;
+  refreshFailed: boolean;
+  onRefresh: () => void;
 }) {
   const router = useRouter();
   const [filter, setFilter] = useState<ListingFilter>('active');
 
   const summary = summarise({ ...overview, now: new Date() });
   const visibleItems = itemsForFilter(overview.items, filter);
+  // Being offline explains a failed refresh, so it is the only notice shown then.
+  const notice = !isOnline
+    ? t('listings.offline.notice')
+    : refreshFailed
+      ? t('listings.refresh.failed')
+      : null;
 
   return (
     <View style={styles.overview}>
-      {isOnline ? null : (
+      {notice ? (
         <AppText variant="rowMeta" color="muted" style={styles.notice}>
-          {t('listings.offline.notice')}
+          {notice}
         </AppText>
-      )}
+      ) : null}
       <SummaryStrip
         tiles={[
           { value: String(summary.activeCount), label: t('listings.summary.active') },
@@ -104,7 +122,11 @@ function ListingsOverviewContent({
         <TextTabs options={filterOptions(overview.items)} value={filter} onChange={setFilter} />
       </View>
       <FlatList
+        testID="listings-list"
         data={visibleItems}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.ink} />
+        }
         keyExtractor={(item) => item.id}
         renderItem={({ item, index }) => (
           <ListingRow

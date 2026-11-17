@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react-native';
 
 import { SummaryStrip } from '@/components/summary-strip';
+import { Type } from '@/constants/theme';
 
 const tiles = [
   { value: '12', label: 'Ativos' },
@@ -22,5 +23,12 @@ describe('SummaryStrip', () => {
     await render(<SummaryStrip tiles={tiles} />);
 
     expect(screen.getByLabelText('Vendido em nov.: 412 €')).toBeOnTheScreen();
+  });
+
+  it('never shrinks a long value below 12 points', async () => {
+    await render(<SummaryStrip tiles={tiles} />);
+
+    const { minimumFontScale } = screen.getByText('412 €').props;
+    expect(minimumFontScale * Type.summaryValue.fontSize).toBeGreaterThanOrEqual(12);
   });
 });

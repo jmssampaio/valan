@@ -2,12 +2,15 @@ import { StyleSheet, View } from 'react-native';
 
 import { AppText } from './app-text';
 
-import { BorderWidth, Colors, Spacing } from '@/constants/theme';
+import { BorderWidth, Colors, MinFontSize, Spacing, Type } from '@/constants/theme';
 
 export type SummaryTile = {
   value: string;
   label: string;
 };
+
+/** How far a value may shrink to fit its tile before it would become too small to read. */
+const VALUE_MINIMUM_SCALE = MinFontSize / Type.summaryValue.fontSize;
 
 export type SummaryStripProps = {
   tiles: readonly SummaryTile[];
@@ -24,7 +27,11 @@ export function SummaryStrip({ tiles }: SummaryStripProps) {
           accessibilityLabel={`${label}: ${value}`}
           style={[styles.tile, index > 0 && styles.following]}>
           {/* Shrinks to stay on one line, so a long amount never pushes the other tiles away. */}
-          <AppText variant="summaryValue" numberOfLines={1} adjustsFontSizeToFit>
+          <AppText
+            variant="summaryValue"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={VALUE_MINIMUM_SCALE}>
             {value}
           </AppText>
           <AppText variant="caption" color="muted">

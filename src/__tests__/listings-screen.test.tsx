@@ -120,7 +120,7 @@ describe('listings screen', () => {
   it('starts a new listing from the button beside the title', async () => {
     await renderRouter(APP_DIR);
 
-    await fireEvent.press(await screen.findByRole('button', { name: 'Novo anúncio' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Criar anúncio' }));
 
     expect(screen).toHavePathname('/new-listing/catalogue');
   });
@@ -130,7 +130,7 @@ describe('listings screen', () => {
     await renderRouter(APP_DIR);
 
     expect(await screen.findByRole('header', { name: 'Ainda não tens anúncios' })).toBeOnTheScreen();
-    expect(screen.queryByRole('button', { name: 'Novo anúncio' })).not.toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Criar anúncio' })).not.toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Criar o primeiro anúncio' }));
 
@@ -157,6 +157,30 @@ describe('listings screen', () => {
 
     expect(await screen.findByRole('header', { name: 'Estás sem ligação' })).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeOnTheScreen();
+  });
+
+  it('loads the listings again when the list is pulled down', async () => {
+    await renderRouter(APP_DIR);
+    await screen.findByText('Noites de Lisboa');
+    jest.mocked(listItems).mockResolvedValue([item({ title: 'Fado Elétrico' })]);
+
+    await fireEvent(screen.getByTestId('listings-list'), 'refresh');
+
+    expect(await screen.findByText('Fado Elétrico')).toBeOnTheScreen();
+    expect(screen.queryByText('Noites de Lisboa')).not.toBeOnTheScreen();
+  });
+
+  it('keeps the listings and says so when pulling down fails to update them', async () => {
+    await renderRouter(APP_DIR);
+    await screen.findByText('Noites de Lisboa');
+    jest.mocked(listItems).mockRejectedValue(new Error('server error'));
+
+    await fireEvent(screen.getByTestId('listings-list'), 'refresh');
+
+    expect(
+      await screen.findByText('Não conseguimos atualizar. Puxa para baixo para tentar de novo.'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Noites de Lisboa')).toBeOnTheScreen();
   });
 
   it('keeps the listings and warns they may be out of date when the connection drops', async () => {

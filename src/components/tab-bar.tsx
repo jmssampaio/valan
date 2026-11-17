@@ -99,7 +99,10 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.line,
   },
   tab: {
-    flex: 1,
+    // Each tab is as wide as its label plus an equal share of the spare room, so a long label
+    // with a badge borrows width from the short ones instead of being cut at large text sizes.
+    flexGrow: 1,
+    paddingHorizontal: Spacing.x1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

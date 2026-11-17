@@ -12,10 +12,10 @@ describe('Screen', () => {
 
   it('shows an action beside the title', async () => {
     await render(
-      <Screen title="Anúncios" titleAction={<Button label="Novo anúncio" onPress={jest.fn()} />} />,
+      <Screen title="Anúncios" titleAction={<Button label="Criar anúncio" onPress={jest.fn()} />} />,
     );
 
     expect(screen.getByRole('header', { name: 'Anúncios' })).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Novo anúncio' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Criar anúncio' })).toBeOnTheScreen();
   });
 });
