@@ -5,14 +5,18 @@ import type { Enums } from '@/types/database';
 export const MAX_PHOTOS = 8;
 
 export type DraftPhoto = { uri: string };
+export type ItemKind = Enums<'item_type'>;
 
 /** What the seller has entered so far, across every step of the new-listing flow. */
 export type ListingDraft = {
-  type: Enums<'item_type'>;
-  /** Records only: the catalogue release the record is listed against. */
+  /** What the seller typed in "What are you selling?". */
+  name: string;
+  /** The catalogue edition the seller chose. With one, the item is a record that Discogs accepts. */
   release: CatalogueRelease | null;
-  /** Equipment only: a record takes its title from the release. */
-  title: string;
+  /** The seller looked at the editions found and said the item is none of them. */
+  declinedCatalogue: boolean;
+  /** Asked only when the listing goes on without the catalogue; it picks the condition scale. */
+  kind: ItemKind | null;
   mediaCondition: Enums<'record_condition'> | null;
   sleeveCondition: Enums<'record_condition'> | null;
   equipmentCondition: Enums<'equipment_condition'> | null;
@@ -21,9 +25,10 @@ export type ListingDraft = {
 };
 
 export const emptyDraft: ListingDraft = {
-  type: 'record',
+  name: '',
   release: null,
-  title: '',
+  declinedCatalogue: false,
+  kind: null,
   mediaCondition: null,
   sleeveCondition: null,
   equipmentCondition: null,
@@ -31,25 +36,97 @@ export const emptyDraft: ListingDraft = {
   description: '',
 };
 
+/** A new name may match other editions, so an earlier "none of these" no longer stands. */
+export function withName(draft: ListingDraft, name: string): ListingDraft {
+  return name === draft.name ? draft : { ...draft, name, declinedCatalogue: false };
+}
+
+export function withRelease(draft: ListingDraft, release: CatalogueRelease): ListingDraft {
+  return { ...draft, release, declinedCatalogue: false };
+}
+
+export function withoutCatalogue(draft: ListingDraft): ListingDraft {
+  return { ...draft, release: null, declinedCatalogue: true };
+}
+
 /**
- * Each type keeps its own answers, so switching by mistake and back loses nothing.
- * Only the current type's answers count and are saved (see draftItemFields).
+ * Each kind keeps its own answers, so switching by mistake and back loses nothing.
+ * Only the current kind's answers count and are saved (see draftItemFields).
  */
-export function withType(draft: ListingDraft, type: ListingDraft['type']): ListingDraft {
-  return draft.type === type ? draft : { ...draft, type };
+export function withKind(draft: ListingDraft, kind: ItemKind): ListingDraft {
+  return { ...draft, kind };
 }
 
-function identifiesItem(draft: ListingDraft): boolean {
-  return draft.type === 'record' ? draft.release !== null : draft.title.trim() !== '';
+/** A catalogue edition is always a record; otherwise the item is what the seller says it is. */
+export function itemType(draft: ListingDraft): ItemKind | null {
+  return draft.release ? 'record' : draft.kind;
 }
 
-export function canLeaveCatalogue(draft: ListingDraft): boolean {
-  return identifiesItem(draft);
+/** What the catalogue search has to say about the name typed so far. */
+export type CatalogueSearchOutcome = 'idle' | 'loading' | 'found' | 'none' | 'error';
+
+export type CatalogueStep =
+  | { state: 'naming' }
+  | { state: 'searching' }
+  /** Editions are on offer: the seller picks one or says it is none of them. */
+  | { state: 'choosing' }
+  | { state: 'linked' }
+  /** The listing goes on without the catalogue. It is never a dead end. */
+  | { state: 'unlinked'; why: 'declined' | 'none' | 'failed' };
+
+export function catalogueStep(draft: ListingDraft, search: CatalogueSearchOutcome): CatalogueStep {
+  if (draft.release) return { state: 'linked' };
+
+  switch (search) {
+    case 'idle':
+      return { state: 'naming' };
+    case 'loading':
+      return { state: 'searching' };
+    case 'none':
+      return { state: 'unlinked', why: 'none' };
+    case 'error':
+      return { state: 'unlinked', why: 'failed' };
+    case 'found':
+      return draft.declinedCatalogue ? { state: 'unlinked', why: 'declined' } : { state: 'choosing' };
+  }
+}
+
+function hasName(draft: ListingDraft): boolean {
+  return draft.name.trim() !== '';
+}
+
+export function canLeaveCatalogue(draft: ListingDraft, search: CatalogueSearchOutcome): boolean {
+  const step = catalogueStep(draft, search);
+  if (step.state === 'linked') return true;
+  return step.state === 'unlinked' && hasName(draft) && draft.kind !== null;
+}
+
+export type MarketplaceReach = {
+  marketplace: Enums<'marketplace'>;
+  available: boolean;
+  /** Why the listing cannot go there; the app always says so. */
+  reason: 'noCatalogueRelease' | null;
+};
+
+/**
+ * Where this listing can be published. A marketplace's requirements may leave it out,
+ * but they never stop the seller from listing on the others.
+ */
+export function marketplaceReach(draft: ListingDraft): MarketplaceReach[] {
+  const inCatalogue = draft.release !== null;
+
+  return [
+    // Discogs lists only records that exist in its catalogue.
+    { marketplace: 'discogs', available: inCatalogue, reason: inCatalogue ? null : 'noCatalogueRelease' },
+    { marketplace: 'ebay', available: true, reason: null },
+  ];
 }
 
 /** A record can be sold without its sleeve, so only the condition of the item itself is needed. */
 export function canLeaveCondition(draft: ListingDraft): boolean {
-  return draft.type === 'record' ? draft.mediaCondition !== null : draft.equipmentCondition !== null;
+  return itemType(draft) === 'record'
+    ? draft.mediaCondition !== null
+    : draft.equipmentCondition !== null;
 }
 
 export function addPhotos(draft: ListingDraft, photos: readonly DraftPhoto[]): ListingDraft {
@@ -63,18 +140,22 @@ export function removePhoto(draft: ListingDraft, uri: string): ListingDraft {
   return { ...draft, photos: draft.photos.filter((photo) => photo.uri !== uri) };
 }
 
-/** A draft without a release or a title would be a nameless row in the seller's list. */
+/** An item is stored with a title and a type, so a draft without either cannot be a row yet. */
 export function isWorthSaving(draft: ListingDraft): boolean {
-  return identifiesItem(draft);
+  return draft.release !== null || (hasName(draft) && draft.kind !== null);
 }
 
 export function draftItemFields(draft: ListingDraft): DraftItemFields {
-  const isRecord = draft.type === 'record';
-  const release = isRecord ? draft.release : null;
+  const type = itemType(draft);
+  if (type === null) {
+    throw new Error('A draft cannot be saved before the kind of item is known.');
+  }
+  const isRecord = type === 'record';
+  const { release } = draft;
 
   return {
-    type: draft.type,
-    title: isRecord ? (release?.title ?? '') : draft.title.trim(),
+    type,
+    title: release?.title ?? draft.name.trim(),
     artist: release?.artist ?? null,
     discogs_release_id: release?.id ?? null,
     format: release?.format ?? null,

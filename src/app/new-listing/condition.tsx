@@ -10,7 +10,13 @@ import { PhotoGrid } from '@/components/photo-grid';
 import { Screen } from '@/components/screen';
 import { TextField } from '@/components/text-field';
 import { Spacing } from '@/constants/theme';
-import { addPhotos, canLeaveCondition, MAX_PHOTOS, removePhoto } from '@/features/new-listing/draft';
+import {
+  addPhotos,
+  canLeaveCondition,
+  itemType,
+  MAX_PHOTOS,
+  removePhoto,
+} from '@/features/new-listing/draft';
 import {
   equipmentConditionDetail,
   equipmentConditionOptions,
@@ -93,7 +99,7 @@ export default function NewListingConditionScreen() {
         />
       }>
       <View style={styles.sections}>
-        {draft.type === 'record' ? (
+        {itemType(draft) === 'record' ? (
           <>
             <Section label={t('newListing.condition.media')}>
               <ChipGrid

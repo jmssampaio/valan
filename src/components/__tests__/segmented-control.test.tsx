@@ -23,4 +23,11 @@ describe('SegmentedControl', () => {
     expect(screen.getByRole('radio', { name: 'Disco' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'Aparelho' })).not.toBeChecked();
   });
+
+  it('can start with nothing chosen', async () => {
+    await render(<SegmentedControl options={options} value={null} onChange={jest.fn()} />);
+
+    expect(screen.getByRole('radio', { name: 'Disco' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Aparelho' })).not.toBeChecked();
+  });
 });

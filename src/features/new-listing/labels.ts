@@ -64,3 +64,13 @@ export function stepHeader(step: number) {
     stepAccessibilityLabel: t('newListing.step', { step, steps: STEPS }),
   };
 }
+
+const marketplaceNames: Record<Enums<'marketplace'>, string> = {
+  discogs: 'Discogs',
+  ebay: 'eBay',
+};
+
+/** Brand names: the same in every language. */
+export function marketplaceName(marketplace: Enums<'marketplace'>): string {
+  return marketplaceNames[marketplace];
+}

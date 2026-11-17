@@ -13,7 +13,8 @@ export type SegmentedControlProps<Value extends string> = {
   /** What is being chosen, for screen readers. */
   label?: string;
   options: readonly ChoiceOption<Value>[];
-  value: Value;
+  /** Null while nothing is chosen yet. */
+  value: Value | null;
   onChange: (value: Value) => void;
 };
 

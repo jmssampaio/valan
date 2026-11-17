@@ -7,6 +7,7 @@ import { Button } from '@/components/button';
 import { ChipGrid } from '@/components/chip-grid';
 import { FlowHeader } from '@/components/flow-header';
 import { ListRow } from '@/components/list-row';
+import { Notice } from '@/components/notice';
 import { PhotoGrid } from '@/components/photo-grid';
 import { Screen } from '@/components/screen';
 import { ScreenMessage } from '@/components/screen-message';
@@ -122,6 +123,14 @@ export default function ComponentGalleryScreen() {
             title="Não conseguimos carregar os anúncios"
             body="Algo correu mal do nosso lado. Tenta de novo dentro de momentos."
             action={{ label: 'Tentar de novo', onPress: noAction }}
+          />
+        </Section>
+
+        <Section label="Notice">
+          <Notice
+            tag="Só eBay"
+            title="Este anúncio não vai para o Discogs"
+            body="O Discogs só aceita discos que existam no seu catálogo. O anúncio é publicado no eBay com o nome que escreveste."
           />
         </Section>
 

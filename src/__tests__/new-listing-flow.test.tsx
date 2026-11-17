@@ -61,22 +61,24 @@ function continueButton() {
   return screen.getByRole('button', { name: 'Continuar' });
 }
 
-async function searchFor(query: string) {
-  await fireEvent.changeText(screen.getByLabelText('Procurar no catálogo'), query);
+async function typeName(name: string) {
+  await fireEvent.changeText(screen.getByLabelText('Nome do que vais vender'), name);
 }
 
 /** Opens the flow, chooses the first pressing and moves to the second step. */
 async function reachConditionWithRecord() {
   await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
-  await searchFor('noites');
+  await typeName('noites');
   await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
   await fireEvent.press(continueButton());
 }
 
-async function reachConditionWithEquipment() {
+/** Opens the flow with something the catalogue does not have and says it is not a record. */
+async function reachConditionWithAnotherItem() {
+  jest.mocked(searchReleases).mockResolvedValue([]);
   await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
-  await fireEvent.press(screen.getByRole('radio', { name: 'Aparelho' }));
-  await fireEvent.changeText(screen.getByLabelText('Nome do aparelho'), 'Gira-discos Aurora');
+  await typeName('Gira-discos Aurora T-200');
+  await fireEvent.press(await screen.findByRole('radio', { name: 'Outro artigo' }));
   await fireEvent.press(continueButton());
 }
 
@@ -97,19 +99,30 @@ describe('new listing, step 1: what are you selling', () => {
     expect(screen.getByRole('progressbar', { name: 'Passo 1 de 4' })).toBeOnTheScreen();
   });
 
-  it('asks for a search before showing anything', async () => {
+  it('asks only for a name, with no kind of item to choose up front', async () => {
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
 
+    expect(screen.getByLabelText('Nome do que vais vender')).toBeOnTheScreen();
+    expect(screen.queryByRole('radio')).not.toBeOnTheScreen();
+    expect(continueButton()).toBeDisabled();
+    expect(searchReleases).not.toHaveBeenCalled();
+  });
+
+  it('does not search for a single letter', async () => {
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+
+    await typeName('n');
+
     expect(
-      screen.getByText('Escreve o título ou o artista para encontrares a edição certa.'),
+      screen.getByText('Se for um disco, escolhe a tua edição para publicar também no Discogs.'),
     ).toBeOnTheScreen();
     expect(searchReleases).not.toHaveBeenCalled();
   });
 
-  it('shows the editions found, with what tells them apart', async () => {
+  it('suggests the catalogue editions that match the name, with what tells them apart', async () => {
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
 
-    await searchFor('noites');
+    await typeName('noites');
 
     expect(await screen.findByText('Os Marés · LP, Album · 1978 · Portugal')).toBeOnTheScreen();
     expect(screen.getByText('Onda Discos – OD 1042')).toBeOnTheScreen();
@@ -117,95 +130,128 @@ describe('new listing, step 1: what are you selling', () => {
     expect(searchReleases).toHaveBeenCalledWith('noites');
   });
 
-  it('cannot continue until an edition is chosen, and marks the chosen one', async () => {
+  it('waits for the seller to choose an edition or say it is none of them', async () => {
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
-    await searchFor('noites');
-    const edition = await screen.findByRole('button', { name: /1994/ });
+    await typeName('noites');
+    await screen.findByRole('button', { name: /1994/ });
 
     expect(continueButton()).toBeDisabled();
+    expect(screen.queryByText('Publica em')).not.toBeOnTheScreen();
+  });
 
-    await fireEvent.press(edition);
+  it('links the listing to the chosen edition, which can go to Discogs and eBay', async () => {
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await typeName('noites');
 
-    expect(continueButton()).toBeEnabled();
+    await fireEvent.press(await screen.findByRole('button', { name: /1994/ }));
+
     expect(screen.getByRole('button', { name: /1994/ })).toBeSelected();
-    expect(screen.getByText('Selecionado')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Publica em: Discogs, eBay')).toBeOnTheScreen();
+    expect(screen.queryByText('Este anúncio não vai para o Discogs')).not.toBeOnTheScreen();
+    expect(screen.queryByRole('radio')).not.toBeOnTheScreen();
+    expect(continueButton()).toBeEnabled();
   });
 
-  it('keeps asking for a search while a single letter is typed', async () => {
+  it('keeps the chosen edition in view when the name changes and it is no longer found', async () => {
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
-
-    await searchFor('n');
-
-    expect(
-      screen.getByText('Escreve o título ou o artista para encontrares a edição certa.'),
-    ).toBeOnTheScreen();
-    expect(searchReleases).not.toHaveBeenCalled();
-  });
-
-  it('keeps the chosen edition in view when another search does not find it', async () => {
-    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
-    await searchFor('noites');
+    await typeName('noites');
     await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
     jest.mocked(searchReleases).mockResolvedValue([reissue]);
 
-    await searchFor('reissue');
+    await typeName('reissue');
 
     expect(await screen.findByRole('button', { name: /1994/ })).not.toBeSelected();
-    expect(screen.getByRole('button', { name: /1978/ })).toBeSelected();
-  });
-
-  it('brings the chosen edition back when the seller switches to equipment and back', async () => {
-    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
-    await searchFor('noites');
-    await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
-
-    await fireEvent.press(screen.getByRole('radio', { name: 'Aparelho' }));
-    await fireEvent.press(screen.getByRole('radio', { name: 'Disco' }));
-
     expect(screen.getByRole('button', { name: /1978/ })).toBeSelected();
     expect(continueButton()).toBeEnabled();
   });
 
-  it('says so when the catalogue has nothing by that name', async () => {
+  it('goes on without the catalogue when it is none of the editions, and says what that means', async () => {
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await typeName('noites');
+
+    await fireEvent.press(await screen.findByRole('button', { name: /Não é nenhuma destas/ }));
+
+    expect(screen.getByText('Este anúncio não vai para o Discogs')).toBeOnTheScreen();
+    expect(screen.getByText(/O Discogs só aceita discos que existam no seu catálogo/)).toBeOnTheScreen();
+    expect(screen.getByLabelText('Publica em: eBay')).toBeOnTheScreen();
+  });
+
+  it('asks what kind of item it is only when going on without the catalogue', async () => {
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await typeName('noites');
+    await fireEvent.press(await screen.findByRole('button', { name: /Não é nenhuma destas/ }));
+
+    expect(screen.getByRole('radio', { name: 'Disco' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Outro artigo' })).not.toBeChecked();
+    expect(continueButton()).toBeDisabled();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Disco' }));
+
+    expect(continueButton()).toBeEnabled();
+  });
+
+  it('lets the seller choose an edition after all', async () => {
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await typeName('noites');
+    await fireEvent.press(await screen.findByRole('button', { name: /Não é nenhuma destas/ }));
+
+    await fireEvent.press(screen.getByRole('button', { name: /1978/ }));
+
+    expect(screen.queryByText('Este anúncio não vai para o Discogs')).not.toBeOnTheScreen();
+    expect(screen.getByLabelText('Publica em: Discogs, eBay')).toBeOnTheScreen();
+  });
+
+  it('goes on with the typed name when the catalogue has no edition by that name', async () => {
     jest.mocked(searchReleases).mockResolvedValue([]);
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
 
-    await searchFor('zzzz');
+    await typeName('Gira-discos Aurora T-200');
 
-    expect(await screen.findByText(/Não encontrámos nada com esse nome/)).toBeOnTheScreen();
+    expect(await screen.findByText('Nenhuma edição encontrada com este nome.')).toBeOnTheScreen();
+    expect(screen.getByText('Este anúncio não vai para o Discogs')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Publica em: eBay')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Outro artigo' }));
+
+    expect(continueButton()).toBeEnabled();
   });
 
-  it('explains a failed search and searches again on retry', async () => {
-    jest.mocked(searchReleases).mockRejectedValueOnce(new Error('server error'));
+  it('never blocks: a failed search still lets the seller continue without the catalogue', async () => {
+    jest.mocked(searchReleases).mockRejectedValue(new Error('server error'));
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
 
-    await searchFor('noites');
-    expect(await screen.findByText(/Não conseguimos procurar no catálogo/)).toBeOnTheScreen();
+    await typeName('noites');
+
+    expect(await screen.findByText('Não conseguimos procurar no catálogo Discogs.')).toBeOnTheScreen();
+    expect(screen.getByText(/Sem a edição do catálogo, o anúncio só pode ir para o eBay/)).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Disco' }));
+
+    expect(continueButton()).toBeEnabled();
+  });
+
+  it('searches again on retry, and offers the editions it then finds', async () => {
+    jest.mocked(searchReleases).mockRejectedValueOnce(new Error('server error'));
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await typeName('noites');
+    await screen.findByText('Não conseguimos procurar no catálogo Discogs.');
 
     await fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
 
     expect(await screen.findByText('Os Marés · LP, Album · 1978 · Portugal')).toBeOnTheScreen();
+    expect(screen.queryByText('Este anúncio não vai para o Discogs')).not.toBeOnTheScreen();
   });
 
-  it('says the device is offline when a search fails without a connection', async () => {
+  it('says the device is offline when a search fails without a connection, and still continues', async () => {
     setOnline(false);
     jest.mocked(searchReleases).mockRejectedValue(new Error('network'));
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
 
-    await searchFor('noites');
+    await typeName('noites');
 
     expect(await screen.findByText(/Estás sem ligação/)).toBeOnTheScreen();
-  });
 
-  it('asks equipment for its name instead of searching the catalogue', async () => {
-    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
-
-    await fireEvent.press(screen.getByRole('radio', { name: 'Aparelho' }));
-
-    expect(screen.queryByLabelText('Procurar no catálogo')).not.toBeOnTheScreen();
-    expect(continueButton()).toBeDisabled();
-
-    await fireEvent.changeText(screen.getByLabelText('Nome do aparelho'), 'Gira-discos Aurora');
+    await fireEvent.press(screen.getByRole('radio', { name: 'Disco' }));
 
     expect(continueButton()).toBeEnabled();
   });
@@ -230,7 +276,7 @@ describe('new listing, leaving the flow', () => {
 
   it('saves what was entered as a draft, without a status, and closes', async () => {
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
-    await searchFor('noites');
+    await typeName('noites');
     await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
 
     await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
@@ -248,10 +294,25 @@ describe('new listing, leaving the flow', () => {
     expect(screen).toHavePathname('/');
   });
 
+  it('saves an item that is not in the catalogue under the name the seller typed', async () => {
+    jest.mocked(searchReleases).mockResolvedValue([]);
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await typeName('Gira-discos Aurora T-200');
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Outro artigo' }));
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(jest.mocked(saveDraft).mock.calls[0][0].item).toMatchObject({
+      type: 'equipment',
+      title: 'Gira-discos Aurora T-200',
+      discogs_release_id: null,
+    });
+  });
+
   it('stays open and offers a choice when the draft cannot be saved', async () => {
     jest.mocked(saveDraft).mockRejectedValue(new Error('server error'));
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
-    await searchFor('noites');
+    await typeName('noites');
     await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
 
     await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
@@ -271,7 +332,7 @@ describe('new listing, leaving the flow', () => {
   it('lets the seller stay and keep editing when the draft cannot be saved', async () => {
     jest.mocked(saveDraft).mockRejectedValue(new Error('server error'));
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
-    await searchFor('noites');
+    await typeName('noites');
     await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
     await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
 
@@ -284,7 +345,7 @@ describe('new listing, leaving the flow', () => {
   it('saves on a second try after a failure', async () => {
     jest.mocked(saveDraft).mockRejectedValueOnce(new Error('server error'));
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
-    await searchFor('noites');
+    await typeName('noites');
     await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
     await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
 
@@ -315,8 +376,8 @@ describe('new listing, step 2: condition and photos', () => {
     expect(continueButton()).toBeEnabled();
   });
 
-  it('grades equipment on its own scale, not on the record grades', async () => {
-    await reachConditionWithEquipment();
+  it('grades another kind of item on its own scale, not on the record grades', async () => {
+    await reachConditionWithAnotherItem();
 
     expect(screen.queryByLabelText('Estado do disco')).not.toBeOnTheScreen();
 
@@ -324,6 +385,17 @@ describe('new listing, step 2: condition and photos', () => {
 
     expect(screen.getByText('Para peças · não funciona ou precisa de reparação.')).toBeOnTheScreen();
     expect(continueButton()).toBeEnabled();
+  });
+
+  it('grades a record that is not in the catalogue like any other record', async () => {
+    jest.mocked(searchReleases).mockResolvedValue([]);
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await typeName('Noites de Lisboa (promo)');
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Disco' }));
+    await fireEvent.press(continueButton());
+
+    expect(screen.getByLabelText('Estado do disco')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Estado da capa')).toBeOnTheScreen();
   });
 
   it('adds the photos chosen from the library and counts them', async () => {
