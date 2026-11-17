@@ -67,11 +67,11 @@ export type StatusTag = { label: string; tone: TagTone };
 export function listingStatusTag(status: Enums<'listing_status'>): StatusTag | null {
   switch (status) {
     case 'published':
-      return { label: t('listingDetail.status.published'), tone: 'success' };
+      return { label: t('newListing.result.published'), tone: 'success' };
     case 'error':
-      return { label: t('listingDetail.status.error'), tone: 'error' };
+      return { label: t('newListing.result.error'), tone: 'error' };
     case 'pending':
-      return { label: t('listingDetail.status.pending'), tone: 'waiting' };
+      return { label: t('newListing.result.retrying'), tone: 'waiting' };
     case 'paused':
       return { label: t('listingDetail.status.paused'), tone: 'waiting' };
     case 'removed':

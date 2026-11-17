@@ -229,8 +229,35 @@ describe('listing detail screen', () => {
     await fireEvent.press(await screen.findByRole('button', { name: 'Pausar' }));
 
     expect(Alert.alert).toHaveBeenCalledWith(
-      'Não conseguimos fazer isto',
+      'Não conseguimos pausar o anúncio',
       'Nada mudou. Tenta de novo dentro de momentos.',
+    );
+  });
+
+  it('names the action when removing fails', async () => {
+    jest.mocked(removeItem).mockRejectedValue(new Error('network'));
+    await renderRouter(APP_DIR, { initialUrl: URL });
+    await fireEvent.press(await screen.findByRole('button', { name: 'Remover' }));
+
+    await answerAlert('destructive');
+
+    expect(Alert.alert).toHaveBeenLastCalledWith(
+      'Não conseguimos remover o anúncio',
+      expect.any(String),
+    );
+  });
+
+  it('names the marketplace when trying it again fails', async () => {
+    const refused: DetailListing = { ...ebay, status: 'error', reason: 'unknown', visits: 0 };
+    jest.mocked(getListingDetail).mockResolvedValue(detail({ listings: [refused], offers: [] }));
+    jest.mocked(retryFailedListing).mockRejectedValue(new Error('network'));
+    await renderRouter(APP_DIR, { initialUrl: URL });
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Tentar de novo' }));
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'Não conseguimos tentar de novo em eBay',
+      expect.any(String),
     );
   });
 
@@ -268,7 +295,7 @@ describe('listing detail screen', () => {
     expect(await screen.findByRole('button', { name: 'Pausar' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Remover' })).toBeDisabled();
     expect(
-      screen.getByText('Sem ligação. Não podes alterar o anúncio até voltares a estar online.'),
+      screen.getByText('Sem ligação. Não podes alterar este anúncio.'),
     ).toBeOnTheScreen();
   });
 });

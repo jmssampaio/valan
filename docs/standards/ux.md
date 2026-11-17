@@ -26,7 +26,7 @@ Empty, loading, error (with a way to retry), offline, and success.
 
 Point of view: Valan feels like a record shop counter run by someone who knows the catalogue, not a SaaS dashboard. Warm, specific, a little editorial.
 
-Palette: one accent (orange from the logo), one ink colour, one paper colour, and the neutrals already in `theme.ts` (surface, muted, line); do not add more. Success and error are for status only. No gradients. Every colour used must be a named token in `theme.ts`. Controls (fields, buttons, chips, segmented controls) are edged with ink; the hairline is for dividers only.
+Palette: one accent (orange from the logo), one ink colour, one paper colour, and the neutrals already in `theme.ts` (surface, muted, line); do not add more. Success is for status only. Error is for status and for destructive actions (the `danger` button: remove, delete), never for decoration. No gradients. Every colour used must be a named token in `theme.ts`. Controls (fields, buttons, chips, segmented controls) are edged with ink; the hairline is for dividers only.
 
 Type: three faces, each with one job. Fraunces SemiBold (600) for titles, summary figures, the sales total and the price field; Inter (400 to 700) for reading text, controls and prices in lists (semi-bold 17 with tabular figures, so stacked amounts line up); IBM Plex Mono (400, 500) for labels, tags and catalogue numbers. Weights come from the font file named in `theme.ts`, never from `fontWeight`. Titles use tight tracking, body text uses normal tracking.
 

@@ -7,9 +7,9 @@ import { AppText } from '@/components/app-text';
 import { Button } from '@/components/button';
 import { ItemPhoto } from '@/components/item-photo';
 import { ListRow } from '@/components/list-row';
+import { MarketplaceRow } from '@/components/marketplace-row';
 import { Screen } from '@/components/screen';
 import { ScreenMessage } from '@/components/screen-message';
-import { Tag } from '@/components/tag';
 import {
   BorderWidth,
   Colors,
@@ -101,8 +101,8 @@ export default function ListingDetailScreen() {
             />
           ) : (
             <ScreenMessage
-              title={t(isOnline ? 'listingDetail.error.title' : 'listingDetail.offline.title')}
-              body={t(isOnline ? 'listingDetail.error.body' : 'listingDetail.offline.body')}
+              title={t(isOnline ? 'listingDetail.error.title' : 'listings.offline.title')}
+              body={t(isOnline ? 'listings.error.body' : 'listingDetail.offline.body')}
               action={{ label: t('common.retry'), onPress: listing.reload }}
             />
           )}
@@ -132,7 +132,12 @@ function ReadyDetail({
   const inFlight = useRef(new Set<string>());
   const [working, setWorking] = useState<readonly string[]>([]);
 
-  async function run(key: string, request: () => Promise<void>, afterwards: () => void) {
+  async function run(
+    key: string,
+    failedTitle: string,
+    request: () => Promise<void>,
+    afterwards: () => void,
+  ) {
     if (inFlight.current.has(key)) return;
     inFlight.current.add(key);
     setWorking([...inFlight.current]);
@@ -142,7 +147,7 @@ function ReadyDetail({
       afterwards();
     } catch {
       // Nothing changed, so the seller keeps what is on screen and may try again.
-      Alert.alert(t('listingDetail.action.failed.title'), t('listingDetail.action.failed.body'));
+      Alert.alert(failedTitle, t('listingDetail.action.failed.body'));
     } finally {
       inFlight.current.delete(key);
       setWorking([...inFlight.current]);
@@ -159,14 +164,17 @@ function ReadyDetail({
   const leave = () => router.dismissTo(LISTINGS);
 
   const doAction: Record<DetailAction, () => void> = {
-    pause: () => void run('pause', () => pauseItem(item.id), onChanged),
-    resume: () => void run('resume', () => resumeItem(item.id), onChanged),
+    pause: () =>
+      void run('pause', t('listingDetail.failed.pause'), () => pauseItem(item.id), onChanged),
+    resume: () =>
+      void run('resume', t('listingDetail.failed.resume'), () => resumeItem(item.id), onChanged),
     remove: () =>
       confirm(
         t('listingDetail.remove.title'),
         t('listingDetail.remove.body'),
         t('listingDetail.action.remove'),
-        () => void run('remove', () => removeItem(item.id), leave),
+        () =>
+          void run('remove', t('listingDetail.failed.remove'), () => removeItem(item.id), leave),
       ),
     continueDraft: () =>
       router.push({ pathname: REOPEN_DRAFT, params: { draft: item.id } }),
@@ -175,7 +183,13 @@ function ReadyDetail({
         t('listingDetail.deleteDraft.title'),
         t('listingDetail.deleteDraft.body'),
         t('listingDetail.action.deleteDraft'),
-        () => void run('delete', () => deleteDraft(item.id), leave),
+        () =>
+          void run(
+            'delete',
+            t('listingDetail.failed.deleteDraft'),
+            () => deleteDraft(item.id),
+            leave,
+          ),
       ),
   };
 
@@ -200,12 +214,14 @@ function ReadyDetail({
         ) : undefined
       }>
       <View style={styles.sections}>
-        <AppText color="muted">{detailLine(item)}</AppText>
-        {notice ? (
-          <AppText variant="rowMeta" color="muted" accessibilityRole="alert">
-            {notice}
-          </AppText>
-        ) : null}
+        <View style={styles.intro}>
+          <AppText color="muted">{detailLine(item)}</AppText>
+          {notice ? (
+            <AppText variant="rowMeta" color="muted" accessibilityRole="alert">
+              {notice}
+            </AppText>
+          ) : null}
+        </View>
 
         {item.status === 'draft' ? null : sale ? (
           <Section title={t('listingDetail.section.sale')}>
@@ -223,7 +239,7 @@ function ReadyDetail({
             {listings.length > 0 ? (
               <Section title={t('listingDetail.section.marketplaces')}>
                 {listings.map((listing, index) => (
-                  <MarketplaceRow
+                  <ListingRow
                     key={listing.id}
                     listing={listing}
                     offers={offers.filter(({ listing_id }) => listing_id === listing.id).length}
@@ -233,6 +249,9 @@ function ReadyDetail({
                     onRetry={() =>
                       void run(
                         `retry:${listing.marketplace}`,
+                        t('listingDetail.failed.retry', {
+                          name: marketplaceName(listing.marketplace),
+                        }),
                         () => retryFailedListing(item.id, listing.marketplace),
                         onChanged,
                       )
@@ -322,7 +341,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function MarketplaceRow({
+function ListingRow({
   listing,
   offers,
   isRetrying,
@@ -337,43 +356,26 @@ function MarketplaceRow({
   isLast: boolean;
   onRetry: () => void;
 }) {
-  const name = marketplaceName(listing.marketplace);
   const tag = isRetrying
-    ? { label: t('listingDetail.status.pending'), tone: 'waiting' as const }
-    : listingStatusTag(listing.status);
-  const divider = isLast ? 'none' : 'line';
-
-  if (listing.status !== 'error') {
-    return (
-      <ListRow
-        title={name}
-        meta={listingMeta(listing, offers)}
-        trailing={tag ? <Tag label={tag.label} tone={tag.tone} /> : undefined}
-        divider={divider}
-      />
-    );
-  }
+    ? { label: t('newListing.result.retrying'), tone: 'waiting' as const }
+    : (listingStatusTag(listing.status) ?? undefined);
+  const meta = listingMeta(listing, offers);
 
   return (
-    <ListRow
-      title={name}
-      trailing={tag ? <Tag label={tag.label} tone={tag.tone} /> : undefined}
-      divider={divider}>
-      <View style={styles.problem}>
-        <AppText variant="rowMeta" color="error" accessibilityRole="alert">
-          {listingMeta(listing, offers)}
-        </AppText>
-        <View style={styles.retry}>
-          <Button
-            label={t('common.retry')}
-            variant="outline"
-            size="small"
-            disabled={isRetrying || !isOnline}
-            onPress={onRetry}
-          />
-        </View>
-      </View>
-    </ListRow>
+    <MarketplaceRow
+      name={marketplaceName(listing.marketplace)}
+      tag={tag}
+      meta={meta}
+      refusal={
+        listing.status === 'error' && meta
+          ? {
+              reason: meta,
+              retry: { label: t('common.retry'), onPress: onRetry, disabled: isRetrying || !isOnline },
+            }
+          : undefined
+      }
+      isLast={isLast}
+    />
   );
 }
 
@@ -430,21 +432,18 @@ const styles = StyleSheet.create({
   sections: {
     gap: Spacing.x6,
   },
+  intro: {
+    gap: Spacing.x2,
+  },
   sectionHeading: {
     paddingBottom: Spacing.x3,
     borderBottomWidth: BorderWidth.hairline,
     borderBottomColor: Colors.ink,
   },
-  problem: {
-    flex: 1,
-    gap: Spacing.x3,
-  },
-  retry: {
-    flexDirection: 'row',
-  },
+  // The same gap as the stacked buttons of a draft: the footer has one rhythm.
   actionRow: {
     flexDirection: 'row',
-    gap: Spacing.x3,
+    gap: Spacing.x2,
   },
   action: {
     flex: 1,

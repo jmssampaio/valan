@@ -18,8 +18,10 @@ function frameFor(ratio: number) {
     : { width: Size.detailPhoto * ratio, height: Size.detailPhoto };
 }
 
-// Decorative: the title beside it already says what the item is.
-/** The seller's photo at its true proportions, for the screen of one item. */
+/**
+ * The seller's photo at its true proportions, for the screen of one item. Decorative: the
+ * title beside it already says what the item is.
+ */
 export function ItemPhoto({ source }: ItemPhotoProps) {
   const [ratio, setRatio] = useState(SQUARE);
 

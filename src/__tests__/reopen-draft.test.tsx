@@ -57,7 +57,7 @@ const draftItem: ListedItem = {
   user_id: 'user-1',
   type: 'record',
   title: 'Noites de Lisboa',
-  artist: null,
+  artist: 'Os Marés',
   discogs_release_id: null,
   format: null,
   release_year: null,
@@ -141,8 +141,20 @@ describe('reopening a draft', () => {
     await fireEvent.press(await screen.findByRole('button', { name: 'Cancelar' }));
 
     expect(saveDraft).toHaveBeenCalledWith(
-      expect.objectContaining({ item: expect.objectContaining({ id: 'item-1' }) }),
+      expect.objectContaining({
+        // What the draft already had is not lost by opening it and leaving.
+        item: expect.objectContaining({ id: 'item-1', artist: 'Os Marés' }),
+      }),
     );
+  });
+
+  it('lets the seller close the sheet while the draft loads', async () => {
+    jest.mocked(getListingDetail).mockReturnValue(new Promise(() => {}));
+    await renderRouter(APP_DIR, { initialUrl: REOPEN });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Fechar' }));
+
+    expect(screen).toHavePathname('/');
   });
 
   it('says so when the draft cannot be opened, and tries again on request', async () => {
@@ -156,13 +168,38 @@ describe('reopening a draft', () => {
     expect(await screen.findByRole('progressbar', { name: 'Passo 2 de 4' })).toBeOnTheScreen();
   });
 
-  it('does not reopen an item that is no longer a draft', async () => {
-    jest
-      .mocked(getListingDetail)
-      .mockResolvedValue(detailOf({ ...draftItem, status: 'active' }));
+  it('lets the seller close the sheet when the draft cannot be opened', async () => {
+    jest.mocked(getListingDetail).mockRejectedValue(new Error('network'));
+    await renderRouter(APP_DIR, { initialUrl: REOPEN });
+    await screen.findByText('Não conseguimos abrir o rascunho');
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Fechar' }));
+
+    expect(screen).toHavePathname('/');
+  });
+
+  it('says there is no connection when it cannot open the draft offline', async () => {
+    setOnline(false);
+    jest.mocked(getListingDetail).mockRejectedValue(new Error('network'));
     await renderRouter(APP_DIR, { initialUrl: REOPEN });
 
-    expect(await screen.findByText('Não conseguimos abrir o rascunho')).toBeOnTheScreen();
+    expect(await screen.findByText('Estás sem ligação')).toBeOnTheScreen();
+    expect(screen.queryByText('Não conseguimos abrir o rascunho')).not.toBeOnTheScreen();
+  });
+
+  it.each([
+    ['is no longer a draft', detailOf({ ...draftItem, status: 'active' })],
+    ['no longer exists', null],
+  ])('says the draft is gone, with nothing to retry, when it %s', async (_case, found) => {
+    jest.mocked(getListingDetail).mockResolvedValue(found);
+    await renderRouter(APP_DIR, { initialUrl: REOPEN });
+
+    expect(await screen.findByText('Este rascunho já não existe')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Tentar de novo' })).not.toBeOnTheScreen();
     expect(screen.queryByRole('progressbar')).not.toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Fechar' }));
+
+    expect(screen).toHavePathname('/');
   });
 });

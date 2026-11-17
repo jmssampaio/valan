@@ -6,13 +6,12 @@ import { getListingDetail } from '@/services/listing-detail';
 export type ReopenedDraftState =
   | { status: 'loading' }
   | { status: 'error' }
+  /** Nothing to carry on with: the item is gone, or is no longer a draft. Trying again cannot help. */
+  | { status: 'unavailable' }
   | { status: 'ready'; draft: ListingDraft };
 
-/**
- * Loads a saved draft to carry on with. Anything that is not a draft any more, or no longer
- * exists, cannot be reopened: it counts as an error, because there is nothing to carry on with.
- */
-export function useReopenedDraft(itemId: string): ReopenedDraftState & { retry: () => void } {
+/** Loads a saved draft to carry on with, with a way to load again after a failure. */
+export function useReopenedDraft(itemId: string): ReopenedDraftState & { reload: () => void } {
   const [state, setState] = useState<ReopenedDraftState>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
 
@@ -25,7 +24,7 @@ export function useReopenedDraft(itemId: string): ReopenedDraftState & { retry: 
         setState(
           detail?.item.status === 'draft'
             ? { status: 'ready', draft: draftFromItem(detail.item) }
-            : { status: 'error' },
+            : { status: 'unavailable' },
         );
       })
       // The screen turns this into a message with a retry; the cause is the service's to report.
@@ -38,10 +37,10 @@ export function useReopenedDraft(itemId: string): ReopenedDraftState & { retry: 
     };
   }, [itemId, attempt]);
 
-  const retry = useCallback(() => {
+  const reload = useCallback(() => {
     setState({ status: 'loading' });
     setAttempt((previous) => previous + 1);
   }, []);
 
-  return { ...state, retry };
+  return { ...state, reload };
 }
