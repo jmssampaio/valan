@@ -109,6 +109,12 @@ describe('respondOffer, accepting', () => {
     ).toBe('already_answered');
   });
 
+  it('does not list an offer that ran out of time under the pending offers of the item', async () => {
+    jest.setSystemTime(new Date(NOW.getTime() + 22 * HOUR_MS));
+
+    expect((await detail.getListingDetail('sample-item-1'))?.offers).toEqual([]);
+  });
+
   it('takes the offer off the detail screen of the item', async () => {
     await service.respondOffer({ offerId: 'sample-offer-1', response: 'reject', amountMinor: 2400 });
 

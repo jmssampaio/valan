@@ -264,6 +264,10 @@ function ReadyDetail({
                       trailing={
                         <Button
                           label={t('listingDetail.offer.view')}
+                          accessibilityLabel={t('listingDetail.offer.view.label', {
+                            price: row.price,
+                            title: row.title,
+                          })}
                           variant="outline"
                           size="small"
                           onPress={() => router.navigate({ pathname: OFFERS, params: { offer: offer.id } })}

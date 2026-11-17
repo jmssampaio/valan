@@ -14,12 +14,12 @@ export type GuardedOutcome =
 export function useGuardedAction(): {
   /** The keys of the requests under way, for disabling what started them. */
   working: readonly string[];
-  run: (key: string, request: () => Promise<void>) => Promise<GuardedOutcome>;
+  run: (key: string, request: () => Promise<unknown>) => Promise<GuardedOutcome>;
 } {
   const inFlight = useRef(new Set<string>());
   const [working, setWorking] = useState<readonly string[]>([]);
 
-  const run = useCallback(async (key: string, request: () => Promise<void>) => {
+  const run = useCallback(async (key: string, request: () => Promise<unknown>) => {
     if (inFlight.current.has(key)) return { status: 'busy' } as const;
 
     inFlight.current.add(key);

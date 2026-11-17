@@ -1,7 +1,7 @@
 import type { ChoiceOption } from '@/components/segmented-control';
 import type { TagTone } from '@/components/tag';
 import { expiryLabel, marketplaceName } from '@/features/listing-detail/labels';
-import { formatPrice } from '@/features/listings/format';
+import { formatDate, formatPrice } from '@/features/listings/format';
 import { t } from '@/i18n';
 import { supportedMarketplaces } from '@/services/marketplaces';
 import type { OfferRow } from '@/services/offers';
@@ -68,13 +68,16 @@ export type CardFacts = {
 
 export function cardFacts(row: OfferRow, now: Date): CardFacts {
   const { offer, item, marketplace } = row;
-  // How long is left only matters while the offer can still be answered; after that the
-  // outcome says it, and saying it twice is noise.
-  const timeLeft = effectiveStatus(row, now) === 'pending' ? expiryLabel(offer.expires_at, now) : null;
+  // While the offer can be answered, how long is left; after that, when it ended. The outcome
+  // already says how, and saying it twice is noise.
+  const when =
+    effectiveStatus(row, now) === 'pending'
+      ? expiryLabel(offer.expires_at, now)
+      : formatDate(new Date(hasLapsed(row, now) ? (offer.expires_at as string) : offer.updated_at));
 
   return {
     title: item.title,
-    meta: [offer.buyer, marketplaceName(marketplace), timeLeft]
+    meta: [offer.buyer, marketplaceName(marketplace), when]
       .filter((part) => part !== null && part !== '')
       .join(META_SEPARATOR),
     asking:
@@ -85,7 +88,13 @@ export function cardFacts(row: OfferRow, now: Date): CardFacts {
   };
 }
 
-export type OfferAction = 'respond' | 'openOnMarketplace' | 'expired' | 'none';
+export type OfferAction =
+  | 'respond'
+  | 'openOnMarketplace'
+  /** The app cannot answer it and has nowhere to send the seller: it can only be answered there. */
+  | 'elsewhere'
+  | 'expired'
+  | 'none';
 
 /**
  * What the seller can do with the offer. Whether the app can answer it comes from what the
@@ -98,7 +107,7 @@ export function offerAction(row: OfferRow, now: Date): OfferAction {
 
   const marketplace = supportedMarketplaces().find(({ id }) => id === row.marketplace);
   if (marketplace?.capabilities.respondToOffers) return 'respond';
-  return row.listingUrl === null ? 'none' : 'openOnMarketplace';
+  return row.listingUrl === null ? 'elsewhere' : 'openOnMarketplace';
 }
 
 const outcomeTones: Record<Exclude<Enums<'offer_status'>, 'pending'>, TagTone> = {

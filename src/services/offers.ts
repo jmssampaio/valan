@@ -42,6 +42,11 @@ function isPastExpiry(offer: Tables<'offers'>, now: Date): boolean {
   return offer.expires_at !== null && new Date(offer.expires_at).getTime() <= now.getTime();
 }
 
+/** True while an offer waits for an answer: pending, and not past its time. */
+export function isAwaitingAnswer(offer: Tables<'offers'>, now: Date): boolean {
+  return offer.status === 'pending' && !isPastExpiry(offer, now);
+}
+
 // Sample data until the Supabase queries exist; callers already get the final shape.
 export async function countPendingOffers(): Promise<number> {
   // An offer is always made on a listing, so a seller without any has none to answer.
@@ -49,8 +54,7 @@ export async function countPendingOffers(): Promise<number> {
   if (items.length === 0) return 0;
 
   const now = new Date();
-  return allOffers().filter((offer) => offer.status === 'pending' && !isPastExpiry(offer, now))
-    .length;
+  return allOffers().filter((offer) => isAwaitingAnswer(offer, now)).length;
 }
 
 // Fake links until the listings carry their address: the marketplace's own site.

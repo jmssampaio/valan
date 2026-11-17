@@ -1,6 +1,7 @@
 import type { ListedItem, ListingSummary } from './listings';
 import { supportedMarketplaces } from './marketplaces';
 import type { PublishFailure } from './publishing';
+import { isAwaitingAnswer } from './offers';
 import { allItems, allOffers, deleteItem, replaceItem, sampleSales } from './sample-data';
 
 import type { Tables } from '@/types/database';
@@ -83,7 +84,7 @@ export async function getListingDetail(itemId: string): Promise<ListingDetail | 
     item,
     listings: listings.map(toDetailListing),
     offers: allOffers().filter(
-      ({ listing_id, status }) => listingIds.has(listing_id) && status === 'pending',
+      (offer) => listingIds.has(offer.listing_id) && isAwaitingAnswer(offer, new Date()),
     ),
     sale: saleOf(item),
   };

@@ -158,6 +158,8 @@ describe('offers screen', () => {
     await fireEvent.press(await screen.findByRole('tab', { name: /Respondidas/ }));
 
     expect(screen.getByText('Night Ferry')).toBeOnTheScreen();
+    // Answered offers say when: the date, not when they would have expired.
+    expect(screen.getByText('north_records · eBay · 16/11/2026')).toBeOnTheScreen();
     expect(screen.getByText('Aceite')).toBeOnTheScreen();
     expect(screen.getByText('Verde Mar')).toBeOnTheScreen();
     expect(screen.getByText('Expirada')).toBeOnTheScreen();
@@ -171,7 +173,7 @@ describe('offers screen', () => {
     expect(await screen.findByRole('tab', { name: 'Pendentes · 1' })).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('tab', { name: /Respondidas/ }));
 
-    expect(screen.getByText('late_buyer · eBay')).toBeOnTheScreen();
+    expect(screen.getByText(/^late_buyer · eBay · \d/)).toBeOnTheScreen();
     expect(screen.getByText('Expirada')).toBeOnTheScreen();
     expect(screen.getByText('Já não podes responder a esta proposta.')).toBeOnTheScreen();
   });
@@ -243,7 +245,10 @@ describe('offers screen, answering', () => {
 
     await fireEvent.press(reject);
 
-    expect(reject).toBeDisabled();
+    // Looked up again: the button now says what it is doing.
+    expect(
+      screen.getByRole('button', { name: 'Rejeitar a proposta de 24 € para Noites de Lisboa' }),
+    ).toBeDisabled();
     expect(
       screen.getByRole('button', { name: 'Rejeitar a proposta de 150 € para Gira-discos Aurora' }),
     ).toBeEnabled();
@@ -297,7 +302,92 @@ describe('offers screen, answering', () => {
   });
 });
 
+describe('offers screen, progress and guards', () => {
+  it('says what is being done while an answer is on its way', async () => {
+    jest.mocked(respondOffer).mockReturnValue(new Promise(() => {}));
+    await renderRouter(APP_DIR, { initialUrl: OFFERS });
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Rejeitar a proposta de 24 € para Noites de Lisboa' }),
+    );
+
+    expect(screen.getByText('A rejeitar…')).toBeOnTheScreen();
+  });
+
+  it('says it is accepting once the acceptance is confirmed', async () => {
+    jest.mocked(respondOffer).mockReturnValue(new Promise(() => {}));
+    await renderRouter(APP_DIR, { initialUrl: OFFERS });
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Aceitar a proposta de 24 € para Noites de Lisboa' }),
+    );
+
+    await pressAlertButton('Aceitar');
+
+    expect(screen.getByText('A aceitar…')).toBeOnTheScreen();
+  });
+
+  it('keeps both buttons of an offer out of reach while either answer is on its way', async () => {
+    jest.mocked(respondOffer).mockReturnValue(new Promise(() => {}));
+    await renderRouter(APP_DIR, { initialUrl: OFFERS });
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Rejeitar a proposta de 24 € para Noites de Lisboa' }),
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'Aceitar a proposta de 24 € para Noites de Lisboa' }),
+    ).toBeDisabled();
+  });
+
+  it('never sends a reject and an accept for the same offer, even if an accept was already asked for', async () => {
+    jest.mocked(respondOffer).mockReturnValue(new Promise(() => {}));
+    await renderRouter(APP_DIR, { initialUrl: OFFERS });
+    // The accept alert is opened first and left open...
+    await fireEvent.press(
+      await screen.findByRole('button', { name: 'Aceitar a proposta de 24 € para Noites de Lisboa' }),
+    );
+    const acceptAlert = jest.mocked(Alert.alert).mock.calls.at(-1)?.[2] ?? [];
+    // ...then the reject goes out...
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Rejeitar a proposta de 24 € para Noites de Lisboa' }),
+    );
+
+    // ...and confirming the old alert afterwards must not send a second, opposite answer.
+    await act(async () => acceptAlert.find(({ text }) => text === 'Aceitar')?.onPress?.());
+
+    expect(respondOffer).toHaveBeenCalledTimes(1);
+    expect(respondOffer).toHaveBeenCalledWith(expect.objectContaining({ response: 'reject' }));
+  });
+
+  it('refreshes the tab bar count as well as the offers when the seller pulls to refresh', async () => {
+    await renderRouter(APP_DIR, { initialUrl: OFFERS });
+    await screen.findByText('Noites de Lisboa');
+    const counts = jest.mocked(countPendingOffers).mock.calls.length;
+
+    await act(async () => screen.getByTestId('offers-list').props.refreshControl.props.onRefresh());
+
+    expect(countPendingOffers).toHaveBeenCalledTimes(counts + 1);
+  });
+
+  it('refreshes the tab bar count as well when the seller comes back to the screen', async () => {
+    await renderRouter(APP_DIR, { initialUrl: OFFERS });
+    await screen.findByText('Noites de Lisboa');
+    const counts = jest.mocked(countPendingOffers).mock.calls.length;
+
+    await fireEvent.press(screen.getByRole('tab', { name: 'Vendas' }));
+    await fireEvent.press(await screen.findByRole('tab', { name: /^Propostas/ }));
+
+    expect(countPendingOffers).toHaveBeenCalledTimes(counts + 1);
+  });
+});
+
 describe('offers screen, answering from outside', () => {
+  it('says where an offer can be answered when the app has nowhere to send the seller', async () => {
+    jest.mocked(listOffers).mockResolvedValue([{ ...onDiscogs, listingUrl: null }]);
+    await renderRouter(APP_DIR, { initialUrl: OFFERS });
+
+    expect(await screen.findByText('Só podes responder a esta proposta em Discogs.')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: /Responder/ })).not.toBeOnTheScreen();
+  });
+
   it('offers only to open the offer on a marketplace that cannot be answered from outside', async () => {
     await renderRouter(APP_DIR, { initialUrl: OFFERS });
     await screen.findByText('Blue Harbor Sessions');

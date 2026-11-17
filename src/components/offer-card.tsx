@@ -122,9 +122,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     gap: Spacing.x2,
   },
+  // The same gap as the buttons of the detail screen's footer: one rhythm for a pair of buttons.
   actions: {
     flexDirection: 'row',
-    gap: Spacing.x5,
+    gap: Spacing.x2,
   },
   action: {
     flex: 1,

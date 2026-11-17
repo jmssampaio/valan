@@ -187,7 +187,9 @@ describe('listing detail screen', () => {
     expect(await screen.findByText('vinil_porto · eBay')).toBeOnTheScreen();
     expect(screen.getByText('24 €')).toBeOnTheScreen();
 
-    await fireEvent.press(screen.getByRole('button', { name: 'Ver' }));
+    await fireEvent.press(
+      screen.getByRole('button', { name: 'Ver a proposta de 24\u00A0€ de vinil_porto · eBay' }),
+    );
 
     expect(screen).toHavePathname('/offers');
     // The offer is named, so the inbox can bring it into view.

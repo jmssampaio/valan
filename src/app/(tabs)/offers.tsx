@@ -33,15 +33,21 @@ export default function OffersScreen() {
   const offers = useOffers();
   const pendingOffers = usePendingOffers();
 
-  // Coming back from another screen shows what changed there. The first focus is the
-  // screen opening, which already loads.
+  // One refresh for the list and for the count on the tab bar, so they move as one: another
+  // offer may have come in. Coming back from another screen refreshes too; the first focus
+  // is the screen opening, which already loads.
   const { refresh } = offers;
+  const { reload: recount } = pendingOffers;
+  const refreshAll = useCallback(() => {
+    refresh();
+    recount();
+  }, [refresh, recount]);
   const hasOpened = useRef(false);
   useFocusEffect(
     useCallback(() => {
-      if (hasOpened.current) refresh();
+      if (hasOpened.current) refreshAll();
       hasOpened.current = true;
-    }, [refresh]),
+    }, [refreshAll]),
   );
 
   const isEmpty = offers.status === 'ready' && offers.offers.length === 0;
@@ -73,11 +79,8 @@ export default function OffersScreen() {
           isOnline={isOnline}
           refreshing={offers.refreshing}
           refreshFailed={offers.refreshFailed}
-          onRefresh={offers.refresh}
-          onAnswered={() => {
-            refresh();
-            pendingOffers.reload();
-          }}
+          onRefresh={refreshAll}
+          onAnswered={refreshAll}
         />
       )}
     </Screen>
@@ -103,6 +106,8 @@ function Inbox({
   const router = useRouter();
   const { offer: openedOffer } = useLocalSearchParams<{ offer?: string }>();
   const { working, run } = useGuardedAction();
+  // Which answer is on its way for each offer, so its button can say so.
+  const [answering, setAnswering] = useState<Record<string, OfferResponse>>({});
   const listRef = useRef<FlatList<OfferRow>>(null);
 
   const now = new Date();
@@ -141,10 +146,15 @@ function Inbox({
 
   async function answer(row: OfferRow, response: OfferResponse) {
     const { offer } = row;
-    const outcome = await run(`${response}:${offer.id}`, () =>
-      respondOffer({ offerId: offer.id, response, amountMinor: offer.amount_minor }).then(() => {}),
-    );
+    // One key for both answers: while one is on its way, the opposite one cannot start,
+    // even from a confirmation that was opened earlier.
+    const outcome = await run(`answer:${offer.id}`, () => {
+      setAnswering((current) => ({ ...current, [offer.id]: response }));
+      return respondOffer({ offerId: offer.id, response, amountMinor: offer.amount_minor });
+    });
+    if (outcome.status === 'busy') return;
 
+    setAnswering(({ [offer.id]: _answered, ...rest }) => rest);
     if (outcome.status === 'done') onAnswered();
     if (outcome.status !== 'failed') return;
 
@@ -184,13 +194,13 @@ function Inbox({
       case 'respond':
         return [
           {
-            label: t('offers.action.reject'),
+            label: t(answering[row.offer.id] === 'reject' ? 'offers.action.rejecting' : 'offers.action.reject'),
             accessibilityLabel: actionLabel('reject', row),
             disabled,
             onPress: () => void answer(row, 'reject'),
           },
           {
-            label: t('offers.action.accept'),
+            label: t(answering[row.offer.id] === 'accept' ? 'offers.action.accepting' : 'offers.action.accept'),
             accessibilityLabel: actionLabel('accept', row),
             primary: true,
             disabled,
@@ -206,6 +216,7 @@ function Inbox({
             onPress: () => void openOnMarketplace(row),
           },
         ];
+      case 'elsewhere':
       case 'expired':
       case 'none':
         return [];
@@ -241,7 +252,7 @@ function Inbox({
             <OfferCard
               {...facts}
               tag={outcomeTag(row, now) ?? undefined}
-              note={offerAction(row, now) === 'expired' ? t('offers.expired.note') : undefined}
+              note={noteFor(row, now)}
               actions={actionsFor(row)}
               isLast={index === visible.length - 1}
             />
@@ -260,6 +271,18 @@ function Inbox({
       />
     </View>
   );
+}
+
+/** Why there is nothing to do with an offer, when there is a reason. */
+function noteFor(row: OfferRow, now: Date): string | undefined {
+  switch (offerAction(row, now)) {
+    case 'expired':
+      return t('offers.expired.note');
+    case 'elsewhere':
+      return t('offers.elsewhere.note', { name: marketplaceName(row.marketplace) });
+    default:
+      return undefined;
+  }
 }
 
 /** What went wrong with an answer, in words: the server's refusal, or that nothing got through. */

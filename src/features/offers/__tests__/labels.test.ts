@@ -113,11 +113,20 @@ describe('cardFacts', () => {
   });
 
   it('does not repeat that an offer expired: its tag and its note already say so', () => {
-    expect(cardFacts(row({ expires_at: inHours(-2) }), NOW).meta).toBe('vinil_porto · eBay');
+    expect(cardFacts(row({ expires_at: inHours(-2) }), NOW).meta).toMatch(/^vinil_porto · eBay · \d/);
+    expect(cardFacts(row({ expires_at: inHours(-2) }), NOW).meta).not.toMatch(/Expir/);
   });
 
-  it('leaves out when it would have expired once the offer was answered', () => {
-    expect(cardFacts(row({ status: 'accepted' }), NOW).meta).toBe('vinil_porto · eBay');
+  it('gives the date an answered offer was answered, instead of when it would expire', () => {
+    const answered = row({ status: 'accepted', updated_at: '2026-11-12T10:00:00Z' });
+
+    expect(cardFacts(answered, NOW).meta).toBe('vinil_porto · eBay · 12/11/2026');
+  });
+
+  it('gives the date an offer ran out of time as the date it expired', () => {
+    const lapsed = row({ expires_at: '2026-11-17T08:00:00Z' });
+
+    expect(cardFacts(lapsed, NOW).meta).toBe('vinil_porto · eBay · 17/11/2026');
   });
 
   it('has nothing to say about what is asked when the item has no price', () => {
@@ -136,8 +145,8 @@ describe('offerAction', () => {
     expect(offerAction(row({}, 'discogs', 'https://www.discogs.com/'), NOW)).toBe('openOnMarketplace');
   });
 
-  it('has nothing to offer for such an offer when there is nowhere to send the seller', () => {
-    expect(offerAction(row({}, 'discogs', null), NOW)).toBe('none');
+  it('says the offer can only be answered elsewhere when there is nowhere to send the seller', () => {
+    expect(offerAction(row({}, 'discogs', null), NOW)).toBe('elsewhere');
   });
 
   it('only says an expired offer cannot be answered', () => {
