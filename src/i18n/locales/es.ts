@@ -21,7 +21,7 @@ export const es: Translations = {
   'listings.filter.sold': 'Vendidos',
   'listings.filter.withCount': '{label} · {count}',
   'listings.filter.empty': 'No hay anuncios en esta pestaña.',
-  'listings.item.equipment': 'Equipo',
+  'listings.item.equipment': 'Otro artículo',
   'listings.item.noPrice': 'Sin precio',
   'listings.tag.error': '{marketplace} · error',
   'listings.tag.pending': '{marketplace} · publicando',

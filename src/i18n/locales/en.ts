@@ -21,7 +21,7 @@ export const en: Translations = {
   'listings.filter.sold': 'Sold',
   'listings.filter.withCount': '{label} · {count}',
   'listings.filter.empty': 'There are no listings in this tab.',
-  'listings.item.equipment': 'Equipment',
+  'listings.item.equipment': 'Another item',
   'listings.item.noPrice': 'No price',
   'listings.tag.error': '{marketplace} · error',
   'listings.tag.pending': '{marketplace} · publishing',

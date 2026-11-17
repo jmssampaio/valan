@@ -20,7 +20,7 @@ export const ptPT = {
   'listings.filter.sold': 'Vendidos',
   'listings.filter.withCount': '{label} · {count}',
   'listings.filter.empty': 'Não há anúncios neste separador.',
-  'listings.item.equipment': 'Aparelho',
+  'listings.item.equipment': 'Outro artigo',
   'listings.item.noPrice': 'Sem preço',
   'listings.tag.error': '{marketplace} · erro',
   'listings.tag.pending': '{marketplace} · a publicar',
