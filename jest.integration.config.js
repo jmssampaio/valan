@@ -9,6 +9,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^expo/virtual/env$': '<rootDir>/jest.integration.env.js',
+    '^react-native-get-random-values$': '<rootDir>/jest.integration.empty.js',
   },
   testMatch: ['**/__integration__/**/*.test.ts'],
   globalSetup: '<rootDir>/jest.integration.setup.js',

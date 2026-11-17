@@ -26,3 +26,15 @@ export function getSupabase(): SupabaseClient<Database> {
   }
   return client;
 }
+
+/**
+ * The id of the seller who is signed in. Services that read or write a seller's rows ask
+ * for it first, so a call made with nobody signed in fails here, plainly, and not as an
+ * empty answer from the database.
+ */
+export async function requireUserId(): Promise<string> {
+  const { data } = await getSupabase().auth.getSession();
+  const userId = data.session?.user.id;
+  if (!userId) throw new Error('Nobody is signed in.');
+  return userId;
+}

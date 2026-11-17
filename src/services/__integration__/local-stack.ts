@@ -71,3 +71,22 @@ export async function latestEmailTo(address: string): Promise<MailboxMessage> {
   }
   throw new Error(`No email arrived for ${address}.`);
 }
+
+/**
+ * A listing, written as the server would: the app itself may not create one, so a test
+ * that needs an item with listings has to set them up this way.
+ */
+export async function createListingAsServer(listing: {
+  itemId: string;
+  userId: string;
+  marketplace: 'discogs' | 'ebay';
+  status: 'pending' | 'published' | 'error' | 'paused' | 'removed';
+}): Promise<void> {
+  const { error } = await localAdmin().from('listings').insert({
+    item_id: listing.itemId,
+    user_id: listing.userId,
+    marketplace: listing.marketplace,
+    status: listing.status,
+  });
+  if (error) throw error;
+}
