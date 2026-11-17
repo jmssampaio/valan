@@ -7,12 +7,24 @@ import {
 } from '../listing-rows';
 
 import type { ListedItem, ListingSummary } from '@/services/listings';
+import { supportedMarketplaces } from '@/services/marketplaces';
 import type { Tables } from '@/types/database';
 
 // The device language is a system boundary: fix it so labels are predictable.
 jest.mock('expo-localization', () => ({
   getLocales: () => [{ languageCode: 'pt', languageTag: 'pt-PT' }],
 }));
+
+// Spied on, not replaced: most tests want the real marketplaces, two want others.
+jest.mock('@/services/marketplaces', () => {
+  const actual = jest.requireActual<typeof import('@/services/marketplaces')>('@/services/marketplaces');
+  return { ...actual, supportedMarketplaces: jest.fn(actual.supportedMarketplaces) };
+});
+
+afterEach(() => {
+  const actual = jest.requireActual<typeof import('@/services/marketplaces')>('@/services/marketplaces');
+  jest.mocked(supportedMarketplaces).mockImplementation(actual.supportedMarketplaces);
+});
 
 function item(overrides: Partial<ListedItem> = {}): ListedItem {
   return {
@@ -107,6 +119,24 @@ describe('listingTags', () => {
   it('marks a paused listing as waiting', () => {
     expect(listingTags([listing({ status: 'paused' })])).toEqual([
       { key: 'listing-1', label: 'Discogs · em pausa', tone: 'waiting' },
+    ]);
+  });
+
+  it('takes the marketplace name from the marketplaces the app supports', () => {
+    jest.mocked(supportedMarketplaces).mockReturnValue([
+      { id: 'ebay', name: 'eBay Portugal', capabilities: { itemTypes: ['record'], requiresCatalogueRelease: false }, feeRate: 0.1 },
+    ]);
+
+    expect(listingTags([listing({ marketplace: 'ebay', status: 'error' })])).toEqual([
+      { key: 'listing-1', label: 'eBay Portugal · erro', tone: 'error' },
+    ]);
+  });
+
+  it('falls back to the marketplace id for one the app does not know', () => {
+    jest.mocked(supportedMarketplaces).mockReturnValue([]);
+
+    expect(listingTags([listing({ marketplace: 'ebay' })])).toEqual([
+      { key: 'listing-1', label: 'ebay', tone: 'neutral' },
     ]);
   });
 

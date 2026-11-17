@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { listItems, type ListedItem } from '@/services/listings';
-import { countPendingOffers } from '@/services/offers';
 import { listSales } from '@/services/sales';
 import type { Tables } from '@/types/database';
 
 export type ListingsOverview = {
   items: ListedItem[];
-  pendingOffers: number;
   sales: Tables<'sales'>[];
 };
 
@@ -24,12 +22,8 @@ export type ListingsOverviewState =
     };
 
 async function loadOverview(): Promise<ListingsOverview> {
-  const [items, pendingOffers, sales] = await Promise.all([
-    listItems(),
-    countPendingOffers(),
-    listSales(),
-  ]);
-  return { items, pendingOffers, sales };
+  const [items, sales] = await Promise.all([listItems(), listSales()]);
+  return { items, sales };
 }
 
 export type ListingsOverviewActions = {

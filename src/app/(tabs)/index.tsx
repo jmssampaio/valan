@@ -24,6 +24,7 @@ import {
 } from '@/features/listings/listing-rows';
 import { useIsOnline } from '@/hooks/use-is-online';
 import { useListingsOverview, type ListingsOverview } from '@/hooks/use-listings-overview';
+import { usePendingOffers } from '@/hooks/use-pending-offers';
 import { t } from '@/i18n';
 import type { ListedItem } from '@/services/listings';
 
@@ -33,10 +34,19 @@ export default function ListingsScreen() {
   const router = useRouter();
   const isOnline = useIsOnline();
   const listings = useListingsOverview();
+  const offers = usePendingOffers();
+
+  // The listings and the offers count are refreshed together, so the summary and the tab
+  // badge move as one.
+  const refreshListings = listings.refresh;
+  const recountOffers = offers.reload;
+  const refresh = useCallback(() => {
+    refreshListings();
+    recountOffers();
+  }, [refreshListings, recountOffers]);
 
   // Coming back from another screen, such as the new-listing flow, shows what changed there.
   // The first focus is the screen opening, which already loads.
-  const { refresh } = listings;
   const hasOpened = useRef(false);
   useFocusEffect(
     useCallback(() => {
@@ -70,10 +80,11 @@ export default function ListingsScreen() {
       ) : hasItems ? (
         <ListingsOverviewContent
           overview={listings.overview}
+          pendingOffers={offers.count}
           isOnline={isOnline}
           refreshing={listings.refreshing}
           refreshFailed={listings.refreshFailed}
-          onRefresh={listings.refresh}
+          onRefresh={refresh}
         />
       ) : (
         <ScreenMessage
@@ -89,12 +100,15 @@ export default function ListingsScreen() {
 
 function ListingsOverviewContent({
   overview,
+  pendingOffers,
   isOnline,
   refreshing,
   refreshFailed,
   onRefresh,
 }: {
   overview: ListingsOverview;
+  /** Null while the count is not known. */
+  pendingOffers: number | null;
   isOnline: boolean;
   refreshing: boolean;
   refreshFailed: boolean;
@@ -103,7 +117,7 @@ function ListingsOverviewContent({
   const router = useRouter();
   const [filter, setFilter] = useState<ListingFilter>('active');
 
-  const summary = summarise({ ...overview, now: new Date() });
+  const summary = summarise({ ...overview, pendingOffers: pendingOffers ?? 0, now: new Date() });
   const visibleItems = itemsForFilter(overview.items, filter);
   // Being offline explains a failed refresh, so it is the only notice shown then.
   const notice = !isOnline
@@ -122,7 +136,10 @@ function ListingsOverviewContent({
       <SummaryStrip
         tiles={[
           { value: String(summary.activeCount), label: t('listings.summary.active') },
-          { value: String(summary.pendingOffers), label: t('listings.summary.offers') },
+          {
+            value: pendingOffers === null ? t('common.unknownValue') : String(pendingOffers),
+            label: t('listings.summary.offers'),
+          },
           {
             value: formatPrice(summary.soldThisMonthMinor, summary.currency),
             label: t('listings.summary.soldIn', { month: formatMonth(summary.month) }),

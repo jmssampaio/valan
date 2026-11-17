@@ -2,6 +2,7 @@ import type { ChoiceOption } from '@/components/segmented-control';
 import type { TagTone } from '@/components/tag';
 import { t, type TranslationKey } from '@/i18n';
 import type { ListedItem, ListingSummary } from '@/services/listings';
+import { supportedMarketplaces } from '@/services/marketplaces';
 import type { Enums, Tables } from '@/types/database';
 
 export type ListingFilter = 'active' | 'drafts' | 'sold';
@@ -21,10 +22,10 @@ const labelKeyByFilter: Record<ListingFilter, TranslationKey> = {
 // The sold tab grows without limit, so its count would say little; the mockup leaves it out.
 const countedFilters: readonly ListingFilter[] = ['active', 'drafts'];
 
-const marketplaceNames: Record<Enums<'marketplace'>, string> = {
-  discogs: 'Discogs',
-  ebay: 'eBay',
-};
+/** The name the marketplace gives itself; its id for one the app no longer supports. */
+function marketplaceName(marketplaceId: string): string {
+  return supportedMarketplaces().find(({ id }) => id === marketplaceId)?.name ?? marketplaceId;
+}
 
 const DETAIL_SEPARATOR = ' · ';
 
@@ -66,7 +67,7 @@ export type ListingTag = {
 
 export function listingTags(listings: readonly ListingSummary[]): ListingTag[] {
   return listings.flatMap((listing): ListingTag[] => {
-    const marketplace = marketplaceNames[listing.marketplace];
+    const marketplace = marketplaceName(listing.marketplace);
     switch (listing.status) {
       case 'published':
         return [{ key: listing.id, label: marketplace, tone: 'neutral' }];
