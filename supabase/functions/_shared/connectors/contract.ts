@@ -9,6 +9,7 @@ import {
   type ConnectorCredentials,
   ConnectorError,
   type ConnectorErrorKind,
+  EQUIPMENT_CONDITIONS,
   type ListingDraft,
 } from './types.ts';
 
@@ -20,6 +21,8 @@ export interface ContractHarness {
   approvedCallbackParams(start: ConnectStart): Record<string, string>;
   deniedCallbackParams(start: ConnectStart): Record<string, string>;
   readonly supportedListing: ListingDraft;
+  /** An equipment item; null only when the marketplace does not list equipment. */
+  readonly equipmentListing: ListingDraft | null;
   /** Null when the marketplace lists every item type. */
   readonly unsupportedListing: ListingDraft | null;
   /** Offers that already exist on the marketplace, by external id. */
@@ -93,6 +96,21 @@ export function testConnectorContract(name: string, makeHarness: () => ContractH
       () => harness.connector.publish(harness.credentials, unsupported),
       'unsupported',
     );
+  });
+
+  // Valan's scale is the only one stored, so a connector must be able to list every value of it.
+  test('publishes equipment in every condition of the Valan scale', async (harness) => {
+    if (!harness.connector.capabilities.itemTypes.includes('equipment')) return;
+    const equipment = harness.equipmentListing;
+    assert(equipment !== null, 'a connector that lists equipment needs an equipment listing to test with');
+
+    for (const equipmentCondition of EQUIPMENT_CONDITIONS) {
+      const published = await harness.connector.publish(harness.credentials, {
+        ...equipment,
+        equipmentCondition,
+      });
+      assert(published.externalId.length > 0, ` was not published`);
+    }
   });
 
   test('updates a published listing', async ({ connector, credentials, supportedListing }) => {

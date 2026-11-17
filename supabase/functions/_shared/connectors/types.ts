@@ -4,6 +4,13 @@
 export type Marketplace = 'ebay' | 'discogs';
 export type ItemType = 'record' | 'equipment';
 export type RecordCondition = 'M' | 'NM' | 'VG+' | 'VG' | 'G+' | 'G' | 'F' | 'P';
+/**
+ * Valan's own scale, best to worst, and the only one the database stores. A connector maps
+ * each value to its marketplace's conditions (several of ours may map to one of theirs) and
+ * must map all of them. Values may be added later; none is removed.
+ */
+export const EQUIPMENT_CONDITIONS = ['new', 'like_new', 'good', 'fair', 'for_parts'] as const;
+export type EquipmentCondition = (typeof EQUIPMENT_CONDITIONS)[number];
 export type OfferStatus = 'pending' | 'accepted' | 'rejected' | 'expired' | 'withdrawn';
 export type OfferResponse = 'accept' | 'reject';
 
@@ -43,8 +50,14 @@ export interface ListingDraft {
   readonly title: string;
   readonly artist?: string;
   readonly discogsReleaseId?: number;
+  /** Records only. The release's format as the catalogue words it: "LP, Album". */
+  readonly format?: string;
+  /** Records only. */
+  readonly releaseYear?: number;
   readonly mediaCondition?: RecordCondition;
   readonly sleeveCondition?: RecordCondition;
+  /** Equipment only. Each connector maps it to the marketplace's own conditions. */
+  readonly equipmentCondition?: EquipmentCondition;
   readonly description?: string;
   /** Minor units (cents). */
   readonly priceMinor: number;
