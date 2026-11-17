@@ -57,6 +57,8 @@ const styles = StyleSheet.create({
   amount: {
     ...Type.priceInput,
     flex: 1,
+    // An input has a width of its own, which would push the currency off the line.
+    minWidth: 0,
     padding: 0,
     color: Colors.ink,
   },
