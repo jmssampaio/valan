@@ -13,7 +13,7 @@ The wave path is `M12 60 24 46 38 80 54 26 66 94 82 40 96 74 108 60`, stroke 9.5
 - Cream `#F5EFE6` for the icon stroke only. The page is white `#FFFFFF`, with ink `#1E1A17` for text.
 
 ## Mockups (v2)
-`mockups/` holds the current screens, 390 x 844 at 2x: `01-entrada.png` to `12-subscricao.png`, plus `03b-anuncios-vazio.png` (empty state) and `00-visao-geral.png` (all screens). `mockups/valan-mockups-v2.html` is the source, with every token as a CSS variable at the top.
+`mockups/` holds the current screens, 390 x 844 at 2x: `01-entrada.png` to `12-subscricao.png`, plus `03b-anuncios-vazio.png` (empty state), `04b-novo-anuncio-sem-catalogo.png` (step 1 without a catalogue edition) and `00-visao-geral.png` (all screens). `mockups/valan-mockups-v2.html` is the source, with every token as a CSS variable at the top.
 
 Tokens: paper `#FFFFFF`, surface `#FBF8F3`, ink `#1E1A17`, muted `#6B6259`, hairline `#D8CEBF`, accent `#B4460F`, on-accent `#FFFFFF`, on-ink `#FFFFFF`, success `#2C6A3F`, error `#A12A1E`. The mockups still show the earlier cream paper (`#F5EFE6`); the app's values are the ones here. Radius: 10 for controls and cards, 4 for tags. No shadows, no gradients. In code they live in `src/constants/theme.ts`.
 
