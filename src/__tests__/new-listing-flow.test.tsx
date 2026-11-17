@@ -547,6 +547,13 @@ describe('new listing, step 2: condition and photos', () => {
     expect(screen.queryByLabelText('Estado do disco')).not.toBeOnTheScreen();
   });
 
+  // Temporary, until the photos PR stores them: the seller is told before relying on it.
+  it('says that photos are not saved with the listing yet', async () => {
+    await reachConditionWithRecord();
+
+    expect(screen.getByText('As fotos ainda não ficam guardadas com o anúncio.')).toBeOnTheScreen();
+  });
+
   it('adds the photos chosen from the library and counts them', async () => {
     jest.mocked(pickPhotos).mockResolvedValue({
       status: 'picked',

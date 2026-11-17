@@ -5,10 +5,6 @@ import { Alert, type AlertButton } from 'react-native';
 import {
   deleteDraft,
   getListingDetail,
-  pauseItem,
-  removeItem,
-  resumeItem,
-  retryFailedListing,
   type DetailListing,
   type ListingDetail,
 } from '@/services/listing-detail';
@@ -101,11 +97,7 @@ beforeEach(() => {
   setOnline(true);
   jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   jest.mocked(getListingDetail).mockResolvedValue(detail());
-  jest.mocked(pauseItem).mockResolvedValue();
-  jest.mocked(resumeItem).mockResolvedValue();
-  jest.mocked(removeItem).mockResolvedValue();
   jest.mocked(deleteDraft).mockResolvedValue();
-  jest.mocked(retryFailedListing).mockResolvedValue();
 });
 
 afterEach(() => {
@@ -151,34 +143,24 @@ describe('listing detail screen', () => {
     expect(screen.getAllByText('Publicado')).toHaveLength(2);
   });
 
-  it('shows the reason a marketplace refused the listing, and tries again on request', async () => {
+  it('shows the reason a marketplace refused the listing; trying again is not available yet', async () => {
     const refused: DetailListing = { ...ebay, status: 'error', reason: 'missingShippingPolicy', visits: 0 };
     jest.mocked(getListingDetail).mockResolvedValue(detail({ listings: [discogs, refused], offers: [] }));
     await renderRouter(APP_DIR, { initialUrl: URL });
 
-    expect(
-      await screen.findByText(
-        'Falta definir a política de envio na tua conta eBay. Define-a em eBay e tenta de novo.',
-      ),
-    ).toBeOnTheScreen();
-
-    await fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
-
-    expect(retryFailedListing).toHaveBeenCalledTimes(1);
-    expect(retryFailedListing).toHaveBeenCalledWith('item-1', 'ebay');
+    expect(await screen.findByText(/Falta definir a política de envio na tua conta eBay/)).toBeOnTheScreen();
+    expect(screen.getByText('Erro')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Tentar de novo' })).toBeDisabled();
   });
 
-  it('asks once when the retry button is pressed twice at once', async () => {
-    const refused: DetailListing = { ...ebay, status: 'error', reason: 'unknown', visits: 0 };
-    jest.mocked(getListingDetail).mockResolvedValue(detail({ listings: [refused], offers: [] }));
-    jest.mocked(retryFailedListing).mockReturnValue(new Promise(() => {}));
+  it('leaves the visits out when the marketplace has not reported any', async () => {
+    jest.mocked(getListingDetail).mockResolvedValue(
+      detail({ listings: [{ ...discogs, visits: null }], offers: [] }),
+    );
     await renderRouter(APP_DIR, { initialUrl: URL });
-    const retry = await screen.findByRole('button', { name: 'Tentar de novo' });
 
-    await fireEvent.press(retry);
-    await fireEvent.press(retry);
-
-    expect(retryFailedListing).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText('0 propostas')).toBeOnTheScreen();
+    expect(screen.queryByText(/visitas/)).not.toBeOnTheScreen();
   });
 
   it('lists the pending offers and opens Propostas from one', async () => {
@@ -200,102 +182,37 @@ describe('listing detail screen', () => {
     expect(screen.queryByText('Propostas')).not.toBeOnTheScreen();
   });
 
-  it('pauses the listing and loads it again', async () => {
-    await renderRouter(APP_DIR, { initialUrl: URL });
-    const pause = await screen.findByRole('button', { name: 'Pausar' });
-    const loadsBefore = jest.mocked(getListingDetail).mock.calls.length;
-
-    await fireEvent.press(pause);
-
-    expect(pauseItem).toHaveBeenCalledWith('item-1');
-    expect(getListingDetail).toHaveBeenCalledTimes(loadsBefore + 1);
-  });
-
-  it('offers to resume a listing that is paused', async () => {
-    const paused = [discogs, ebay].map((listing) => ({ ...listing, status: 'paused' as const }));
-    jest.mocked(getListingDetail).mockResolvedValue(detail({ listings: paused }));
-    await renderRouter(APP_DIR, { initialUrl: URL });
-
-    await fireEvent.press(await screen.findByRole('button', { name: 'Retomar' }));
-
-    expect(resumeItem).toHaveBeenCalledWith('item-1');
-    expect(screen.queryByRole('button', { name: 'Pausar' })).not.toBeOnTheScreen();
-  });
-
-  it('tells the seller when an action did not go through', async () => {
-    jest.mocked(pauseItem).mockRejectedValue(new Error('network'));
-    await renderRouter(APP_DIR, { initialUrl: URL });
-
-    await fireEvent.press(await screen.findByRole('button', { name: 'Pausar' }));
-
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'Não conseguimos pausar o anúncio',
-      'Nada mudou. Tenta de novo dentro de momentos.',
-    );
-  });
-
-  it('names the action when removing fails', async () => {
-    jest.mocked(removeItem).mockRejectedValue(new Error('network'));
-    await renderRouter(APP_DIR, { initialUrl: URL });
-    await fireEvent.press(await screen.findByRole('button', { name: 'Remover' }));
-
-    await answerAlert('destructive');
-
-    expect(Alert.alert).toHaveBeenLastCalledWith(
-      'Não conseguimos remover o anúncio',
-      expect.any(String),
-    );
-  });
-
-  it('names the marketplace when trying it again fails', async () => {
-    const refused: DetailListing = { ...ebay, status: 'error', reason: 'unknown', visits: 0 };
-    jest.mocked(getListingDetail).mockResolvedValue(detail({ listings: [refused], offers: [] }));
-    jest.mocked(retryFailedListing).mockRejectedValue(new Error('network'));
-    await renderRouter(APP_DIR, { initialUrl: URL });
-
-    await fireEvent.press(await screen.findByRole('button', { name: 'Tentar de novo' }));
-
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'Não conseguimos tentar de novo em eBay',
-      expect.any(String),
-    );
-  });
-
-  it('asks before removing, and removes nothing when the seller cancels', async () => {
-    await renderRouter(APP_DIR, { initialUrl: URL });
-
-    await fireEvent.press(await screen.findByRole('button', { name: 'Remover' }));
-
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'Remover este anúncio?',
-      expect.any(String),
-      expect.any(Array),
-    );
-    expect(removeItem).not.toHaveBeenCalled();
-
-    await answerAlert('cancel');
-
-    expect(removeItem).not.toHaveBeenCalled();
-  });
-
-  it('removes the item once confirmed and goes back to the listings', async () => {
-    await renderRouter(APP_DIR, { initialUrl: URL });
-    await fireEvent.press(await screen.findByRole('button', { name: 'Remover' }));
-
-    await answerAlert('destructive');
-
-    expect(removeItem).toHaveBeenCalledWith('item-1');
-    expect(screen).toHavePathname('/');
-  });
-
-  it('keeps the actions out of reach while offline', async () => {
-    setOnline(false);
+  // Pausing, resuming and removing change what is on the marketplaces, which only the
+  // server may do. Until it can, they are shown so the seller knows they are coming.
+  it('shows pausing and removing as coming soon, and neither can be pressed', async () => {
     await renderRouter(APP_DIR, { initialUrl: URL });
 
     expect(await screen.findByRole('button', { name: 'Pausar' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Remover' })).toBeDisabled();
     expect(
-      screen.getByText('Sem ligação. Não podes alterar este anúncio.'),
+      screen.getByText('Pausar, retomar e remover anúncios fica disponível em breve.'),
+    ).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Remover' }));
+
+    expect(Alert.alert).not.toHaveBeenCalled();
+  });
+
+  it('shows resuming as coming soon for a listing that is paused', async () => {
+    const paused = [discogs, ebay].map((listing) => ({ ...listing, status: 'paused' as const }));
+    jest.mocked(getListingDetail).mockResolvedValue(detail({ listings: paused }));
+    await renderRouter(APP_DIR, { initialUrl: URL });
+
+    expect(await screen.findByRole('button', { name: 'Retomar' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Pausar' })).not.toBeOnTheScreen();
+  });
+
+  it('says there is no connection while offline', async () => {
+    setOnline(false);
+    await renderRouter(APP_DIR, { initialUrl: URL });
+
+    expect(
+      await screen.findByText('Sem ligação. Não podes alterar este anúncio.'),
     ).toBeOnTheScreen();
   });
 });
