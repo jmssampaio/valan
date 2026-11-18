@@ -65,7 +65,10 @@ const reverb: MarketplaceInfo = {
 };
 
 function photos(count: number) {
-  return Array.from({ length: count }, (_, index) => ({ uri: `file:///photo-${index + 1}.jpg` }));
+  return Array.from({ length: count }, (_, index) => ({
+    id: `photo-${index + 1}`,
+    uri: `file:///photo-${index + 1}.jpg`,
+  }));
 }
 
 describe('a new draft', () => {
@@ -248,15 +251,15 @@ describe('leaving the condition step', () => {
 
 describe('photos', () => {
   it('are added after the ones already there', () => {
-    const draft = addPhotos({ ...linked, photos: photos(1) }, [{ uri: 'file:///new.jpg' }]);
+    const draft = addPhotos({ ...linked, photos: photos(1) }, [{ id: 'new', uri: 'file:///new.jpg' }]);
 
     expect(draft.photos.map((photo) => photo.uri)).toEqual(['file:///photo-1.jpg', 'file:///new.jpg']);
   });
 
   it(`stop at ${MAX_PHOTOS}`, () => {
     const draft = addPhotos({ ...linked, photos: photos(7) }, [
-      { uri: 'file:///eighth.jpg' },
-      { uri: 'file:///ninth.jpg' },
+      { id: 'eighth', uri: 'file:///eighth.jpg' },
+      { id: 'ninth', uri: 'file:///ninth.jpg' },
     ]);
 
     expect(draft.photos).toHaveLength(MAX_PHOTOS);
@@ -264,7 +267,7 @@ describe('photos', () => {
   });
 
   it('are not added twice', () => {
-    const draft = addPhotos({ ...linked, photos: photos(2) }, [{ uri: 'file:///photo-1.jpg' }]);
+    const draft = addPhotos({ ...linked, photos: photos(2) }, [{ id: 'again', uri: 'file:///photo-1.jpg' }]);
 
     expect(draft.photos).toHaveLength(2);
   });

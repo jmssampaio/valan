@@ -76,7 +76,7 @@ const draftItem: ListedItem = {
 };
 
 function detailOf(item: ListedItem): ListingDetail {
-  return { item, listings: [], offers: [], sale: null };
+  return { item, photos: [], listings: [], offers: [], sale: null };
 }
 
 function setOnline(isConnected: boolean) {
@@ -88,7 +88,7 @@ beforeEach(() => {
   setOnline(true);
   jest.mocked(supportedMarketplaces).mockReturnValue([discogs, ebay]);
   jest.mocked(searchReleases).mockResolvedValue([firstPressing]);
-  jest.mocked(saveDraft).mockResolvedValue({ id: 'item-1' });
+  jest.mocked(saveDraft).mockResolvedValue({ id: 'item-1', photosFailed: 0 });
   jest.mocked(listItems).mockResolvedValue([]);
   jest.mocked(countPendingOffers).mockResolvedValue(0);
   jest.mocked(listSales).mockResolvedValue([]);
@@ -114,6 +114,27 @@ describe('reopening a draft', () => {
 
     expect(await screen.findByRole('progressbar', { name: 'Passo 2 de 4' })).toBeOnTheScreen();
     expect(screen.getAllByRole('radio', { name: 'VG+' })[0]).toBeChecked();
+  });
+
+  it('shows the photos the draft already has, and saves them with it under their own ids', async () => {
+    const stored = ['photo-a', 'photo-b'].map((id) => ({
+      id,
+      full: { uri: `https://storage.test/.jpg`, cacheKey: id },
+      small: { uri: `https://storage.test/-small.jpg`, cacheKey: `-small` },
+    }));
+    jest.mocked(getListingDetail).mockResolvedValue({ ...detailOf(draftItem), photos: stored });
+    await renderRouter(APP_DIR, { initialUrl: REOPEN });
+
+    expect(await screen.findByText('Fotos · 2 de 8')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Foto 2 de 2')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(jest.mocked(saveDraft).mock.calls[0][0].photos.map(({ id }) => id)).toEqual([
+      'photo-a',
+      'photo-b',
+    ]);
   });
 
   it('goes back to step 1 with the name filled in', async () => {

@@ -3,10 +3,11 @@ import { Stack } from 'expo-router/stack';
 import { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, View, StyleSheet } from 'react-native';
 
+import { AppText } from '@/components/app-text';
 import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
 import { ScreenMessage } from '@/components/screen-message';
-import { Colors } from '@/constants/theme';
+import { Colors, Spacing } from '@/constants/theme';
 import { draftItemFields, isWorthSaving, type ListingDraft } from '@/features/new-listing/draft';
 import { useIsOnline } from '@/hooks/use-is-online';
 import { ListingDraftProvider, useListingDraft } from '@/hooks/use-listing-draft';
@@ -31,8 +32,9 @@ export default function NewListingLayout() {
 function Flow({ initialDraft }: { initialDraft?: ListingDraft }) {
   return (
     <ListingDraftProvider initialDraft={initialDraft}>
-      <SaveDraftOnLeave />
       <Stack screenOptions={{ headerShown: false }} />
+      {/* After the screens, so its saving state covers them. */}
+      <SaveDraftOnLeave />
     </ListingDraftProvider>
   );
 }
@@ -73,6 +75,17 @@ function ReopenedFlow({ itemId }: { itemId: string }) {
 }
 
 const styles = StyleSheet.create({
+  saving: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.x4,
+    backgroundColor: Colors.paper,
+  },
   loading: {
     flex: 1,
     alignItems: 'center',
@@ -88,28 +101,48 @@ function SaveDraftOnLeave() {
   const { draft, publication } = useListingDraft();
   // True once the draft is saved or given up: leaving then goes ahead.
   const [released, setReleased] = useState(false);
+  // Shown while the save is on its way: with photos to upload it can take seconds.
+  const [isSaving, setIsSaving] = useState(false);
   const saving = useRef(false);
 
   async function saveThenLeave(leave: () => void) {
     if (saving.current) return;
     saving.current = true;
+    setIsSaving(true);
 
     const release = () => {
       setReleased(true);
       leave();
     };
+    const retry = { text: t('common.retry'), onPress: () => void saveThenLeave(leave) };
+    const stay = { text: t('newListing.leave.stay'), style: 'cancel' as const };
 
     try {
-      await saveDraft({ item: draftItemFields(draft), photos: draft.photos });
-      release();
+      const { photosFailed } = await saveDraft({ item: draftItemFields(draft), photos: draft.photos });
+      if (photosFailed === 0) {
+        release();
+      } else {
+        // The draft is safe; only some photos are missing, and the seller decides.
+        Alert.alert(
+          t('newListing.leave.photosFailed.title'),
+          t(
+            photosFailed === 1
+              ? 'newListing.leave.photosFailed.one'
+              : 'newListing.leave.photosFailed.other',
+            { count: photosFailed },
+          ),
+          [retry, { text: t('newListing.leave.withoutPhotos'), onPress: release }, stay],
+        );
+      }
     } catch {
       Alert.alert(t('newListing.leave.failed.title'), t('newListing.leave.failed.body'), [
-        { text: t('common.retry'), onPress: () => void saveThenLeave(leave) },
+        retry,
         { text: t('newListing.leave.discard'), style: 'destructive', onPress: release },
-        { text: t('newListing.leave.stay'), style: 'cancel' },
+        stay,
       ]);
     } finally {
       saving.current = false;
+      setIsSaving(false);
     }
   }
 
@@ -121,5 +154,13 @@ function SaveDraftOnLeave() {
     void saveThenLeave(repeat);
   });
 
-  return null;
+  if (!isSaving) return null;
+
+  return (
+    // Over the whole flow, so nothing can be changed or pressed twice while it saves.
+    <View accessibilityViewIsModal style={styles.saving}>
+      <ActivityIndicator accessibilityLabel={t('newListing.leave.saving')} color={Colors.ink} />
+      <AppText color="muted">{t('newListing.leave.saving')}</AppText>
+    </View>
+  );
 }

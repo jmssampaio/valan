@@ -109,9 +109,16 @@ describe('draftFromItem', () => {
     expect(draft.equipmentCondition).toBe('good');
   });
 
-  it('brings the photo along when it is one the seller added', () => {
-    expect(draftFromItem(savedItem({ photo: { uri: 'file:///cover.jpg' } })).photos).toEqual([
-      { uri: 'file:///cover.jpg' },
+  it('brings the stored photos along, in order, as their small versions under their own ids', () => {
+    const stored = ['photo-a', 'photo-b'].map((id) => ({
+      id,
+      full: { uri: `https://storage.test/${id}.jpg?token=1`, cacheKey: id },
+      small: { uri: `https://storage.test/${id}-small.jpg?token=1`, cacheKey: `${id}-small` },
+    }));
+
+    expect(draftFromItem(savedItem(), stored).photos).toEqual([
+      { id: 'photo-a', uri: 'https://storage.test/photo-a-small.jpg?token=1', cacheKey: 'photo-a-small' },
+      { id: 'photo-b', uri: 'https://storage.test/photo-b-small.jpg?token=1', cacheKey: 'photo-b-small' },
     ]);
   });
 

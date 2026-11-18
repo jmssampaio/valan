@@ -23,7 +23,7 @@ export function useReopenedDraft(itemId: string): ReopenedDraftState & { reload:
         if (ignore) return;
         setState(
           detail?.item.status === 'draft'
-            ? { status: 'ready', draft: draftFromItem(detail.item) }
+            ? { status: 'ready', draft: draftFromItem(detail.item, detail.photos) }
             : { status: 'unavailable' },
         );
       })
