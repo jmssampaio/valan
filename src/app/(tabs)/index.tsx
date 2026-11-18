@@ -1,5 +1,5 @@
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/app-text';
@@ -25,6 +25,7 @@ import {
 import { useIsOnline } from '@/hooks/use-is-online';
 import { useListingsOverview, type ListingsOverview } from '@/hooks/use-listings-overview';
 import { usePendingOffers } from '@/hooks/use-pending-offers';
+import { useRefreshOnFocus } from '@/hooks/use-refresh-on-focus';
 import { t } from '@/i18n';
 import type { ListedItem } from '@/services/listings';
 
@@ -46,14 +47,7 @@ export default function ListingsScreen() {
   }, [refreshListings, recountOffers]);
 
   // Coming back from another screen, such as the new-listing flow, shows what changed there.
-  // The first focus is the screen opening, which already loads.
-  const hasOpened = useRef(false);
-  useFocusEffect(
-    useCallback(() => {
-      if (hasOpened.current) refresh();
-      hasOpened.current = true;
-    }, [refresh]),
-  );
+  useRefreshOnFocus(refresh);
 
   const startListing = () => router.push(NEW_LISTING);
   const hasItems = listings.status === 'ready' && listings.overview.items.length > 0;
