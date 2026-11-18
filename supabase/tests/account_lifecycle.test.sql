@@ -20,8 +20,11 @@ insert into public.items (id, user_id, type, title) values
   ('10000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 'record', 'Alice record'),
   ('10000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-00000000000b', 'record', 'Bob record');
 
+-- Each file has its own path, under its owner's folder.
 insert into public.item_photos (user_id, item_id, storage_path, position)
-select user_id, id, 'front.jpg', 0 from public.items;
+select user_id, id, user_id || '/' || id || '/front.jpg', 0 from public.items
+-- Only this test's items: the database may hold others, each with its own photos.
+where id in ('10000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-00000000000b');
 
 insert into public.listings (id, user_id, item_id, marketplace) values
   ('50000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-00000000000a', 'ebay'),
