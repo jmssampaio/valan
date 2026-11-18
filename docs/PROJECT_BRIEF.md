@@ -114,5 +114,8 @@ Logo: a straight-line zigzag wave on an orange tile, with the wordmark "VALAN" i
 - **Password reset:** not built yet. It will use the same emailed code as sign-up confirmation, and must exist before release.
 - **Breached-password rejection:** to be turned on in the Supabase dashboard (staging and production).
 - **Account deletion inside the app:** required by the App Store; not built yet.
+- **Purge the user's photo folder on account deletion (must be done before release).** Deleting an account removes its rows, but the photo files in storage stay unless the deletion function removes the user's folder in the `item-photos` bucket.
+- **Server-side cleanup of orphan photo files.** The app deletes an item's files before the item, but a failure in between leaves files with no row. A scheduled job should remove files that no `item_photos` row points to.
+- **Confirm on a device that uploaded photos carry no location data.** The app re-encodes every photo before upload, which should drop what the camera wrote; this has to be checked on real files from a real phone. The publish function must not trust the app for it: it sends the marketplaces only the re-encoded files from the bucket, never a file the app hands it directly.
 - **Terms and privacy policy pages:** the entry screen mentions them; they need real pages and links.
 - **Sign in with Apple and Google:** shown as "em breve" until the developer accounts exist.

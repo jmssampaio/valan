@@ -156,7 +156,7 @@ beforeEach(() => {
   setOnline(true);
   jest.mocked(supportedMarketplaces).mockReturnValue([discogs, ebay]);
   jest.mocked(searchReleases).mockResolvedValue([firstPressing, reissue]);
-  jest.mocked(saveDraft).mockResolvedValue({ id: 'draft-1' });
+  jest.mocked(saveDraft).mockResolvedValue({ id: 'draft-1', photosFailed: 0 });
   jest.mocked(listItems).mockResolvedValue([]);
   jest.mocked(countPendingOffers).mockResolvedValue(0);
   jest.mocked(listSales).mockResolvedValue([]);
@@ -446,6 +446,60 @@ describe('new listing, leaving the flow', () => {
     });
   });
 
+  it('says it is saving until the draft and its photos are stored', async () => {
+    let finish: (saved: { id: string; photosFailed: number }) => void = () => {};
+    jest.mocked(saveDraft).mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await typeName('noites');
+    await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen.getByText('A guardar o rascunho')).toBeOnTheScreen();
+    expect(screen).toHavePathname(CATALOGUE);
+
+    await act(async () => finish({ id: 'draft-1', photosFailed: 0 }));
+
+    expect(screen).toHavePathname('/');
+  });
+
+  it('says how many photos were not saved, and lets the seller leave without them', async () => {
+    jest.mocked(saveDraft).mockResolvedValue({ id: 'draft-1', photosFailed: 2 });
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await typeName('noites');
+    await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(alert).toHaveBeenCalledWith(
+      'Algumas fotos não ficaram guardadas',
+      'O rascunho ficou guardado, mas 2 fotos não. Tenta de novo ou sai sem elas.',
+      expect.any(Array),
+    );
+    expect(screen).toHavePathname(CATALOGUE);
+
+    await pressAlertButton('Sair assim');
+
+    expect(screen).toHavePathname('/');
+  });
+
+  it('speaks of one photo in the singular, and saves again on retry', async () => {
+    jest.mocked(saveDraft).mockResolvedValueOnce({ id: 'draft-1', photosFailed: 1 });
+    await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
+    await typeName('noites');
+    await fireEvent.press(await screen.findByRole('button', { name: /1978/ }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(alert.mock.calls.at(-1)?.[1]).toBe(
+      'O rascunho ficou guardado, mas 1 foto não. Tenta de novo ou sai sem ela.',
+    );
+
+    await pressAlertButton('Tentar de novo');
+
+    expect(saveDraft).toHaveBeenCalledTimes(2);
+    expect(screen).toHavePathname('/');
+  });
+
   it('stays open and offers a choice when the draft cannot be saved', async () => {
     jest.mocked(saveDraft).mockRejectedValue(new Error('server error'));
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
@@ -547,17 +601,13 @@ describe('new listing, step 2: condition and photos', () => {
     expect(screen.queryByLabelText('Estado do disco')).not.toBeOnTheScreen();
   });
 
-  // Temporary, until the photos PR stores them: the seller is told before relying on it.
-  it('says that photos are not saved with the listing yet', async () => {
-    await reachConditionWithRecord();
-
-    expect(screen.getByText('As fotos ainda não ficam guardadas com o anúncio.')).toBeOnTheScreen();
-  });
-
   it('adds the photos chosen from the library and counts them', async () => {
     jest.mocked(pickPhotos).mockResolvedValue({
       status: 'picked',
-      photos: [{ uri: 'file:///front.jpg' }, { uri: 'file:///back.jpg' }],
+      photos: [
+        { id: 'photo-front', uri: 'file:///front.jpg' },
+        { id: 'photo-back', uri: 'file:///back.jpg' },
+      ],
     });
     await reachConditionWithRecord();
 
@@ -607,7 +657,10 @@ describe('new listing, step 2: condition and photos', () => {
   });
 
   it('removes a photo only after the seller confirms', async () => {
-    jest.mocked(pickPhotos).mockResolvedValue({ status: 'picked', photos: [{ uri: 'file:///front.jpg' }] });
+    jest.mocked(pickPhotos).mockResolvedValue({
+      status: 'picked',
+      photos: [{ id: 'photo-front', uri: 'file:///front.jpg' }],
+    });
     await reachConditionWithRecord();
     await fireEvent.press(screen.getByRole('button', { name: 'Adicionar foto' }));
     await chooseFromSheet('Escolher da galeria');
@@ -624,7 +677,10 @@ describe('new listing, step 2: condition and photos', () => {
   it('stops offering to add photos at eight', async () => {
     jest.mocked(pickPhotos).mockResolvedValue({
       status: 'picked',
-      photos: Array.from({ length: 8 }, (_, index) => ({ uri: `file:///photo-${index}.jpg` })),
+      photos: Array.from({ length: 8 }, (_, index) => ({
+        id: `photo-`,
+        uri: `file:///photo-.jpg`,
+      })),
     });
     await reachConditionWithRecord();
     await fireEvent.press(screen.getByRole('button', { name: 'Adicionar foto' }));
@@ -649,7 +705,10 @@ describe('new listing, step 2: condition and photos', () => {
   });
 
   it('saves the grades, photos and description with the draft when the flow is left', async () => {
-    jest.mocked(pickPhotos).mockResolvedValue({ status: 'picked', photos: [{ uri: 'file:///front.jpg' }] });
+    jest.mocked(pickPhotos).mockResolvedValue({
+      status: 'picked',
+      photos: [{ id: 'photo-front', uri: 'file:///front.jpg' }],
+    });
     await reachConditionWithRecord();
     await fireEvent.press(screen.getAllByRole('radio', { name: 'VG+' })[0]);
     await fireEvent.press(screen.getAllByRole('radio', { name: 'VG' })[1]);
@@ -662,7 +721,7 @@ describe('new listing, step 2: condition and photos', () => {
 
     expect(jest.mocked(saveDraft).mock.calls[0][0]).toMatchObject({
       item: { media_condition: 'VG+', sleeve_condition: 'VG', description: 'Primeira edição.' },
-      photos: [{ uri: 'file:///front.jpg' }],
+      photos: [{ id: 'photo-front', uri: 'file:///front.jpg' }],
     });
   });
 

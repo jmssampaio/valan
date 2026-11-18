@@ -27,8 +27,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      # The whole local stack, not only the database: the integration tests sign real users in.
-      - run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,storage-api,supavisor,postgres-meta
+      # The local stack with auth and storage, not only the database: the integration tests
+      # sign real users in and store their photos.
+      - run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,supavisor,postgres-meta
       - run: npm run test:db
       - name: Services against the local stack
         run: npm run test:integration

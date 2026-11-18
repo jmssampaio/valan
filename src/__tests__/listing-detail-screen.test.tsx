@@ -77,7 +77,7 @@ const offer: Tables<'offers'> = {
 };
 
 function detail(overrides: Partial<ListingDetail> = {}): ListingDetail {
-  return { item: item(), listings: [discogs, ebay], offers: [offer], sale: null, ...overrides };
+  return { item: item(), photos: [], listings: [discogs, ebay], offers: [offer], sale: null, ...overrides };
 }
 
 function setOnline(isConnected: boolean) {
@@ -227,7 +227,7 @@ describe('listing detail screen, a draft', () => {
   beforeEach(() => {
     jest
       .mocked(getListingDetail)
-      .mockResolvedValue({ item: draftItem, listings: [], offers: [], sale: null });
+      .mockResolvedValue({ item: draftItem, photos: [], listings: [], offers: [], sale: null });
   });
 
   it('shows what the draft has and no marketplaces', async () => {
@@ -281,7 +281,7 @@ describe('listing detail screen, a sold item', () => {
   it('shows the sale and no actions', async () => {
     jest
       .mocked(getListingDetail)
-      .mockResolvedValue({ item: item({ status: 'sold' }), listings: [], offers: [], sale });
+      .mockResolvedValue({ item: item({ status: 'sold' }), photos: [], listings: [], offers: [], sale });
     await renderRouter(APP_DIR, { initialUrl: URL });
 
     expect(await screen.findByText('Vendido por')).toBeOnTheScreen();

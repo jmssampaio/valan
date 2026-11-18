@@ -7,7 +7,7 @@ import { EvenGrid } from './even-grid';
 import { BorderWidth, Colors, Opacity, Radius } from '@/constants/theme';
 
 export type PhotoGridProps = {
-  photos: readonly { uri: string }[];
+  photos: readonly { uri: string; cacheKey?: string }[];
   /** The add tile disappears once this many photos are in. */
   max: number;
   columns: number;
@@ -39,7 +39,7 @@ export function PhotoGrid({
 }: PhotoGridProps) {
   return (
     <EvenGrid columns={columns}>
-      {photos.map(({ uri }, index) => (
+      {photos.map(({ uri, cacheKey }, index) => (
         <Pressable
           key={uri}
           accessibilityRole="imagebutton"
@@ -47,7 +47,7 @@ export function PhotoGrid({
           accessibilityHint={photoAccessibilityHint}
           onPress={() => onPressPhoto(uri)}
           style={({ pressed }) => [styles.tile, styles.photo, pressed && styles.pressed]}>
-          <Image source={{ uri }} contentFit="cover" style={styles.image} />
+          <Image source={{ uri, cacheKey }} contentFit="cover" style={styles.image} />
         </Pressable>
       ))}
       {photos.length < max ? (

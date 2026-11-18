@@ -1,9 +1,11 @@
+import { inOrder, showPhotos } from './photos';
+import { toError } from './errors';
 import { getSupabase, requireUserId } from './supabase';
 
 import type { Tables } from '@/types/database';
 
-/** A bundled image, or one fetched from storage. */
-export type PhotoSource = number | { uri: string };
+/** A bundled image, a file on the device, or a stored photo with its stable cache key. */
+export type PhotoSource = number | { uri: string; cacheKey?: string };
 
 export type ListingSummary = Pick<Tables<'listings'>, 'id' | 'marketplace' | 'status'>;
 
@@ -14,7 +16,8 @@ export type ListedItem = Tables<'items'> & {
 };
 
 /** What every query for a seller's items selects: the item and the state of its listings. */
-export const ITEM_WITH_LISTINGS = '*, listings(id, marketplace, status)';
+export const ITEM_WITH_LISTINGS =
+  '*, listings(id, marketplace, status), item_photos(id, item_id, storage_path, position)';
 
 /**
  * The signed-in seller's items, newest first. The database returns only their own rows
@@ -27,8 +30,14 @@ export async function listItems(): Promise<ListedItem[]> {
     .from('items')
     .select(ITEM_WITH_LISTINGS)
     .order('created_at', { ascending: false });
-  if (error) throw error;
+  if (error) throw toError(error);
 
-  // Photos are not stored yet, so no item has one to show.
-  return data.map((item) => ({ ...item, photo: null }));
+  // A row shows the small version of the item's first photo.
+  const covers = data.flatMap(({ item_photos }) => inOrder(item_photos).slice(0, 1));
+  const shown = await showPhotos(covers);
+
+  return data.map(({ item_photos, ...item }) => {
+    const [cover] = inOrder(item_photos);
+    return { ...item, photo: (cover && shown.get(cover.id)?.small) ?? null };
+  });
 }

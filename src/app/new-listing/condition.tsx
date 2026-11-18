@@ -160,9 +160,6 @@ export default function NewListingConditionScreen() {
             }
             photoAccessibilityHint={t('newListing.photos.photo.hint')}
           />
-          {/* TEMPORARY (owner: photos PR): remove this note, and its string, once photos are
-              uploaded and stored with the item. */}
-          <Detail>{t('newListing.photos.notSaved')}</Detail>
           {photoProblem ? <Detail tone="error">{t(photoProblem)}</Detail> : null}
         </Section>
         <TextField

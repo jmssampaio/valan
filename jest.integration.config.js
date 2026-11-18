@@ -10,6 +10,8 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^expo/virtual/env$': '<rootDir>/jest.integration.env.js',
     '^react-native-get-random-values$': '<rootDir>/jest.integration.empty.js',
+    // Native code that re-encodes photos; the tests that store photos stand in for it.
+    '^expo-image-manipulator$': '<rootDir>/jest.integration.empty.js',
   },
   testMatch: ['**/__integration__/**/*.test.ts'],
   globalSetup: '<rootDir>/jest.integration.setup.js',

@@ -2,6 +2,7 @@ import type { CatalogueRelease } from '@/services/catalogue';
 import type { DraftItemFields } from '@/services/drafts';
 import type { ListedItem } from '@/services/listings';
 import type { MarketplaceInfo } from '@/services/marketplaces';
+import type { StoredPhoto } from '@/services/photos';
 import type { Enums } from '@/types/database';
 
 export const MAX_PHOTOS = 8;
@@ -25,7 +26,12 @@ export function parsePrice(text: string): number | null {
   return minor > 0 && minor <= MAX_PRICE_MINOR ? minor : null;
 }
 
-export type DraftPhoto = { uri: string };
+/**
+ * A photo of the draft. Its id is made when it is picked and names it once stored. The uri is
+ * what to show: the file on the device, or the stored photo's address, whose cache key lets
+ * the image cache recognise it when the address changes.
+ */
+export type DraftPhoto = { id: string; uri: string; cacheKey?: string };
 export type ItemKind = Enums<'item_type'>;
 
 /** What the seller has entered so far, across every step of the new-listing flow. */
@@ -247,7 +253,10 @@ function priceTextOf(priceMinor: number | null): string {
  * marked as "none of these": the seller can still pick one, which makes Discogs available.
  * The catalogue's country, label and number are not stored on the item, so they stay empty.
  */
-export function draftFromItem(item: ListedItem): ListingDraft {
+export function draftFromItem(
+  item: ListedItem,
+  photos: readonly StoredPhoto[] = [],
+): ListingDraft {
   const release: CatalogueRelease | null =
     item.discogs_release_id === null
       ? null
@@ -271,7 +280,8 @@ export function draftFromItem(item: ListedItem): ListingDraft {
     mediaCondition: item.media_condition,
     sleeveCondition: item.sleeve_condition,
     equipmentCondition: item.equipment_condition,
-    photos: item.photo !== null && typeof item.photo === 'object' ? [item.photo] : [],
+    // The small version is enough for the tiles of the photo step.
+    photos: photos.map(({ id, small }) => ({ id, ...small })),
     description: item.description ?? '',
     priceText: priceTextOf(item.price_minor),
     acceptsOffers: item.accepts_offers,
