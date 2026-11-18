@@ -32,8 +32,20 @@ describe('pickPhotos', () => {
 
     expect(await pickPhotos(5)).toEqual({
       status: 'picked',
-      photos: [{ uri: 'file:///a.jpg' }, { uri: 'file:///b.jpg' }],
+      photos: [
+        { id: expect.any(String), uri: 'file:///a.jpg' },
+        { id: expect.any(String), uri: 'file:///b.jpg' },
+      ],
     });
+  });
+
+  it('gives each photo its own id, to store it under', async () => {
+    library.mockResolvedValue(picked('file:///a.jpg', 'file:///b.jpg'));
+
+    const pick = await pickPhotos(5);
+
+    const ids = pick.status === 'picked' ? pick.photos.map(({ id }) => id) : [];
+    expect(new Set(ids).size).toBe(2);
   });
 
   it('lets the seller choose only as many photos as still fit', async () => {
@@ -58,7 +70,10 @@ describe('takePhoto', () => {
     cameraPermission.mockResolvedValue(permission(true));
     camera.mockResolvedValue(picked('file:///shot.jpg'));
 
-    expect(await takePhoto()).toEqual({ status: 'picked', photos: [{ uri: 'file:///shot.jpg' }] });
+    expect(await takePhoto()).toEqual({
+      status: 'picked',
+      photos: [{ id: expect.any(String), uri: 'file:///shot.jpg' }],
+    });
   });
 
   it('does not open the camera when the seller refuses access to it', async () => {

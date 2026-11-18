@@ -90,3 +90,10 @@ export async function createListingAsServer(listing: {
   });
   if (error) throw error;
 }
+
+/** The names of the photo files stored for an item, as the server sees them, sorted. */
+export async function listPhotoFilesAsServer(userId: string, itemId: string): Promise<string[]> {
+  const { data, error } = await localAdmin().storage.from('item-photos').list(`${userId}/${itemId}`);
+  if (error) throw error;
+  return data.map(({ name }) => name).sort();
+}

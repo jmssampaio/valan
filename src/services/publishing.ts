@@ -51,7 +51,9 @@ function publishOn(itemId: string, marketplace: string): ListingOutcome {
 // Idempotent per item id and marketplace, as the real publish Edge Function must be:
 // publishing the same draft again updates that item and never creates a second one.
 export async function publishItem({ item, photos, marketplaces }: ItemToPublish): Promise<PublishResult> {
-  await saveDraft({ item, photos });
+  const { photosFailed } = await saveDraft({ item, photos });
+  // A listing goes out with all its photos or not at all; the seller can try again.
+  if (photosFailed > 0) throw new Error('Some photos could not be stored.');
   sent.add(item.id);
 
   return {

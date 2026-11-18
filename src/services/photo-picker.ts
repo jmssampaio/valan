@@ -1,6 +1,9 @@
 import * as ImagePicker from 'expo-image-picker';
 
-export type PickedPhoto = { uri: string };
+import { newPhotoId } from './ids';
+
+/** A photo the seller chose, with the id it will be stored under. */
+export type PickedPhoto = { id: string; uri: string };
 
 export type PhotoPick =
   | { status: 'picked'; photos: PickedPhoto[] }
@@ -13,7 +16,7 @@ const QUALITY = 0.8;
 
 function toPick(result: ImagePicker.ImagePickerResult): PhotoPick {
   if (result.canceled) return { status: 'cancelled' };
-  return { status: 'picked', photos: result.assets.map(({ uri }) => ({ uri })) };
+  return { status: 'picked', photos: result.assets.map(({ uri }) => ({ id: newPhotoId(), uri })) };
 }
 
 /** Opens the system photo library. It runs outside the app, so it needs no permission. */

@@ -24,12 +24,12 @@ const fields = {
 
 /** Something to publish, with the id the device gave the draft. */
 function toPublish(marketplaces = ['discogs', 'ebay'], id = newItemId()) {
-  return { item: { ...fields, id }, photos: [{ uri: 'file:///front.jpg' }], marketplaces };
+  return { item: { ...fields, id }, photos: [{ id: 'photo-front', uri: 'file:///front.jpg' }], marketplaces };
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.mocked(saveDraft).mockImplementation(async ({ item }) => ({ id: item.id }));
+  jest.mocked(saveDraft).mockImplementation(async ({ item }) => ({ id: item.id, photosFailed: 0 }));
 });
 
 describe('publishItem', () => {
@@ -40,6 +40,12 @@ describe('publishItem', () => {
 
     expect(itemId).toBe(request.item.id);
     expect(saveDraft).toHaveBeenCalledWith({ item: request.item, photos: request.photos });
+  });
+
+  it('publishes nothing when some photos could not be stored', async () => {
+    jest.mocked(saveDraft).mockImplementation(async ({ item }) => ({ id: item.id, photosFailed: 2 }));
+
+    await expect(publishItem(toPublish())).rejects.toThrow();
   });
 
   it('publishes nothing when the item cannot be saved', async () => {
