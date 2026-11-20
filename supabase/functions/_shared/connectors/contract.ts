@@ -57,15 +57,16 @@ export function testConnectorContract(name: string, makeHarness: () => ContractH
     assertEquals(new URL(start.authorizationUrl).protocol, 'https:');
   });
 
-  test('returns credentials when the seller approves access', async (harness) => {
+  test('returns credentials and the name of the account when the seller approves access', async (harness) => {
     const start = await harness.connector.startConnect(connectInput);
 
-    const credentials = await harness.connector.finishConnect({
+    const account = await harness.connector.finishConnect({
       handshake: start.handshake,
       callbackParams: harness.approvedCallbackParams(start),
     });
 
-    assert(credentials.accessToken.length > 0);
+    assert(account.credentials.accessToken.length > 0);
+    assert(account.accountName.length > 0);
   });
 
   test('rejects a connection the seller refused', async (harness) => {

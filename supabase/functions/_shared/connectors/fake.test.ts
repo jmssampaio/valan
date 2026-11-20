@@ -91,7 +91,7 @@ Deno.test('fake connector: issues credentials that work', async () => {
   const { connector, approvedCallbackParams } = makeHarness(everything);
   const start = await connector.startConnect({ redirectUrl: 'https://valan.test/callback', state: 'state-123' });
 
-  const credentials = await connector.finishConnect({
+  const { credentials } = await connector.finishConnect({
     handshake: start.handshake,
     callbackParams: approvedCallbackParams(start),
   });

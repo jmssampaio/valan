@@ -1,7 +1,14 @@
 // The contract every marketplace connector implements. Edge Functions depend on this
 // file only, so a marketplace can be added or swapped without touching the rest.
 
-export type Marketplace = 'ebay' | 'discogs';
+export const MARKETPLACES = ['ebay', 'discogs'] as const;
+export type Marketplace = (typeof MARKETPLACES)[number];
+
+/** Whether a value that came from outside names a marketplace Valan knows. */
+export function isMarketplace(value: unknown): value is Marketplace {
+  return typeof value === 'string' && (MARKETPLACES as readonly string[]).includes(value);
+}
+
 export type ItemType = 'record' | 'equipment';
 export type RecordCondition = 'M' | 'NM' | 'VG+' | 'VG' | 'G+' | 'G' | 'F' | 'P';
 /**
@@ -36,6 +43,13 @@ export interface ConnectorCredentials {
   readonly tokenSecret?: string;
   /** ISO 8601 timestamp. */
   readonly expiresAt?: string;
+}
+
+/** What a finished connection gives the server: the credentials to store, and whose they are. */
+export interface ConnectedAccount {
+  readonly credentials: ConnectorCredentials;
+  /** The seller's name on the marketplace, shown in the app so they know which account is connected. */
+  readonly accountName: string;
 }
 
 export interface ConnectStart {
@@ -134,7 +148,7 @@ export interface Connector {
   readonly capabilities: ConnectorCapabilities;
 
   startConnect(input: { redirectUrl: string; state: string }): Promise<ConnectStart>;
-  finishConnect(callback: ConnectCallback): Promise<ConnectorCredentials>;
+  finishConnect(callback: ConnectCallback): Promise<ConnectedAccount>;
 
   publish(credentials: ConnectorCredentials, listing: ListingDraft): Promise<PublishedListing>;
   update(
