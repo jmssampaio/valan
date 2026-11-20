@@ -27,6 +27,12 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # The stack's ports (54320 to 54329) sit inside the range Linux hands out at random for
+      # outgoing connections, so a download running just before can be holding one of them
+      # and the database then fails to start with "address already in use". Reserving them
+      # keeps the system from giving them away.
+      - name: Keep the local Supabase ports free
+        run: sudo sysctl -w net.ipv4.ip_local_reserved_ports=54320-54329
       # The local stack with auth and storage, not only the database: the integration tests
       # sign real users in and store their photos.
       - run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,supavisor,postgres-meta
