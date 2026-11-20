@@ -37,7 +37,7 @@ Stack: Expo (SDK atual) + Expo Router + TypeScript estrito, só iOS na v1.0. Est
 
 Tipografia: Space Grotesk 600 para títulos e números grandes (preço, total, valor de proposta); Inter para o resto e para o logótipo. Preços com `fontVariant: ['tabular-nums']`. Escala em `type` no `theme.ts`.
 
-Raios: selo 8, controlos 10, campos e botões 14, cartões 16. Espaçamento em múltiplos de 2 (`space`). Alvos de toque nunca abaixo de 44 pt.
+Raios: selo 8, controlos 10, campos e botões 14, cartões 16. Espaçamento em múltiplos de 4 (`space`; é a regra de `docs/standards/ux.md`, ver §10). Alvos de toque nunca abaixo de 44 pt.
 
 Todos os pares de texto e fundo usados passam 4,5:1. Os mais apertados: `muted` sobre `fill` 4,9:1, `primary` sobre `bg` 5,0:1, branco sobre `primary` 5,5:1.
 
@@ -232,3 +232,15 @@ Um ecrã só está pronto quando:
 4. todos os alvos de toque têm pelo menos 44 pt e os elementos interativos têm `accessibilityRole` e `accessibilityLabel`;
 5. funciona com texto grande (Dynamic Type até XL) sem cortar o botão principal;
 6. foi visto no simulador e comparado com o artboard.
+
+## 10. Correções pendentes nas imagens
+
+Decidido a 20/11/2026: onde as imagens (os PNG e o `valan-mockups-v3.html`) não cumprem as regras de `docs/standards/ux.md`, valem as regras. As imagens têm de ser corrigidas; até lá, a app segue as regras e não a imagem.
+
+| Nas imagens | Regra | A corrigir |
+|---|---|---|
+| Texto a 11 pt: os rótulos dos separadores, o contador de Propostas e a etiqueta "Capa" | Nenhum texto abaixo de 12 pt | Passar a 12 pt ou mais |
+| Espaçamentos fora da grelha (por exemplo 6, 10, 14, 18, 22 e 26, e alguns valores ímpares) | Espaçamento em múltiplos de 4 | Ajustar ao múltiplo de 4 mais próximo |
+| Raio 12 nas miniaturas, nos quadrados das plataformas e no botão compacto "Ligar" | Só os raios da §2: 8, 10, 14 e 16 | O botão passa a 14, como os outros botões; as miniaturas e os quadrados passam a um dos quatro |
+
+As imagens `01-entrada` e `13-subscricao` são anteriores a este texto: falta-lhes o botão da Google (§7.1) e o plano semanal (§7.13).
