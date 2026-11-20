@@ -135,3 +135,59 @@ export async function accountExistsAsServer(userId: string): Promise<boolean> {
   if (error) return false;
   return data.user !== null;
 }
+
+/** The client the Edge Functions use, for a test of the code they run on the real tables. */
+export function serverClient() {
+  return localAdmin();
+}
+
+type Marketplace = 'discogs' | 'ebay';
+
+/** A connected marketplace account, written as the server would: the app may not create one. */
+export async function createConnectionAsServer(connection: {
+  userId: string;
+  marketplace: Marketplace;
+  accountName: string;
+}): Promise<void> {
+  const { error } = await localAdmin().from('platform_connections').insert({
+    user_id: connection.userId,
+    marketplace: connection.marketplace,
+    access_token_encrypted: 'v1.iv.sealed-access-token',
+    token_secret_encrypted: 'v1.iv.sealed-token-secret',
+    external_username: connection.accountName,
+  });
+  if (error) throw error;
+}
+
+/** The marketplaces a seller is connected to, as the server sees them, sorted. */
+export async function listConnectedMarketplacesAsServer(userId: string): Promise<string[]> {
+  const { data, error } = await localAdmin().from('platform_connections').select('marketplace').eq('user_id', userId);
+  if (error) throw error;
+  return data.map(({ marketplace }) => marketplace as string).sort();
+}
+
+/** How many connection attempts a seller has pending, as the server sees them. */
+export async function countHandshakesAsServer(userId: string): Promise<number> {
+  const { count, error } = await localAdmin()
+    .from('connection_handshakes')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+/** Deletes an account as the server would, leaving any token it was given still signed. */
+export async function deleteUserAsServer(userId: string): Promise<void> {
+  const { error } = await localAdmin().auth.admin.deleteUser(userId);
+  if (error) throw error;
+}
+
+/**
+ * A token the local gateway lets through (this stack signed it) that belongs to no seller,
+ * so a test can reach a function's own check of who is calling.
+ */
+export function signedTokenOfNobody(): string {
+  const token = process.env.LOCAL_SUPABASE_ANON_JWT;
+  if (!token) throw new Error('The local stack did not give its anonymous token.');
+  return token;
+}

@@ -23,7 +23,21 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "item_photos": {
+            "connection_handshakes": {
+                  Row: {
+                    "created_at": string,"expires_at": string,"handshake_encrypted": string,"id": string,"marketplace": Database["public"]['Enums']["marketplace"],"state_hash": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"expires_at": string,"handshake_encrypted": string,"id"?: string,"marketplace": Database["public"]['Enums']["marketplace"],"state_hash": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"expires_at"?: string,"handshake_encrypted"?: string,"id"?: string,"marketplace"?: Database["public"]['Enums']["marketplace"],"state_hash"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"item_photos": {
                   Row: {
                     "created_at": string,"id": string,"item_id": string,"position": number,"storage_path": string,"user_id": string
                   }
@@ -99,14 +113,14 @@ isOneToOne: false
                   ]
                 },"platform_connections": {
                   Row: {
-                    "access_token_encrypted": string | null,"created_at": string,"expires_at": string | null,"id": string,"marketplace": Database["public"]['Enums']["marketplace"],"refresh_token_encrypted": string | null,"status": Database["public"]['Enums']["connection_status"],"updated_at": string,"user_id": string
+                    "access_token_encrypted": string | null,"created_at": string,"expires_at": string | null,"external_username": string | null,"id": string,"marketplace": Database["public"]['Enums']["marketplace"],"refresh_token_encrypted": string | null,"status": Database["public"]['Enums']["connection_status"],"token_secret_encrypted": string | null,"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "access_token_encrypted"?: string | null,"created_at"?: string,"expires_at"?: string | null,"id"?: string,"marketplace": Database["public"]['Enums']["marketplace"],"refresh_token_encrypted"?: string | null,"status"?: Database["public"]['Enums']["connection_status"],"updated_at"?: string,"user_id": string
+                    "access_token_encrypted"?: string | null,"created_at"?: string,"expires_at"?: string | null,"external_username"?: string | null,"id"?: string,"marketplace": Database["public"]['Enums']["marketplace"],"refresh_token_encrypted"?: string | null,"status"?: Database["public"]['Enums']["connection_status"],"token_secret_encrypted"?: string | null,"updated_at"?: string,"user_id": string
                   }
                   Update: {
-                    "access_token_encrypted"?: string | null,"created_at"?: string,"expires_at"?: string | null,"id"?: string,"marketplace"?: Database["public"]['Enums']["marketplace"],"refresh_token_encrypted"?: string | null,"status"?: Database["public"]['Enums']["connection_status"],"updated_at"?: string,"user_id"?: string
+                    "access_token_encrypted"?: string | null,"created_at"?: string,"expires_at"?: string | null,"external_username"?: string | null,"id"?: string,"marketplace"?: Database["public"]['Enums']["marketplace"],"refresh_token_encrypted"?: string | null,"status"?: Database["public"]['Enums']["connection_status"],"token_secret_encrypted"?: string | null,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     

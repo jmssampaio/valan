@@ -3,6 +3,7 @@
 
 import {
   type ConnectCallback,
+  type ConnectedAccount,
   type ConnectStart,
   type Connector,
   type ConnectorCapabilities,
@@ -99,13 +100,13 @@ export function createFakeConnector(options: FakeConnectorOptions): FakeConnecto
       };
     },
 
-    async finishConnect({ handshake, callbackParams }: ConnectCallback): Promise<ConnectorCredentials> {
+    async finishConnect({ handshake, callbackParams }: ConnectCallback): Promise<ConnectedAccount> {
       requireOnline();
       const approved = callbackParams.state === handshake.state && callbackParams.code !== undefined;
       if (!approved) {
         throw new ConnectorError('auth_denied', 'The marketplace did not grant access.');
       }
-      return issueCredentials();
+      return { credentials: issueCredentials(), accountName: 'fake-seller' };
     },
 
     async publish(credentials, listing): Promise<PublishedListing> {
