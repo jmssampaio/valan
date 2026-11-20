@@ -1,6 +1,6 @@
 # Valan design
 
-Source of truth for screens and brand: the mockups in `mockups/` and the logo in `logo/`. The Figma file "Valan — Mockups v1.0" is no longer used.
+**Design v3 in `v3/` is the source of truth now** (`v3/design-spec.md`). What follows describes design v2, which the app was built from and which `v3/` supersedes: the mockups in `mockups/` and the logo in `logo/`. The Figma file "Valan — Mockups v1.0" is no longer used.
 
 ## Logo
 - `valan-icon.svg`: app icon. Orange tile `#B4460F` with cream wave `#F5EFE6`.

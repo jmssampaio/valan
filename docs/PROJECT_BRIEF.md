@@ -63,7 +63,7 @@ Known constraints to confirm:
 
 ## Screens and flows
 
-Design source of truth: the v2 mockups and logo in `docs/design/` (see its README). The earlier Figma file is no longer used. Screen names and copy in the mockups are in Portuguese.
+Design source of truth: `docs/design/v3/design-spec.md` (design v3), which supersedes the v2 mockups in `docs/design/mockups/` that the app was built from; where it disagrees with a decision in CLAUDE.md, the decision stands. The earlier Figma file is no longer used. Screen names and copy in the mockups are in Portuguese.
 
 Screens: 01 Welcome · 02 Connect marketplaces · 03 Listings (home, with a three-tile summary: pending offers, month sales, listings with errors) · 04–07 New listing (catalogue, condition and photos, price and marketplaces, result) · 08 Listing detail · 09 Offers · 10 Sales · 11 Account · 12 Subscription.
 
@@ -79,7 +79,7 @@ Known gaps in the mockups: loading, offline and error states; the equipment path
 
 ## Brand
 
-Logo: a straight-line zigzag wave on an orange tile, with the wordmark "VALAN" in spaced capitals below. Colours: orange `#B4460F`, cream `#F5EFE6`, ink `#1E1A17` (full token list and contrast checks in `docs/design/README.md`). Type: Fraunces, Inter and IBM Plex Mono.
+Logo: a straight-line zigzag wave on an orange tile, with the wordmark "VALAN" in spaced capitals below. Colours: orange `#B4460F`, cream `#F5EFE6`, ink `#1E1A17` (full token list in section 2 of `docs/design/v3/design-spec.md`). Type: Space Grotesk for titles and big numbers and Inter for the rest (design v3; the app still uses Fraunces and IBM Plex Mono until its theme is migrated).
 
 ## Suggested build order
 
