@@ -37,6 +37,8 @@ module.exports = async () => {
   process.env.EXPO_PUBLIC_SUPABASE_URL = url;
   process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY = publishableKey;
   process.env.LOCAL_SUPABASE_SERVICE_ROLE_KEY = serviceRoleKey;
+  // A token the local gateway accepts (it is signed by this stack) that is nobody's session.
+  process.env.LOCAL_SUPABASE_ANON_JWT = status.ANON_KEY ?? '';
   // Where the local stack keeps the emails it would have sent.
   const mailbox = status.MAILPIT_URL ?? status.INBUCKET_URL ?? '';
   process.env.LOCAL_MAILBOX_URL = mailbox;

@@ -444,3 +444,18 @@ enabled = true
 # a valid session token before the function runs; the function checks the password too.
 [functions.delete-account]
 verify_jwt = true
+
+# Start connecting a marketplace account, and disconnect one. Both act for the caller, so
+# the gateway refuses a request without a valid session token before the function runs.
+[functions.connect-start]
+verify_jwt = true
+
+[functions.disconnect]
+verify_jwt = true
+
+# Where a marketplace sends the seller's browser back. The ONLY function open to anybody:
+# a browser coming from another site carries no Valan session. It is protected by the
+# state of the attempt instead (random, single-use, ten minutes) and only ever answers
+# with a redirect to the app.
+[functions.connect-callback]
+verify_jwt = false
