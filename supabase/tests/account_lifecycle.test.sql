@@ -13,8 +13,14 @@ select results_eq(
   'signing up creates a profile with the fallback language and currency'
 );
 
+-- Only this test's two users: the database may hold others, some already connected.
 insert into public.platform_connections (user_id, marketplace)
-select id, 'ebay' from auth.users;
+select id, 'ebay' from auth.users
+where id in ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000b');
+
+insert into public.connection_handshakes (user_id, marketplace, state_hash, handshake_encrypted, expires_at) values
+  ('00000000-0000-0000-0000-00000000000a', 'discogs', repeat('1', 64), 'v1.iv.sealed', now() + interval '10 minutes'),
+  ('00000000-0000-0000-0000-00000000000b', 'discogs', repeat('2', 64), 'v1.iv.sealed', now() + interval '10 minutes');
 
 insert into public.items (id, user_id, type, title) values
   ('10000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000a', 'record', 'Alice record'),
@@ -37,7 +43,8 @@ insert into public.sales (user_id, listing_id, marketplace, item_title, external
 select user_id, id, marketplace, 'Record', 'order', 2000, 'EUR', now() from public.listings;
 
 insert into public.push_tokens (user_id, token)
-select id, 'device' from auth.users;
+select id, 'device' from auth.users
+where id in ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000b');
 
 delete from auth.users where id = '00000000-0000-0000-0000-00000000000a';
 
@@ -45,6 +52,7 @@ create function pg_temp.rows_owned_by(owner uuid) returns bigint language sql as
   select
     (select count(*) from public.profiles where id = owner)
     + (select count(*) from public.platform_connections where user_id = owner)
+    + (select count(*) from public.connection_handshakes where user_id = owner)
     + (select count(*) from public.items where user_id = owner)
     + (select count(*) from public.item_photos where user_id = owner)
     + (select count(*) from public.listings where user_id = owner)
@@ -60,7 +68,8 @@ select is(
 );
 select is(
   pg_temp.rows_owned_by('00000000-0000-0000-0000-00000000000b'),
-  8::bigint,
+  -- One row in each table, the connection attempt included.
+  9::bigint,
   'deleting an account leaves other users'' rows untouched'
 );
 
