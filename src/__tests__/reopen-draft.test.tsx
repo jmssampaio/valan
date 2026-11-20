@@ -112,7 +112,7 @@ describe('reopening a draft', () => {
   it('opens at step 2 with what the draft already has', async () => {
     await renderRouter(APP_DIR, { initialUrl: REOPEN });
 
-    expect(await screen.findByRole('progressbar', { name: 'Passo 2 de 4' })).toBeOnTheScreen();
+    expect(await screen.findByRole('progressbar', { name: 'Passo 2 de 4 · Estado e fotos' })).toBeOnTheScreen();
     expect(screen.getAllByRole('radio', { name: 'VG+' })[0]).toBeChecked();
   });
 
@@ -186,7 +186,7 @@ describe('reopening a draft', () => {
 
     await fireEvent.press(screen.getByRole('button', { name: 'Tentar de novo' }));
 
-    expect(await screen.findByRole('progressbar', { name: 'Passo 2 de 4' })).toBeOnTheScreen();
+    expect(await screen.findByRole('progressbar', { name: 'Passo 2 de 4 · Estado e fotos' })).toBeOnTheScreen();
   });
 
   it('lets the seller close the sheet when the draft cannot be opened', async () => {

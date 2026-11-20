@@ -87,7 +87,7 @@ export default function NewListingPriceScreen() {
       }>
       <View style={styles.sections}>
         <View>
-          <AppText variant="caption" color="muted">
+          <AppText variant="label" color="muted">
             {t('newListing.price.label')}
           </AppText>
           <PriceField
@@ -99,7 +99,7 @@ export default function NewListingPriceScreen() {
           />
           {hasUnreadablePrice ? (
             // Said as soon as it shows: the publish button is off because of it.
-            <AppText variant="rowMeta" color="error" accessibilityRole="alert" style={styles.hint}>
+            <AppText variant="rowMeta" color="danger" accessibilityRole="alert" style={styles.hint}>
               {t('newListing.price.invalid')}
             </AppText>
           ) : null}
@@ -111,7 +111,7 @@ export default function NewListingPriceScreen() {
           />
         </View>
         <View>
-          <AppText variant="caption" color="muted">
+          <AppText variant="label" color="muted">
             {t('newListing.publishOn')}
           </AppText>
           {connections.status === 'loading' ? (
@@ -129,8 +129,8 @@ export default function NewListingPriceScreen() {
               </AppText>
               <Button
                 label={t('common.retry')}
-                variant="outline"
-                size="small"
+                variant="secondary"
+                size="compact"
                 onPress={connections.reload}
               />
             </View>

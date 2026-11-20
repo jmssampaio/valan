@@ -24,7 +24,7 @@ describe('Screen', () => {
       <Screen
         title="Estado e fotos"
         scroll
-        header={<Button label="Voltar" variant="text" onPress={jest.fn()} />}
+        header={<Button label="Voltar" variant="link" onPress={jest.fn()} />}
         footer={<Button label="Continuar" onPress={jest.fn()} />}
       />,
     );

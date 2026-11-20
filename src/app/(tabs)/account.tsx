@@ -40,7 +40,7 @@ export default function AccountScreen() {
       <View style={styles.account}>
         {email ? (
           <View style={styles.identity}>
-            <AppText variant="caption" color="muted">
+            <AppText variant="label" color="muted">
               {t('account.signedInAs')}
             </AppText>
             <AppText>{email}</AppText>
@@ -48,19 +48,19 @@ export default function AccountScreen() {
         ) : null}
         <Button
           label={t('account.signOut')}
-          variant="outline"
+          variant="secondary"
           disabled={isBusy}
           onPress={() => void leave()}
         />
         {failure ? (
-          <AppText variant="rowMeta" color="error" accessibilityRole="alert">
+          <AppText variant="rowMeta" color="danger" accessibilityRole="alert">
             {t(failureMessage(failure))}
           </AppText>
         ) : null}
         {/* Opens its own screen, which explains what is lost and asks for the password. */}
         <Button
           label={t('account.delete')}
-          variant="danger"
+          variant="dangerLink"
           disabled={isBusy}
           onPress={() => router.push('/delete-account')}
         />

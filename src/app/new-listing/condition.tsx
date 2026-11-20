@@ -160,7 +160,7 @@ export default function NewListingConditionScreen() {
             }
             photoAccessibilityHint={t('newListing.photos.photo.hint')}
           />
-          {photoProblem ? <Detail tone="error">{t(photoProblem)}</Detail> : null}
+          {photoProblem ? <Detail tone="danger">{t(photoProblem)}</Detail> : null}
         </Section>
         <TextField
           label={t('newListing.description.label')}
@@ -177,7 +177,7 @@ export default function NewListingConditionScreen() {
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View style={styles.section}>
-      <AppText variant="caption" color="muted">
+      <AppText variant="label" color="muted">
         {label}
       </AppText>
       {children}
@@ -185,14 +185,14 @@ function Section({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
-function Detail({ tone = 'muted', children }: { tone?: 'muted' | 'error'; children: string }) {
+function Detail({ tone = 'muted', children }: { tone?: 'muted' | 'danger'; children: string }) {
   return (
     // A problem appears after an action elsewhere on the screen, so it is announced.
     <AppText
       variant="rowMeta"
       color={tone}
-      accessibilityRole={tone === 'error' ? 'alert' : undefined}
-      accessibilityLiveRegion={tone === 'error' ? 'polite' : undefined}>
+      accessibilityRole={tone === 'danger' ? 'alert' : undefined}
+      accessibilityLiveRegion={tone === 'danger' ? 'polite' : undefined}>
       {children}
     </AppText>
   );

@@ -73,7 +73,7 @@ export default function DeleteAccountScreen() {
           )}
           <Button
             label={t('account.delete')}
-            variant="danger"
+            variant="dangerLink"
             disabled={!isOnline || isBusy || password === ''}
             onPress={confirm}
           />
@@ -106,7 +106,7 @@ export default function DeleteAccountScreen() {
           </View>
         ) : null}
         {failure ? (
-          <AppText variant="rowMeta" color="error" accessibilityRole="alert">
+          <AppText variant="rowMeta" color="danger" accessibilityRole="alert">
             {t(messageFor[failure] ?? 'account.delete.failed')}
           </AppText>
         ) : null}

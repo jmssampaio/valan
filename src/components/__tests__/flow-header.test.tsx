@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { FlowHeader } from '@/components/flow-header';
+import { Colors } from '@/constants/theme';
 
 const secondOfFour = {
   step: 2,
@@ -35,5 +36,17 @@ describe('FlowHeader', () => {
     await render(<FlowHeader {...secondOfFour} />);
 
     expect(screen.queryByRole('button')).not.toBeOnTheScreen();
+  });
+
+  it('fills the steps done in the brand colour, and leaves the others on the line colour', async () => {
+    await render(<FlowHeader {...secondOfFour} />);
+
+    const segments = screen.getAllByTestId('step-segment', { includeHiddenElements: true });
+    expect(segments.map((segment) => segment.props.style)).toEqual([
+      expect.arrayContaining([expect.objectContaining({ backgroundColor: Colors.primary })]),
+      expect.arrayContaining([expect.objectContaining({ backgroundColor: Colors.primary })]),
+      expect.not.arrayContaining([expect.objectContaining({ backgroundColor: Colors.primary })]),
+      expect.not.arrayContaining([expect.objectContaining({ backgroundColor: Colors.primary })]),
+    ]);
   });
 });

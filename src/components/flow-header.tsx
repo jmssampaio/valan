@@ -8,9 +8,9 @@ export type FlowHeaderProps = {
   /** The step on screen, counted from 1. */
   step: number;
   steps: number;
-  /** The short form shown beside the bar: "1/4". */
+  /** Shown under the bar: "Passo 2 de 4 · Estado e fotos". */
   stepLabel: string;
-  /** The spoken form: "Step 1 of 4". */
+  /** The spoken form, read once on the bar. */
   stepAccessibilityLabel: string;
   /** Leaves the flow on the first step and goes back on the others. */
   leading?: {
@@ -21,7 +21,10 @@ export type FlowHeaderProps = {
   };
 };
 
-/** The top of every step in a multi-step flow: a way out or back, and how far along it is. */
+/**
+ * The top of every step in a multi-step flow: a way out or back, how far along it is, and the
+ * name of the step (design-spec.md, StepHeader).
+ */
 export function FlowHeader({
   step,
   steps,
@@ -41,17 +44,7 @@ export function FlowHeader({
             style={({ pressed }) => [styles.leading, pressed && styles.pressed]}>
             <AppText variant="navAction">{leading.label}</AppText>
           </Pressable>
-        ) : (
-          <View />
-        )}
-        {/* Read once, on the bar below. */}
-        <AppText
-          variant="step"
-          color="muted"
-          accessibilityElementsHidden
-          importantForAccessibility="no">
-          {stepLabel}
-        </AppText>
+        ) : null}
       </View>
       <View
         accessible
@@ -60,21 +53,33 @@ export function FlowHeader({
         accessibilityValue={{ min: 0, max: steps, now: step }}
         style={styles.progress}>
         {Array.from({ length: steps }, (_, index) => (
-          <View key={index} style={[styles.segment, index < step && styles.done]} />
+          <View
+            key={index}
+            testID="step-segment"
+            style={[styles.segment, index < step && styles.done]}
+          />
         ))}
       </View>
+      {/* Read once, on the bar above. */}
+      <AppText
+        variant="label"
+        color="muted"
+        accessibilityElementsHidden
+        importantForAccessibility="no">
+        {stepLabel}
+      </AppText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
-    paddingBottom: Spacing.x5,
+    gap: Spacing.x2,
+    paddingBottom: Spacing.x4,
   },
   nav: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     minHeight: ControlHeight.small,
   },
   leading: {
@@ -87,8 +92,7 @@ const styles = StyleSheet.create({
   },
   progress: {
     flexDirection: 'row',
-    gap: Spacing.x1,
-    marginTop: Spacing.x1,
+    gap: Spacing.x2,
   },
   segment: {
     flex: 1,
@@ -96,6 +100,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.line,
   },
   done: {
-    backgroundColor: Colors.ink,
+    backgroundColor: Colors.primary,
   },
 });

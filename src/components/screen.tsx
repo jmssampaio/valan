@@ -95,7 +95,7 @@ export function Screen({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: Colors.paper,
+    backgroundColor: Colors.bg,
   },
   fill: {
     flex: 1,

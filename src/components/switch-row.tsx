@@ -34,7 +34,7 @@ export function SwitchRow({ title, meta, value, onValueChange }: SwitchRowProps)
         pointerEvents="none"
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants">
-        <Switch value={value} trackColor={{ true: Colors.accent, false: Colors.line }} />
+        <Switch value={value} trackColor={{ true: Colors.primary, false: Colors.line }} />
       </View>
     </Pressable>
   );

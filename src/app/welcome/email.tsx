@@ -151,21 +151,21 @@ export default function EmailAuthScreen() {
           ) : null}
           <Button
             label={t(showsPassword ? 'auth.password.hide' : 'auth.password.show')}
-            variant="text"
-            size="small"
+            variant="link"
+            size="compact"
             onPress={() => setShowsPassword((shown) => !shown)}
           />
           {isSigningUp ? null : (
             <Button
               label={t('auth.forgot.link')}
-              variant="text"
-              size="small"
+              variant="link"
+              size="compact"
               onPress={forgotPassword}
             />
           )}
         </View>
         {failure ? (
-          <AppText variant="rowMeta" color="error" accessibilityRole="alert">
+          <AppText variant="rowMeta" color="danger" accessibilityRole="alert">
             {t(failureMessage(failure))}
           </AppText>
         ) : null}

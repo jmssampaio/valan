@@ -40,12 +40,12 @@ export function CheckRow({
         divider === 'line' && styles.divided,
         pressed && styles.pressed,
       ]}>
-      <View style={[styles.box, checked && styles.checked, disabled && styles.unavailable]}>
+      <View style={[styles.box, checked && styles.checked]}>
         {checked ? (
           // The row already says "checked"; the mark is for the eye.
           <AppText
             variant="tileLabel"
-            color="onInk"
+            color="onPrimary"
             accessibilityElementsHidden
             importantForAccessibility="no">
             {CHECK_MARK}
@@ -87,16 +87,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: Size.checkbox,
     height: Size.checkbox,
-    borderRadius: Radius.tag,
-    borderWidth: BorderWidth.hairline,
-    borderColor: Colors.ink,
-  },
-  checked: {
-    backgroundColor: Colors.ink,
-  },
-  // Edged in the muted colour, like the row's title: the divider colour is for dividers only.
-  unavailable: {
+    borderRadius: Radius.seal,
+    borderWidth: BorderWidth.control,
     borderColor: Colors.muted,
+  },
+  // Ticked in the brand colour, as in design v3.
+  checked: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   text: {
     flex: 1,

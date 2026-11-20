@@ -1,19 +1,22 @@
-import { Pressable, StyleSheet, type ViewStyle } from 'react-native';
+import type { SFSymbol } from 'expo-symbols';
+import { ActivityIndicator, Pressable, StyleSheet, type ViewStyle } from 'react-native';
 
 import { AppText } from './app-text';
+import { Icon } from './icon';
 
 import {
-  BorderWidth,
   Colors,
   ControlHeight,
   Opacity,
   Radius,
+  Size,
   Spacing,
+  type TextVariant,
   type ThemeColor,
 } from '@/constants/theme';
 
-type ButtonVariant = 'primary' | 'ink' | 'outline' | 'text' | 'danger';
-type ButtonSize = 'large' | 'small';
+type ButtonVariant = 'primary' | 'secondary' | 'dark' | 'link' | 'dangerLink';
+type ButtonSize = 'default' | 'compact';
 
 export type ButtonProps = {
   label: string;
@@ -22,44 +25,66 @@ export type ButtonProps = {
   onPress: () => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
+  /** An inline symbol before the label, such as "+" or "open on the marketplace". */
+  icon?: SFSymbol;
   disabled?: boolean;
+  /** The request is on its way: shows that it is working and takes no second press. */
+  loading?: boolean;
 };
 
 const labelColor: Record<ButtonVariant, ThemeColor> = {
-  primary: 'onAccent',
-  ink: 'onInk',
-  outline: 'ink',
-  text: 'ink',
-  // For an action that cannot be undone: it is written in the error colour, without a box.
-  danger: 'error',
+  primary: 'onPrimary',
+  secondary: 'ink',
+  dark: 'onInk',
+  link: 'primary',
+  // For an action that cannot be undone: written in the danger colour, without a box.
+  dangerLink: 'danger',
 };
+
+const isLink = (variant: ButtonVariant) => variant === 'link' || variant === 'dangerLink';
+
+function labelVariant(variant: ButtonVariant, size: ButtonSize): TextVariant {
+  return size === 'default' && !isLink(variant) ? 'button' : 'buttonCompact';
+}
 
 export function Button({
   label,
   accessibilityLabel,
   onPress,
   variant = 'primary',
-  size = 'large',
+  size = 'default',
+  icon,
   disabled = false,
+  loading = false,
 }: ButtonProps) {
+  const color = labelColor[variant];
+
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ disabled }}
-      disabled={disabled}
+      accessibilityState={{ disabled, busy: loading }}
+      // While loading, a second press would send the same request again.
+      disabled={disabled || loading}
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        sizeStyles[size],
+        isLink(variant) ? styles.link : sizeStyles[size],
         variantStyles[variant],
-        pressed && styles.pressed,
+        pressed && (variant === 'primary' ? styles.primaryPressed : styles.pressed),
         disabled && styles.disabled,
       ]}>
-      <AppText
-        variant={size === 'large' ? 'button' : 'buttonSmall'}
-        color={labelColor[variant]}
-        style={styles.label}>
+      {loading ? (
+        <ActivityIndicator
+          testID="button-spinner"
+          color={Colors[color]}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+        />
+      ) : icon ? (
+        <Icon name={icon} size={Size.inlineIcon} color={color} />
+      ) : null}
+      <AppText variant={labelVariant(variant, size)} color={color} style={styles.label}>
         {label}
       </AppText>
     </Pressable>
@@ -68,19 +93,27 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: Radius.control,
+    gap: Spacing.x2,
+    borderRadius: Radius.field,
     // Room for a label that wraps onto two lines at large text sizes.
     paddingVertical: Spacing.x2,
-    borderWidth: BorderWidth.hairline,
-    borderColor: Colors.transparent,
+  },
+  link: {
+    minHeight: ControlHeight.small,
+    paddingHorizontal: Spacing.x2,
   },
   label: {
+    flexShrink: 1,
     textAlign: 'center',
   },
   pressed: {
     opacity: Opacity.pressed,
+  },
+  primaryPressed: {
+    backgroundColor: Colors.primaryPressed,
   },
   disabled: {
     opacity: Opacity.disabled,
@@ -88,26 +121,26 @@ const styles = StyleSheet.create({
 });
 
 const sizeStyles = StyleSheet.create<Record<ButtonSize, ViewStyle>>({
-  large: {
+  default: {
     minHeight: ControlHeight.large,
     paddingHorizontal: Spacing.x5,
   },
-  small: {
-    minHeight: ControlHeight.small,
+  compact: {
+    minHeight: ControlHeight.compact,
     paddingHorizontal: Spacing.x4,
   },
 });
 
 const variantStyles = StyleSheet.create<Record<ButtonVariant, ViewStyle>>({
   primary: {
-    backgroundColor: Colors.accent,
+    backgroundColor: Colors.primary,
   },
-  ink: {
+  secondary: {
+    backgroundColor: Colors.fill,
+  },
+  dark: {
     backgroundColor: Colors.ink,
   },
-  outline: {
-    borderColor: Colors.ink,
-  },
-  text: {},
-  danger: {},
+  link: {},
+  dangerLink: {},
 });

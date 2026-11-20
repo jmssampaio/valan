@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
 import { SegmentedControl } from '@/components/segmented-control';
+import { Colors } from '@/constants/theme';
 
 const options = [
   { value: 'record', label: 'Disco' },
@@ -29,5 +30,25 @@ describe('SegmentedControl', () => {
 
     expect(screen.getByRole('radio', { name: 'Disco' })).not.toBeChecked();
     expect(screen.getByRole('radio', { name: 'Aparelho' })).not.toBeChecked();
+  });
+});
+
+describe('SegmentedControl in design v3', () => {
+  it('shows the chosen option as a white tile on the grey track', async () => {
+    await render(<SegmentedControl options={options} value="record" onChange={jest.fn()} />);
+
+    expect(screen.getByTestId('segmented-track')).toHaveStyle({ backgroundColor: Colors.fill });
+    expect(screen.getByRole('radio', { name: 'Disco' })).toHaveStyle({ backgroundColor: Colors.surface });
+    expect(screen.getByRole('radio', { name: 'Aparelho' })).not.toHaveStyle({
+      backgroundColor: Colors.surface,
+    });
+  });
+
+  it('keeps every option at least 44 points tall', async () => {
+    await render(<SegmentedControl options={options} value="record" onChange={jest.fn()} />);
+
+    for (const name of ['Disco', 'Aparelho']) {
+      expect(screen.getByRole('radio', { name })).toHaveStyle({ minHeight: 44 });
+    }
   });
 });

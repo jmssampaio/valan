@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: Colors.surface,
     borderWidth: BorderWidth.hairline,
-    borderColor: Colors.photoEdge,
+    borderColor: Colors.line,
   },
   photo: {
     flex: 1,

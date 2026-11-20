@@ -88,7 +88,7 @@ export default function ResetPasswordScreen() {
           returnKeyType="done"
         />
         {failure ? (
-          <AppText variant="rowMeta" color="error" accessibilityRole="alert">
+          <AppText variant="rowMeta" color="danger" accessibilityRole="alert">
             {t(failureMessage(failure))}
           </AppText>
         ) : null}

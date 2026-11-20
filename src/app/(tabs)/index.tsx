@@ -11,7 +11,6 @@ import { SummaryStrip } from '@/components/summary-strip';
 import { Tag } from '@/components/tag';
 import { TextTabs } from '@/components/text-tabs';
 import { Thumbnail } from '@/components/thumbnail';
-import { Wave } from '@/components/wave';
 import { Colors, Spacing } from '@/constants/theme';
 import { formatMonth, formatPrice } from '@/features/listings/format';
 import {
@@ -59,7 +58,7 @@ export default function ListingsScreen() {
       // The empty screen's drawing hangs well below the title; everything else sits close to it.
       titleGap={isEmpty ? 'x30' : 'x4'}
       titleAction={
-        hasItems ? <Button label={t('listings.new')} size="small" onPress={startListing} /> : undefined
+        hasItems ? <Button label={t('listings.new')} size="compact" onPress={startListing} /> : undefined
       }>
       {listings.status === 'loading' ? (
         <View style={styles.loading}>
@@ -82,7 +81,6 @@ export default function ListingsScreen() {
         />
       ) : (
         <ScreenMessage
-          illustration={<Wave />}
           title={t('listings.empty.title')}
           body={t('listings.empty.body')}
           action={{ label: t('listings.empty.action'), onPress: startListing }}

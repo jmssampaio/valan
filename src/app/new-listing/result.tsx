@@ -107,7 +107,7 @@ export default function NewListingResultScreen() {
             label={t('newListing.result.view')}
             onPress={() => router.replace({ pathname: '/listing/[id]', params: { id: result.itemId } })}
           />
-          <Button label={t('newListing.result.another')} variant="outline" onPress={createAnother} />
+          <Button label={t('newListing.result.another')} variant="secondary" onPress={createAnother} />
         </>
       }>
       {/* The listing is out: there is no step to go back to. */}

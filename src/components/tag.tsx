@@ -13,8 +13,8 @@ export type TagProps = {
 
 const labelColor: Record<TagTone, ThemeColor> = {
   neutral: 'ink',
-  success: 'success',
-  error: 'error',
+  success: 'primary',
+  error: 'danger',
   waiting: 'muted',
   filled: 'onInk',
 };
@@ -22,7 +22,7 @@ const labelColor: Record<TagTone, ThemeColor> = {
 export function Tag({ label, tone = 'neutral' }: TagProps) {
   return (
     <View style={[styles.base, toneStyles[tone]]}>
-      <AppText variant="tag" color={labelColor[tone]} numberOfLines={1}>
+      <AppText variant="seal" color={labelColor[tone]} numberOfLines={1}>
         {label}
       </AppText>
     </View>
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     paddingVertical: Spacing.x1,
     paddingHorizontal: Spacing.x2,
-    borderRadius: Radius.tag,
+    borderRadius: Radius.seal,
     borderWidth: BorderWidth.hairline,
     borderColor: Colors.line,
   },
@@ -43,10 +43,10 @@ const styles = StyleSheet.create({
 const toneStyles = StyleSheet.create<Record<TagTone, ViewStyle>>({
   neutral: {},
   success: {
-    borderColor: Colors.success,
+    borderColor: Colors.primary,
   },
   error: {
-    borderColor: Colors.error,
+    borderColor: Colors.danger,
   },
   waiting: {
     borderStyle: 'dashed',

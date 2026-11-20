@@ -30,4 +30,11 @@ describe('ScreenMessage', () => {
 
     expect(screen.queryByRole('button')).not.toBeOnTheScreen();
   });
+
+  it('shows the wave on its tile above the title, as a drawing screen readers skip', async () => {
+    await render(<ScreenMessage title="Ainda não tens anúncios" body="Cria o primeiro." />);
+
+    expect(screen.getByTestId('message-wave', { includeHiddenElements: true })).toBeOnTheScreen();
+    expect(screen.queryByRole('image')).not.toBeOnTheScreen();
+  });
 });

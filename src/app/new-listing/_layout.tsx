@@ -53,7 +53,7 @@ function ReopenedFlow({ itemId }: { itemId: string }) {
       titleSize="medium"
       titleGap="x4"
       // Until the draft is open there is no step to go back from: this is the way out.
-      footer={<Button label={t('common.close')} variant="outline" onPress={() => router.dismissTo('/')} />}>
+      footer={<Button label={t('common.close')} variant="secondary" onPress={() => router.dismissTo('/')} />}>
       {reopened.status === 'loading' ? (
         <View style={styles.loading}>
           <ActivityIndicator accessibilityLabel={t('newListing.reopen.loading')} color={Colors.ink} />
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.x4,
-    backgroundColor: Colors.paper,
+    backgroundColor: Colors.bg,
   },
   loading: {
     flex: 1,

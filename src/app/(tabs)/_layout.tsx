@@ -1,5 +1,7 @@
 import { Tabs } from 'expo-router/js-tabs';
 
+import type { SFSymbol } from 'expo-symbols';
+
 import { TabBar } from '@/components/tab-bar';
 import { PendingOffersProvider, usePendingOffers } from '@/hooks/use-pending-offers';
 import { t } from '@/i18n';
@@ -11,6 +13,14 @@ export default function TabsLayout() {
     </PendingOffersProvider>
   );
 }
+
+// SF Symbols for the four tabs of design-spec.md (Tag, MessageSquare, BarChart3, User).
+const icons: Record<string, SFSymbol> = {
+  index: 'tag',
+  offers: 'bubble.left',
+  sales: 'chart.bar',
+  account: 'person',
+};
 
 function TabsWithBadges() {
   const pendingOffers = usePendingOffers().count ?? 0;
@@ -26,7 +36,7 @@ function TabsWithBadges() {
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
-      tabBar={(props) => <TabBar {...props} badges={badges} />}>
+      tabBar={(props) => <TabBar {...props} icons={icons} badges={badges} />}>
       <Tabs.Screen name="index" options={{ title: t('tabs.listings') }} />
       <Tabs.Screen name="offers" options={{ title: t('tabs.offers') }} />
       <Tabs.Screen name="sales" options={{ title: t('tabs.sales') }} />
