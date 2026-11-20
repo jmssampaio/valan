@@ -34,7 +34,7 @@ export function SummaryStrip({ tiles }: SummaryStripProps) {
             minimumFontScale={VALUE_MINIMUM_SCALE}>
             {value}
           </AppText>
-          <AppText variant="caption" color="muted">
+          <AppText variant="label" color="muted">
             {label}
           </AppText>
         </View>

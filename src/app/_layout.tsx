@@ -20,9 +20,9 @@ const navigationTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: Colors.accent,
-    background: Colors.paper,
-    card: Colors.paper,
+    primary: Colors.primary,
+    background: Colors.bg,
+    card: Colors.bg,
     text: Colors.ink,
     border: Colors.line,
   },

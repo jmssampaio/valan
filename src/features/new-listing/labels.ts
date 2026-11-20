@@ -1,5 +1,5 @@
 import type { ChoiceOption } from '@/components/segmented-control';
-import { t } from '@/i18n';
+import { t, type TranslationKey } from '@/i18n';
 import type { MarketplaceReach } from './draft';
 
 import type { CatalogueRelease } from '@/services/catalogue';
@@ -57,13 +57,25 @@ export function equipmentConditionDetail(condition: EquipmentCondition): string 
 
 const STEPS = 4;
 
-/** What the header of each step shows and says about how far along the flow is. */
+const stepNameKeys: readonly TranslationKey[] = [
+  'newListing.stepName.1',
+  'newListing.stepName.2',
+  'newListing.stepName.3',
+  'newListing.stepName.4',
+];
+
+/** What the header of each step shows and says about how far along the flow is: "Passo 2 de 4 · Estado e fotos". */
 export function stepHeader(step: number) {
+  const label = t('newListing.stepNamed', {
+    step,
+    steps: STEPS,
+    name: t(stepNameKeys[step - 1]),
+  });
   return {
     step,
     steps: STEPS,
-    stepLabel: t('newListing.stepShort', { step, steps: STEPS }),
-    stepAccessibilityLabel: t('newListing.step', { step, steps: STEPS }),
+    stepLabel: label,
+    stepAccessibilityLabel: label,
   };
 }
 

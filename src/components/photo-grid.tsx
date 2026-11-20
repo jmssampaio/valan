@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
   photo: {
     backgroundColor: Colors.surface,
     borderWidth: BorderWidth.hairline,
-    borderColor: Colors.photoEdge,
+    borderColor: Colors.line,
   },
   image: {
     flex: 1,

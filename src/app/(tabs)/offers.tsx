@@ -7,7 +7,6 @@ import { OfferCard, type OfferCardAction } from '@/components/offer-card';
 import { Screen } from '@/components/screen';
 import { ScreenMessage } from '@/components/screen-message';
 import { TextTabs } from '@/components/text-tabs';
-import { Wave } from '@/components/wave';
 import { Colors, Spacing } from '@/constants/theme';
 import { marketplaceName } from '@/features/listing-detail/labels';
 import {
@@ -63,7 +62,6 @@ export default function OffersScreen() {
         />
       ) : isEmpty ? (
         <ScreenMessage
-          illustration={<Wave />}
           title={t('offers.empty.title')}
           body={t('offers.empty.body')}
         />

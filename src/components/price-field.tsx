@@ -27,7 +27,7 @@ export function PriceField({ label, value, onChangeText, currency, placeholder }
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor={Colors.muted}
-        selectionColor={Colors.accent}
+        selectionColor={Colors.primary}
         keyboardType="decimal-pad"
         maxLength={MAX_LENGTH}
         // Already the largest text on the screen: growing further would push the amount off it.
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.ink,
   },
   amount: {
-    ...Type.priceInput,
+    ...Type.bigNumber,
     flex: 1,
     // An input has a width of its own, which would push the currency off the line.
     minWidth: 0,

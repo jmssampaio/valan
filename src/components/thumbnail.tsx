@@ -1,14 +1,15 @@
 import { Image, type ImageProps } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 
-import { BorderWidth, Colors, Size } from '@/constants/theme';
+import { Colors, Radius, Size } from '@/constants/theme';
 
 export type ThumbnailProps = {
-  /** The item's first photo; null shows a plain placeholder. */
+  /** The item's first photo; null shows a plain tile in its place. */
   source: ImageProps['source'] | null;
 };
 
-// Decorative: the row's title already says what the item is.
+// Decorative: the row's title already says what the item is. The spec draws a photo symbol on
+// an empty tile; it stays plain, as no decorative icons are drawn (docs/standards/ux.md).
 export function Thumbnail({ source }: ThumbnailProps) {
   return (
     <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={styles.frame}>
@@ -26,9 +27,8 @@ const styles = StyleSheet.create({
     width: Size.thumbnail,
     height: Size.thumbnail,
     overflow: 'hidden',
-    backgroundColor: Colors.surface,
-    borderWidth: BorderWidth.hairline,
-    borderColor: Colors.photoEdge,
+    borderRadius: Radius.control,
+    backgroundColor: Colors.fill,
   },
   photo: {
     flex: 1,

@@ -17,7 +17,7 @@ export function TextField({ label, labelHidden = false, multiline = false, ...in
       {labelHidden ? null : (
         // The input carries the label for screen readers, so this copy is for the eye only.
         <AppText
-          variant="caption"
+          variant="label"
           color="muted"
           accessibilityElementsHidden
           importantForAccessibility="no">
@@ -28,7 +28,7 @@ export function TextField({ label, labelHidden = false, multiline = false, ...in
         accessibilityLabel={label}
         multiline={multiline}
         placeholderTextColor={Colors.muted}
-        selectionColor={Colors.accent}
+        selectionColor={Colors.primary}
         style={[styles.input, multiline && styles.area]}
         {...input}
       />
@@ -47,8 +47,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.x4,
     color: Colors.ink,
     backgroundColor: Colors.surface,
-    borderRadius: Radius.control,
-    borderWidth: BorderWidth.hairline,
+    borderRadius: Radius.field,
+    borderWidth: BorderWidth.control,
     borderColor: Colors.ink,
   },
   area: {

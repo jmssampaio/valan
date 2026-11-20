@@ -1,4 +1,4 @@
-import { renderRouter, screen } from 'expo-router/testing-library';
+import { renderRouter, screen, within } from 'expo-router/testing-library';
 
 import { countPendingOffers } from '@/services/offers';
 
@@ -43,5 +43,18 @@ describe('TabBar badge', () => {
     await renderRouter('src/app');
 
     expect(await screen.findByRole('tab', { name: 'Propostas' })).toHaveTextContent('Propostas');
+  });
+});
+
+describe('TabBar symbols', () => {
+  it('shows a symbol above each label, and names each tab by its label alone', async () => {
+    pendingOffers.mockResolvedValue(0);
+
+    await renderRouter('src/app');
+
+    for (const name of ['Anúncios', 'Propostas', 'Vendas', 'Conta']) {
+      const tab = await screen.findByRole('tab', { name });
+      expect(within(tab).getByTestId('icon', { includeHiddenElements: true })).toBeOnTheScreen();
+    }
   });
 });

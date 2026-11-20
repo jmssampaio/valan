@@ -175,7 +175,7 @@ describe('new listing, step 1: what are you selling', () => {
   it('says which step of the flow this is', async () => {
     await renderRouter(APP_DIR, { initialUrl: CATALOGUE });
 
-    expect(screen.getByRole('progressbar', { name: 'Passo 1 de 4' })).toBeOnTheScreen();
+    expect(screen.getByRole('progressbar', { name: 'Passo 1 de 4 · Artigo' })).toBeOnTheScreen();
   });
 
   it('asks only for a name, with no kind of item to choose up front', async () => {
@@ -397,7 +397,7 @@ describe('new listing, step 1: what are you selling', () => {
     await reachConditionWithRecord();
 
     expect(screen).toHavePathname('/new-listing/condition');
-    expect(screen.getByRole('progressbar', { name: 'Passo 2 de 4' })).toBeOnTheScreen();
+    expect(screen.getByRole('progressbar', { name: 'Passo 2 de 4 · Estado e fotos' })).toBeOnTheScreen();
   });
 });
 

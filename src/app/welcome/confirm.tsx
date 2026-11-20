@@ -115,7 +115,7 @@ export default function ConfirmEmailScreen() {
           autoComplete="one-time-code"
         />
         {failure ? (
-          <AppText variant="rowMeta" color="error" accessibilityRole="alert">
+          <AppText variant="rowMeta" color="danger" accessibilityRole="alert">
             {t(failureMessage(failure))}
           </AppText>
         ) : null}
@@ -127,8 +127,8 @@ export default function ConfirmEmailScreen() {
         <View style={styles.resend}>
           <Button
             label={t('auth.confirm.resend')}
-            variant="outline"
-            size="small"
+            variant="secondary"
+            size="compact"
             disabled={!isOnline || isBusy || !canResend}
             onPress={() => void resend()}
           />

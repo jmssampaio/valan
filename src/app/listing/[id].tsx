@@ -53,7 +53,7 @@ const headerOptions = {
   headerTitle: '',
   headerBackTitle: t('tabs.listings'),
   headerShadowVisible: false,
-  headerStyle: { backgroundColor: Colors.paper },
+  headerStyle: { backgroundColor: Colors.bg },
   headerTintColor: Colors.ink,
 } as const;
 
@@ -240,8 +240,8 @@ function ReadyDetail({
                             price: row.price,
                             title: row.title,
                           })}
-                          variant="outline"
-                          size="small"
+                          variant="secondary"
+                          size="compact"
                           onPress={() => router.navigate({ pathname: OFFERS, params: { offer: offer.id } })}
                         />
                       }
@@ -282,7 +282,7 @@ function ItemSummary({ detail }: { detail: ListingDetail }) {
         )}
         <View>
           {conditionLines(item).map((line) => (
-            <AppText key={line} variant="caption" color="muted">
+            <AppText key={line} variant="label" color="muted">
               {line}
             </AppText>
           ))}
@@ -296,7 +296,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <View>
       <View style={styles.sectionHeading}>
-        <AppText variant="caption" color="muted" accessibilityRole="header">
+        <AppText variant="label" color="muted" accessibilityRole="header">
           {title}
         </AppText>
       </View>
@@ -370,12 +370,12 @@ function Actions({
 }
 
 const buttonVariant = {
-  pause: 'outline',
-  resume: 'outline',
-  remove: 'danger',
+  pause: 'secondary',
+  resume: 'secondary',
+  remove: 'dangerLink',
   continueDraft: 'primary',
-  deleteDraft: 'danger',
-} as const satisfies Record<DetailAction, 'outline' | 'danger' | 'primary'>;
+  deleteDraft: 'dangerLink',
+} as const satisfies Record<DetailAction, 'secondary' | 'dangerLink' | 'primary'>;
 
 const styles = StyleSheet.create({
   loading: {

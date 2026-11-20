@@ -2,7 +2,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from './app-text';
 
-import { BorderWidth, Colors, ControlHeight, Opacity, Radius, Spacing } from '@/constants/theme';
+import { Colors, ControlHeight, Opacity, Radius, Shadow, Spacing } from '@/constants/theme';
 
 export type ChoiceOption<Value extends string> = {
   value: Value;
@@ -25,8 +25,12 @@ export function SegmentedControl<Value extends string>({
   onChange,
 }: SegmentedControlProps<Value>) {
   return (
-    <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.group}>
-      {options.map((option, index) => {
+    <View
+      testID="segmented-track"
+      accessibilityRole="radiogroup"
+      accessibilityLabel={label}
+      style={styles.track}>
+      {options.map((option) => {
         const selected = option.value === value;
         return (
           <Pressable
@@ -36,13 +40,12 @@ export function SegmentedControl<Value extends string>({
             onPress={() => onChange(option.value)}
             style={({ pressed }) => [
               styles.segment,
-              index > 0 && styles.divided,
               selected && styles.selected,
               pressed && styles.pressed,
             ]}>
             <AppText
               variant={selected ? 'optionSelected' : 'option'}
-              color={selected ? 'onInk' : 'ink'}
+              color={selected ? 'ink' : 'muted'}
               style={styles.label}>
               {option.label}
             </AppText>
@@ -54,13 +57,15 @@ export function SegmentedControl<Value extends string>({
 }
 
 const styles = StyleSheet.create({
-  group: {
+  // The track's corner is the option's plus the gap around it, so the two curves stay parallel.
+  track: {
     flexDirection: 'row',
-    borderWidth: BorderWidth.hairline,
-    borderColor: Colors.ink,
-    borderRadius: Radius.control,
-    overflow: 'hidden',
+    gap: Spacing.x1,
+    padding: Spacing.x1,
+    borderRadius: Radius.field,
+    backgroundColor: Colors.fill,
   },
+  // 44 points, not the 40 of the pictures: every touch target is at least 44 (docs/standards/ux.md).
   segment: {
     flex: 1,
     alignItems: 'center',
@@ -68,16 +73,14 @@ const styles = StyleSheet.create({
     minHeight: ControlHeight.small,
     paddingVertical: Spacing.x2,
     paddingHorizontal: Spacing.x2,
+    borderRadius: Radius.control,
   },
   label: {
     textAlign: 'center',
   },
-  divided: {
-    borderLeftWidth: BorderWidth.hairline,
-    borderLeftColor: Colors.ink,
-  },
   selected: {
-    backgroundColor: Colors.ink,
+    backgroundColor: Colors.surface,
+    ...Shadow.selectedOption,
   },
   pressed: {
     opacity: Opacity.pressed,

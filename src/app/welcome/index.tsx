@@ -30,7 +30,7 @@ export default function WelcomeScreen() {
             <Image source={valanIcon} contentFit="contain" style={styles.icon} />
             <AppText variant="wordmark">{WORDMARK}</AppText>
           </View>
-          <Wave variant="hero" />
+          <Wave />
         </View>
       }
       footer={
@@ -38,19 +38,19 @@ export default function WelcomeScreen() {
           {/* Shown so the seller knows they are coming; they work once the developer accounts exist. */}
           <Button
             label={t('welcome.soon', { action: t('welcome.apple') })}
-            variant="ink"
+            variant="dark"
             disabled
             onPress={noAction}
           />
           <Button
             label={t('welcome.soon', { action: t('welcome.google') })}
-            variant="ink"
+            variant="dark"
             disabled
             onPress={noAction}
           />
           <Button
             label={t('welcome.email')}
-            variant="outline"
+            variant="secondary"
             onPress={() => router.push('/welcome/email')}
           />
           <AppText variant="rowMeta" color="muted" style={styles.terms}>

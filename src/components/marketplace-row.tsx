@@ -34,14 +34,14 @@ export function MarketplaceRow({ name, tag, meta, refusal, isLast = false }: Mar
       divider={isLast ? 'none' : 'line'}>
       {refusal ? (
         <View style={styles.problem}>
-          <AppText variant="rowMeta" color="error" accessibilityRole="alert">
+          <AppText variant="rowMeta" color="danger" accessibilityRole="alert">
             {refusal.reason}
           </AppText>
           <View style={styles.actions}>
             <Button
               label={refusal.retry.label}
-              variant="outline"
-              size="small"
+              variant="secondary"
+              size="compact"
               disabled={refusal.retry.disabled}
               onPress={refusal.retry.onPress}
             />

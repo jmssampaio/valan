@@ -40,7 +40,7 @@ export type OfferCardProps = {
   isLast?: boolean;
 };
 
-const PRICE_MINIMUM_SCALE = MinFontSize / Type.offerPrice.fontSize;
+const PRICE_MINIMUM_SCALE = MinFontSize / Type.offerNumber.fontSize;
 
 /** One offer from a buyer, with what the seller can do about it. */
 export function OfferCard({ title, meta, asking, price, tag, note, actions, isLast = false }: OfferCardProps) {
@@ -53,14 +53,14 @@ export function OfferCard({ title, meta, asking, price, tag, note, actions, isLa
             {meta}
           </AppText>
           {asking ? (
-            <AppText variant="step" color="muted" style={styles.asking}>
+            <AppText variant="label" color="muted" style={styles.asking}>
               {asking}
             </AppText>
           ) : null}
         </View>
         <View style={styles.figure}>
           <AppText
-            variant="offerPrice"
+            variant="offerNumber"
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={PRICE_MINIMUM_SCALE}
@@ -82,7 +82,7 @@ export function OfferCard({ title, meta, asking, price, tag, note, actions, isLa
               <Button
                 label={label}
                 accessibilityLabel={accessibilityLabel}
-                variant={primary ? 'primary' : 'outline'}
+                variant={primary ? 'primary' : 'secondary'}
                 disabled={disabled}
                 onPress={onPress}
               />

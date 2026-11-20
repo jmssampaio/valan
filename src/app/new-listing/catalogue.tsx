@@ -110,7 +110,7 @@ export default function NewListingCatalogueScreen() {
         {step.state === 'unlinked' ? (
           <>
             <View style={styles.question}>
-              <AppText variant="caption" color="muted">
+              <AppText variant="label" color="muted">
                 {t('newListing.kind.label')}
               </AppText>
               <SegmentedControl
@@ -142,7 +142,7 @@ function PublishesOn({ names }: { names: readonly string[] }) {
       accessible
       accessibilityLabel={`${t('newListing.publishesOn')}: ${names.join(NAME_SEPARATOR)}`}
       style={styles.publishesOn}>
-      <AppText variant="caption" color="muted">
+      <AppText variant="label" color="muted">
         {t('newListing.publishesOn')}
       </AppText>
       {names.map((name) => (
@@ -181,7 +181,7 @@ function Editions({
 
   return (
     <View>
-      <AppText variant="caption" color="muted">
+      <AppText variant="label" color="muted">
         {t('newListing.catalogue.heading', { catalogue: CATALOGUE_NAME })}
       </AppText>
       <AppText variant="rowMeta" color="muted" style={styles.status}>
@@ -199,7 +199,7 @@ function Editions({
       </AppText>
       {failed ? (
         <View style={styles.retry}>
-          <Button label={t('common.retry')} variant="outline" size="small" onPress={search.retry} />
+          <Button label={t('common.retry')} variant="secondary" size="compact" onPress={search.retry} />
         </View>
       ) : null}
       {search.status === 'loading' ? (
@@ -228,7 +228,7 @@ function Editions({
                 }
                 onPress={() => onSelect(release)}>
                 {label ? (
-                  <AppText variant="tag" color="muted">
+                  <AppText variant="seal" color="muted">
                     {label}
                   </AppText>
                 ) : null}

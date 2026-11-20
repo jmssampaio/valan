@@ -8,6 +8,7 @@ import {
   reachNotice,
   releaseDetail,
   releaseLabel,
+  stepHeader,
 } from '../labels';
 
 import type { MarketplaceReach } from '../draft';
@@ -163,5 +164,20 @@ describe('what the seller is told about where the listing goes', () => {
 
   it('lists every marketplace the listing reaches in the footer', () => {
     expect(reachedNames([shut('Discogs'), open('eBay'), open('Reverb')])).toEqual(['eBay', 'Reverb']);
+  });
+});
+
+describe('stepHeader', () => {
+  it.each([
+    [1, 'Passo 1 de 4 · Artigo'],
+    [2, 'Passo 2 de 4 · Estado e fotos'],
+    [3, 'Passo 3 de 4 · Preço e plataformas'],
+    [4, 'Passo 4 de 4 · Resultado'],
+  ])('names step %i beside its number', (step, label) => {
+    expect(stepHeader(step).stepLabel).toBe(label);
+  });
+
+  it('is read as the step and its name', () => {
+    expect(stepHeader(2).stepAccessibilityLabel).toBe('Passo 2 de 4 · Estado e fotos');
   });
 });

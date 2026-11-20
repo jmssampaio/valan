@@ -144,13 +144,13 @@ export default function NewPasswordScreen() {
           </AppText>
           <Button
             label={t(showsPassword ? 'auth.password.hide' : 'auth.password.show')}
-            variant="text"
-            size="small"
+            variant="link"
+            size="compact"
             onPress={() => setShowsPassword((shown) => !shown)}
           />
         </View>
         {failure ? (
-          <AppText variant="rowMeta" color="error" accessibilityRole="alert">
+          <AppText variant="rowMeta" color="danger" accessibilityRole="alert">
             {t(failure === 'weakPassword' ? 'auth.newPassword.refused' : failureMessage(failure))}
           </AppText>
         ) : null}
@@ -162,8 +162,8 @@ export default function NewPasswordScreen() {
         <View style={styles.resend}>
           <Button
             label={t('auth.confirm.resend')}
-            variant="outline"
-            size="small"
+            variant="secondary"
+            size="compact"
             disabled={!isOnline || isBusy || !canResend}
             onPress={() => void resend()}
           />

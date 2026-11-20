@@ -1,7 +1,9 @@
+import type { SFSymbol } from 'expo-symbols';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from './app-text';
+import { Icon } from './icon';
 
 import {
   BorderWidth,
@@ -9,6 +11,8 @@ import {
   ControlHeight,
   MaxFontScale,
   Opacity,
+  Radius,
+  Size,
   Spacing,
 } from '@/constants/theme';
 
@@ -19,7 +23,9 @@ export type TabBadge = {
 };
 
 export type TabBarProps = BottomTabBarProps & {
-  /** Counts to show beside a tab's label, by route name. A count of zero shows nothing. */
+  /** The symbol above each tab's label, by route name. */
+  icons?: Partial<Record<string, SFSymbol>>;
+  /** Counts to show on a tab's symbol, by route name. A count of zero shows nothing. */
   badges?: Partial<Record<string, TabBadge>>;
 };
 
@@ -29,6 +35,7 @@ export function TabBar({
   emitter,
   navigateToTab,
   insets,
+  icons = {},
   badges = {},
 }: TabBarProps) {
   return (
@@ -37,6 +44,7 @@ export function TabBar({
       {state.routes.map((route, index) => {
         const selected = index === state.index;
         const label = descriptors[route.key].options.title ?? route.name;
+        const icon = icons[route.name];
         const badge = badges[route.name];
         const visibleBadge = badge && badge.count > 0 ? badge : undefined;
 
@@ -63,11 +71,14 @@ export function TabBar({
             accessibilityShowsLargeContentViewer
             accessibilityLargeContentTitle={label}
             onPress={selectTab}
-            style={({ pressed }) => [
-              styles.tab,
-              selected && styles.selected,
-              pressed && styles.pressed,
-            ]}>
+            style={({ pressed }) => [styles.tab, pressed && styles.pressed]}>
+            {icon ? (
+              <Icon
+                name={icon}
+                color={selected ? 'ink' : 'muted'}
+                weight={selected ? 'semibold' : 'regular'}
+              />
+            ) : null}
             <AppText
               variant={selected ? 'tabSelected' : 'tab'}
               color={selected ? 'ink' : 'muted'}
@@ -76,12 +87,16 @@ export function TabBar({
               {label}
             </AppText>
             {visibleBadge ? (
-              <AppText
-                variant="tabBadge"
-                color="accent"
-                maxFontSizeMultiplier={MaxFontScale.tabLabel}>
-                {visibleBadge.count}
-              </AppText>
+              // On the symbol's top right corner; read as the tab's value, not as text.
+              <View style={styles.badge}>
+                <AppText
+                  variant="tabBadge"
+                  maxFontSizeMultiplier={MaxFontScale.tabLabel}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no">
+                  {visibleBadge.count}
+                </AppText>
+              </View>
             ) : null}
           </Pressable>
         );
@@ -93,29 +108,37 @@ export function TabBar({
 const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
+    paddingTop: Spacing.x1,
     paddingHorizontal: Spacing.x2,
-    backgroundColor: Colors.paper,
+    backgroundColor: Colors.surface,
     borderTopWidth: BorderWidth.hairline,
     borderTopColor: Colors.line,
   },
   tab: {
     // Each tab is as wide as its label plus an equal share of the spare room, so a long label
-    // with a badge borrows width from the short ones instead of being cut at large text sizes.
+    // borrows width from the short ones instead of being cut at large text sizes.
     flexGrow: 1,
-    paddingHorizontal: Spacing.x1,
-    flexDirection: 'row',
+    flexBasis: 0,
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.x1,
-    minHeight: ControlHeight.row,
+    minHeight: ControlHeight.large,
     minWidth: ControlHeight.small,
-    // Sits on top of the bar's hairline, so the selected indicator replaces it.
-    marginTop: -BorderWidth.hairline,
-    borderTopWidth: BorderWidth.indicator,
-    borderTopColor: Colors.transparent,
+    paddingHorizontal: Spacing.x1,
   },
-  selected: {
-    borderTopColor: Colors.accent,
+  badge: {
+    position: 'absolute',
+    top: 0,
+    // From the middle of the tab, over the symbol's top right corner.
+    left: '50%',
+    marginLeft: Spacing.x1,
+    minWidth: Size.badge,
+    minHeight: Size.badge,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.x1,
+    borderRadius: Radius.pill,
+    backgroundColor: Colors.badge,
   },
   pressed: {
     opacity: Opacity.pressed,

@@ -5,18 +5,26 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/app-text';
 import { BackLink } from '@/components/back-link';
 import { Button } from '@/components/button';
+import { Card } from '@/components/card';
+import { ChipRow } from '@/components/chip-row';
 import { CheckRow } from '@/components/check-row';
 import { ChipGrid } from '@/components/chip-grid';
 import { FlowHeader } from '@/components/flow-header';
+import { Icon } from '@/components/icon';
 import { ItemPhoto } from '@/components/item-photo';
 import { ListRow } from '@/components/list-row';
+import { Logo } from '@/components/logo';
 import { OfferCard } from '@/components/offer-card';
 import { Notice } from '@/components/notice';
 import { PhotoGrid } from '@/components/photo-grid';
+import { PlatformChip, type ChipState } from '@/components/platform-chip';
 import { PriceField } from '@/components/price-field';
 import { Screen } from '@/components/screen';
 import { ScreenMessage } from '@/components/screen-message';
+import { ScreenTitle } from '@/components/screen-title';
+import { SectionLabel } from '@/components/section-label';
 import { SegmentedControl } from '@/components/segmented-control';
+import { SkeletonRows } from '@/components/skeleton-rows';
 import { SummaryStrip } from '@/components/summary-strip';
 import { SwitchRow } from '@/components/switch-row';
 import { Tag } from '@/components/tag';
@@ -24,11 +32,12 @@ import { TextField } from '@/components/text-field';
 import { TextTabs } from '@/components/text-tabs';
 import { Thumbnail } from '@/components/thumbnail';
 import { Wave } from '@/components/wave';
+import { WaveLine } from '@/components/wave-line';
 import { Spacing } from '@/constants/theme';
 import samplePhoto from '../../../assets/samples/sleeve-1.svg';
 
-// Sample copy from docs/design/mockups, written here because this screen never ships:
-// it exists to compare the base components with the mockups during development.
+// Sample copy from docs/design/v3, written here because this screen never ships: it exists to
+// compare the base components with the design during development.
 const itemTypes = [
   { value: 'record', label: 'Disco' },
   { value: 'equipment', label: 'Aparelho' },
@@ -66,6 +75,8 @@ const summaryTiles = [
 
 const noAction = () => {};
 
+const chipStates: readonly ChipState[] = ['live', 'pending', 'paused', 'error', 'sold', 'off'];
+
 const photoGridLabels = {
   onAdd: noAction,
   onPressPhoto: noAction,
@@ -94,10 +105,110 @@ export default function ComponentGalleryScreen() {
   return (
     <Screen
       title="Componentes"
-      titleAction={<Button label="Ação" size="small" variant="outline" onPress={noAction} />}>
+      titleAction={<Button label="Ação" size="compact" variant="secondary" onPress={noAction} />}>
       <ScrollView contentContainerStyle={styles.gallery}>
-        <Section label="SummaryStrip">
-          <SummaryStrip tiles={summaryTiles} />
+        <AppText variant="label">Base do design v3</AppText>
+
+        <Section label="Logo">
+          <Logo />
+        </Section>
+
+        <Section label="ScreenTitle · large, medium, small">
+          <ScreenTitle>Anúncios</ScreenTitle>
+          <ScreenTitle size="medium">O que vais vender?</ScreenTitle>
+          <ScreenTitle size="small">Ainda não tens anúncios</ScreenTitle>
+        </Section>
+
+        <Section label="SectionLabel">
+          <SectionLabel>Plataformas ligadas</SectionLabel>
+        </Section>
+
+        <Section label="PlatformChip · every state">
+          <View style={styles.inline}>
+            {chipStates.map((state) => (
+              <PlatformChip key={state} name="Discogs" state={state} />
+            ))}
+          </View>
+        </Section>
+
+        <Section label="ChipRow">
+          <ChipRow
+            items={[
+              { key: 'discogs', name: 'Discogs', state: 'live' },
+              { key: 'ebay', name: 'eBay', state: 'error' },
+            ]}
+          />
+        </Section>
+
+        <Section label="Card · rows divided by a line">
+          <Card>
+            {[
+              ['Discogs', 'Ligada como joao_discos'],
+              ['eBay', 'Ligada como joao.vinil'],
+            ].map(([name, account]) => (
+              <View key={name} style={styles.cardRow}>
+                <AppText variant="rowTitle">{name}</AppText>
+                <AppText variant="rowMeta" color="muted">
+                  {account}
+                </AppText>
+              </View>
+            ))}
+          </Card>
+          <Card padding="x4">
+            <AppText variant="label" color="muted">
+              Recebes em novembro
+            </AppText>
+            <AppText variant="bigNumber">412,40 €</AppText>
+          </Card>
+        </Section>
+
+        <Section label="Button · default">
+          <Button label="Continuar" onPress={noAction} />
+          <Button label="Novo anúncio" icon="plus" onPress={noAction} />
+          <Button label="Continuar com Apple" variant="dark" onPress={noAction} />
+          <Button label="Continuar com email" variant="secondary" onPress={noAction} />
+          <Button label="Publicar em 2 plataformas" loading onPress={noAction} />
+          <Button label="Publicar em 2 plataformas" disabled onPress={noAction} />
+          <Button label="Criar outro anúncio" variant="link" onPress={noAction} />
+          <Button label="Remover anúncio" variant="dangerLink" onPress={noAction} />
+        </Section>
+
+        <Section label="Button · compact">
+          <View style={styles.inline}>
+            <Button label="Ligar" size="compact" onPress={noAction} />
+            <Button label="Tentar de novo" size="compact" variant="secondary" onPress={noAction} />
+            <Button label="Abrir" size="compact" variant="link" icon="arrow.up.right" onPress={noAction} />
+          </View>
+        </Section>
+
+        <Section label="SegmentedControl">
+          <SegmentedControl options={itemTypes} value={itemType} onChange={setItemType} />
+        </Section>
+
+        <Section label="FlowHeader">
+          <FlowHeader
+            step={2}
+            steps={4}
+            stepLabel="Passo 2 de 4 · Estado e fotos"
+            stepAccessibilityLabel="Passo 2 de 4 · Estado e fotos"
+            leading={{ label: '‹ Voltar', accessibilityLabel: 'Voltar', onPress: noAction }}
+          />
+        </Section>
+
+        <Section label="ScreenMessage · empty or failed">
+          <ScreenMessage
+            title="Ainda não tens anúncios"
+            body="Escolhe o artigo, define o estado e o preço, e publica nas tuas plataformas de uma só vez."
+            action={{ label: 'Criar o primeiro anúncio', onPress: noAction }}
+          />
+        </Section>
+
+        <Section label="SkeletonRows · loading">
+          <SkeletonRows accessibilityLabel="A carregar os anúncios" />
+        </Section>
+
+        <Section label="WaveLine">
+          <WaveLine width={60} />
         </Section>
 
         <Section label="Thumbnail · photo and placeholder">
@@ -105,6 +216,23 @@ export default function ComponentGalleryScreen() {
             <Thumbnail source={samplePhoto} />
             <Thumbnail source={null} />
           </View>
+        </Section>
+
+        <Section label="Icon · SF Symbols, drawn in the iOS app only">
+          <View style={styles.inline}>
+            <Icon name="tag" />
+            <Icon name="bubble.left" />
+            <Icon name="chart.bar" />
+            <Icon name="person" />
+            <Icon name="chevron.left" accessibilityLabel="Voltar" />
+            <Icon name="magnifyingglass" color="muted" />
+          </View>
+        </Section>
+
+        <AppText variant="label">Só os tokens mudaram; a estrutura vem com o ecrã de cada um</AppText>
+
+        <Section label="SummaryStrip">
+          <SummaryStrip tiles={summaryTiles} />
         </Section>
 
         <Section label="ItemPhoto · photo and placeholder">
@@ -127,21 +255,12 @@ export default function ComponentGalleryScreen() {
           </ListRow>
         </Section>
 
-        <Section label="Wave · quiet and hero">
+        <Section label="Wave · entry screen">
           <Wave />
-          <Wave variant="hero" />
         </Section>
 
         <Section label="BackLink">
           <BackLink label="‹ Voltar" accessibilityLabel="Voltar" onPress={noAction} />
-        </Section>
-
-        <Section label="ScreenMessage · with action">
-          <ScreenMessage
-            title="Não conseguimos carregar os anúncios"
-            body="Algo correu mal do nosso lado. Tenta de novo dentro de momentos."
-            action={{ label: 'Tentar de novo', onPress: noAction }}
-          />
         </Section>
 
         <Section label="PriceField">
@@ -192,16 +311,6 @@ export default function ComponentGalleryScreen() {
           />
         </Section>
 
-        <Section label="FlowHeader">
-          <FlowHeader
-            step={2}
-            steps={4}
-            stepLabel="2/4"
-            stepAccessibilityLabel="Passo 2 de 4"
-            leading={{ label: '‹ Voltar', onPress: noAction }}
-          />
-        </Section>
-
         <Section label="TextField · search, labelled and multi-line">
           <TextField
             label="Procurar no catálogo"
@@ -242,15 +351,6 @@ export default function ComponentGalleryScreen() {
           <PhotoGrid {...photoGridLabels} photos={galleryPhotos} max={2} columns={4} />
         </Section>
 
-        <Section label="Button · large">
-          <Button label="Continuar" onPress={noAction} />
-          <Button label="Continuar com Apple" variant="ink" onPress={noAction} />
-          <Button label="Continuar com email" variant="outline" onPress={noAction} />
-          <Button label="Mais tarde" variant="text" onPress={noAction} />
-          <Button label="Remover" variant="danger" onPress={noAction} />
-          <Button label="Publicar em 2 plataformas" disabled onPress={noAction} />
-        </Section>
-
         <Section label="OfferCard · waiting, from outside, answered">
           <OfferCard
             title="Noites de Lisboa"
@@ -278,18 +378,6 @@ export default function ComponentGalleryScreen() {
             actions={[]}
             isLast
           />
-        </Section>
-
-        <Section label="Button · small">
-          <View style={styles.inline}>
-            <Button label="Ligar" size="small" onPress={noAction} />
-            <Button label="Gerir" size="small" variant="outline" onPress={noAction} />
-            <Button label="Rejeitar" size="small" variant="text" onPress={noAction} />
-          </View>
-        </Section>
-
-        <Section label="SegmentedControl">
-          <SegmentedControl options={itemTypes} value={itemType} onChange={setItemType} />
         </Section>
 
         <Section label="TextTabs">
@@ -321,7 +409,7 @@ export default function ComponentGalleryScreen() {
               title="eBay"
               meta="Discos e aparelhos"
               divider="ink"
-              trailing={<Button label="Ligar" size="small" onPress={noAction} />}
+              trailing={<Button label="Ligar" size="compact" onPress={noAction} />}
             />
             <ListRow title="Verde Mar" meta="Quarteto Atlântico · LP · VG" divider="none" />
           </View>
@@ -334,7 +422,7 @@ export default function ComponentGalleryScreen() {
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <View style={styles.section}>
-      <AppText variant="caption" color="muted">
+      <AppText variant="label" color="muted">
         {label}
       </AppText>
       {children}
@@ -349,6 +437,10 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: Spacing.x3,
+  },
+  cardRow: {
+    gap: Spacing.x1,
+    padding: Spacing.x4,
   },
   inline: {
     flexDirection: 'row',

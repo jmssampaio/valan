@@ -1,25 +1,39 @@
 /**
- * Valan design tokens. Source: docs/design/README.md and docs/design/mockups/valan-mockups-v2.html.
+ * Valan design tokens, from design v3: docs/design/v3/design-spec.md, section 2, with the rules
+ * of docs/standards/ux.md on top (no text below 12 pt, spacing on the 4-point grid).
  * The app is light-only in v1.0, so there is a single palette.
  */
 
-import type { TextStyle } from 'react-native';
+import type { TextStyle, ViewStyle } from 'react-native';
 
 export const Colors = {
-  paper: '#FFFFFF',
-  /** Slightly warm, so fields and cards still read against the white page. */
-  surface: '#FBF8F3',
+  /** The page behind everything. */
+  bg: '#F6F4F1',
+  /** Cards, lists and fields. */
+  surface: '#FFFFFF',
+  /** Secondary buttons, the track of a segmented control, a photo still to come. */
+  fill: '#EDE9E3',
+  /** The 1-point contour of a card and the dividers. Too faint (1.2:1) to be a control's only edge. */
+  line: '#E3DED6',
   ink: '#1E1A17',
   muted: '#6B6259',
-  /** Dividers only. Controls are edged with ink: this is too faint (1.6:1) to mark one. */
-  line: '#D8CEBF',
-  accent: '#B4460F',
-  onAccent: '#FFFFFF',
+  /** The logo's orange: the main button, links, and a listing that is published. */
+  primary: '#B4460F',
+  /** Primary when pressed; text and symbols on primaryTint. */
+  primaryPressed: '#8F370B',
+  /** Behind the wave on empty and waiting screens. */
+  primaryTint: '#F8E8DC',
+  /** Only the wave inside the app icon. */
+  cream: '#F5EFE6',
+  /** Only the counter on the Propostas tab, with ink text. */
+  badge: '#E07A2E',
+  /** The third series of a chart; never text. */
+  chart3: '#E3A47A',
+  /** Errors and actions that cannot be undone. */
+  danger: '#B3261E',
+  dangerTint: '#FCE9E7',
+  onPrimary: '#FFFFFF',
   onInk: '#FFFFFF',
-  success: '#2C6A3F',
-  error: '#A12A1E',
-  /** Ink at 15%: the edge that keeps a pale photo from bleeding into the paper. */
-  photoEdge: 'rgba(30, 26, 23, 0.15)',
   transparent: 'transparent',
 } as const;
 
@@ -27,13 +41,12 @@ export type ThemeColor = keyof typeof Colors;
 
 /** iOS selects embedded fonts by PostScript name, one per weight. */
 export const Fonts = {
-  display: 'Fraunces-SemiBold',
+  /** Titles and big numbers only. */
+  display: 'SpaceGrotesk-SemiBold',
   textRegular: 'Inter-Regular',
   textMedium: 'Inter-Medium',
   textSemiBold: 'Inter-SemiBold',
   textBold: 'Inter-Bold',
-  monoRegular: 'IBMPlexMono-Regular',
-  monoMedium: 'IBMPlexMono-Medium',
 } as const;
 
 /** Each step is named after its multiple of the 4-point grid. */
@@ -50,24 +63,48 @@ export const Spacing = {
 
 /** Fixed sizes of drawn or photographic elements. */
 export const Size = {
-  thumbnail: 56,
-  logo: 56,
+  thumbnail: 52,
+  /** The app icon inside the logo: the logo has this one size. */
+  logo: 40,
   /** The long side of the photo on an item's own screen; the short side follows its proportions. */
   detailPhoto: 120,
-  wave: 120,
+  /** The tile behind the wave on an empty or failed screen, and the wave on it. */
+  waveTile: 96,
+  waveOnTile: 60,
   heroWave: 152,
   /** One segment of the step progress bar in a multi-step flow. */
   progress: 4,
   checkbox: 24,
+  icon: 24,
+  /** A symbol beside a label, as in a button or a field: a touch smaller than one that stands alone. */
+  inlineIcon: 20,
+  /** The counter on a tab's symbol. */
+  badge: 20,
+  /** A bar of text still to come in a loading row. */
+  skeletonLine: 12,
+  /** The symbol inside a platform chip, beside its words. */
+  sealIcon: 12,
 } as const;
 
 export const Radius = {
+  /** Seals (platform chips) and boxes to tick. */
+  seal: 8,
+  /** Small controls: the options of a segmented control and the grade buttons; thumbnails. */
   control: 10,
-  tag: 4,
+  /** Fields and buttons. */
+  field: 14,
+  card: 16,
+  /** Fully round ends, for pills and counters. */
+  pill: 999,
+  /** The tile behind the wave on an empty or failed screen (design-spec.md, EmptyState). */
+  waveTile: 28,
 } as const;
 
 export const BorderWidth = {
   hairline: 1,
+  /** The edge of a field, a seal or a box to tick. */
+  control: 1.5,
+  /** The underline of the chosen tab in a row of text tabs. */
   indicator: 2,
 } as const;
 
@@ -76,6 +113,7 @@ export const ControlHeight = {
   /** A multi-line text field, before it grows with its text. */
   area: 96,
   large: 52,
+  compact: 48,
   row: 48,
   small: 44,
 } as const;
@@ -95,56 +133,78 @@ export const Opacity = {
   disabled: 0.4,
 } as const;
 
+/** The one shadow of our own (docs/standards/ux.md): under the chosen option of a segmented control. */
+export const Shadow = {
+  selectedOption: {
+    shadowColor: Colors.ink,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.12,
+    shadowRadius: 2,
+  },
+} as const satisfies Record<string, ViewStyle>;
+
 const tabularFigures: TextStyle['fontVariant'] = ['tabular-nums'];
 
 /** One bundle per text role. Weight comes from the font file, never from fontWeight. */
 export const Type = {
+  // Space Grotesk: titles and big numbers, with tight tracking (-0.02em on the largest).
   screenTitle: { fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, letterSpacing: -0.64 },
   sectionTitle: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.56 },
-  body: { fontFamily: Fonts.textRegular, fontSize: 16, lineHeight: 24 },
-  /** The price on an item's own screen: the one figure the seller came to see. */
-  heroPrice: { fontFamily: Fonts.display, fontSize: 40, lineHeight: 44, letterSpacing: -0.4 },
+  /** The title of an empty or failed screen, and of an item on its own screen. */
+  smallTitle: { fontFamily: Fonts.display, fontSize: 22, lineHeight: 28, letterSpacing: -0.22 },
+  /** The price field and the sales total. */
+  bigNumber: {
+    fontFamily: Fonts.display,
+    fontSize: 40,
+    lineHeight: 44,
+    letterSpacing: -0.8,
+    fontVariant: tabularFigures,
+  },
+  summaryValue: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.56 },
   /** The offered price on an offer card: the one number the card is about. */
-  offerPrice: { fontFamily: Fonts.display, fontSize: 32, lineHeight: 36, letterSpacing: -0.32 },
-  summaryValue: { fontFamily: Fonts.display, fontSize: 28, lineHeight: 32, letterSpacing: -0.28 },
-  // Inter, not Fraunces: prices stacked in a list are compared digit by digit, so figures share a width.
+  offerNumber: {
+    fontFamily: Fonts.display,
+    fontSize: 28,
+    lineHeight: 32,
+    fontVariant: tabularFigures,
+  },
+  /** The price on an item's own screen: the one figure the seller came to see. */
+  heroPrice: {
+    fontFamily: Fonts.display,
+    fontSize: 24,
+    lineHeight: 28,
+    fontVariant: tabularFigures,
+  },
+  priceCurrency: { fontFamily: Fonts.display, fontSize: 24, lineHeight: 28 },
+  // Inter: everything else.
+  body: { fontFamily: Fonts.textRegular, fontSize: 16, lineHeight: 24 },
+  bodySmall: { fontFamily: Fonts.textRegular, fontSize: 15, lineHeight: 22 },
+  // Inter, not Space Grotesk: prices stacked in a list are compared digit by digit (CLAUDE.md).
   rowPrice: {
     fontFamily: Fonts.textSemiBold,
     fontSize: 17,
     lineHeight: 24,
     fontVariant: tabularFigures,
   },
-  rowTitle: { fontFamily: Fonts.textSemiBold, fontSize: 16, lineHeight: 20 },
-  rowMeta: { fontFamily: Fonts.textRegular, fontSize: 13, lineHeight: 20 },
+  rowTitle: { fontFamily: Fonts.textSemiBold, fontSize: 15, lineHeight: 20 },
+  rowMeta: { fontFamily: Fonts.textRegular, fontSize: 13, lineHeight: 18 },
+  /** Names a section, a field or the step of a flow. */
+  label: { fontFamily: Fonts.textSemiBold, fontSize: 13, lineHeight: 18 },
   button: { fontFamily: Fonts.textSemiBold, fontSize: 16, lineHeight: 20 },
-  buttonSmall: { fontFamily: Fonts.textSemiBold, fontSize: 15, lineHeight: 20 },
-  priceInput: { fontFamily: Fonts.display, fontSize: 60, lineHeight: 64, letterSpacing: -0.6 },
-  priceCurrency: {
-    fontFamily: Fonts.monoRegular,
-    fontSize: 14,
-    lineHeight: 20,
-    letterSpacing: 0.84,
-    textTransform: 'uppercase',
-  },
-  // The logo's wordmark: Inter Bold with wide tracking (0.32 em), as in docs/design/README.md.
-  wordmark: { fontFamily: Fonts.textBold, fontSize: 22, lineHeight: 28, letterSpacing: 7.04 },
-  navAction: { fontFamily: Fonts.textMedium, fontSize: 16, lineHeight: 24 },
-  step: { fontFamily: Fonts.monoRegular, fontSize: 13, lineHeight: 16 },
-  chip: { fontFamily: Fonts.monoMedium, fontSize: 13, lineHeight: 16 },
+  buttonCompact: { fontFamily: Fonts.textSemiBold, fontSize: 15, lineHeight: 20 },
+  navAction: { fontFamily: Fonts.textMedium, fontSize: 15, lineHeight: 20 },
+  /** The words inside a platform chip. */
+  seal: { fontFamily: Fonts.textSemiBold, fontSize: 12, lineHeight: 16 },
+  chip: { fontFamily: Fonts.textSemiBold, fontSize: 14, lineHeight: 20 },
   tileLabel: { fontFamily: Fonts.textSemiBold, fontSize: 13, lineHeight: 16 },
-  option: { fontFamily: Fonts.textMedium, fontSize: 15, lineHeight: 20 },
-  optionSelected: { fontFamily: Fonts.textSemiBold, fontSize: 15, lineHeight: 20 },
-  tab: { fontFamily: Fonts.textMedium, fontSize: 14, lineHeight: 20 },
-  tabSelected: { fontFamily: Fonts.textSemiBold, fontSize: 14, lineHeight: 20 },
-  tabBadge: { fontFamily: Fonts.monoMedium, fontSize: 12, lineHeight: 16 },
-  tag: { fontFamily: Fonts.monoRegular, fontSize: 12, lineHeight: 16 },
-  caption: {
-    fontFamily: Fonts.monoRegular,
-    fontSize: 12,
-    lineHeight: 16,
-    letterSpacing: 0.72,
-    textTransform: 'uppercase',
-  },
+  option: { fontFamily: Fonts.textMedium, fontSize: 14, lineHeight: 20 },
+  optionSelected: { fontFamily: Fonts.textSemiBold, fontSize: 14, lineHeight: 20 },
+  // 12, not the 11 of the pictures: no text goes below the floor.
+  tab: { fontFamily: Fonts.textMedium, fontSize: 12, lineHeight: 16 },
+  tabSelected: { fontFamily: Fonts.textBold, fontSize: 12, lineHeight: 16 },
+  tabBadge: { fontFamily: Fonts.textBold, fontSize: 12, lineHeight: 16 },
+  // The logo's wordmark: Inter Bold 18 with letters spaced at 0.32 em.
+  wordmark: { fontFamily: Fonts.textBold, fontSize: 18, lineHeight: 20, letterSpacing: 5.76 },
 } as const satisfies Record<string, TextStyle>;
 
 export type TextVariant = keyof typeof Type;
