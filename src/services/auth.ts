@@ -94,15 +94,79 @@ export async function currentSession(): Promise<AppSession | null> {
   return toAppSession(data.session);
 }
 
+// While a password is being reset a session exists on the server before the new password is
+// stored. Nobody listening is told of it until the reset is over: otherwise the app would
+// move on as signed in while the account still has the password its owner forgot.
+let holdingSessionChanges = false;
+const announcers = new Set<() => void>();
+
+async function withSessionChangesHeld<Result>(work: () => Promise<Result>): Promise<Result> {
+  holdingSessionChanges = true;
+  try {
+    return await work();
+  } finally {
+    holdingSessionChanges = false;
+    // Whatever the session is now, every listener hears it once.
+    announcers.forEach((announce) => announce());
+  }
+}
+
 /**
  * Calls back with the session now and every time it changes (sign-in, sign-out, expiry).
  * Returns the function that stops listening.
  */
 export function onSessionChange(listener: (session: AppSession | null) => void): () => void {
+  let latest: AppSession | null = null;
+  const announce = () => listener(latest);
+  announcers.add(announce);
+
   const { data } = getSupabase().auth.onAuthStateChange((_event, session) => {
-    listener(toAppSession(session));
+    latest = toAppSession(session);
+    if (!holdingSessionChanges) announce();
   });
-  return () => data.subscription.unsubscribe();
+
+  return () => {
+    announcers.delete(announce);
+    data.subscription.unsubscribe();
+  };
+}
+
+/**
+ * Sends a code to reset the password. The answer is the same whether or not the email has
+ * an account, so nobody can use this to find out who is registered.
+ */
+export async function requestPasswordReset(email: string): Promise<AuthOutcome> {
+  const { error } = await getSupabase().auth.resetPasswordForEmail(email.trim());
+  if (!error) return OK;
+
+  return failed(commonFailure(error) ?? 'unknown');
+}
+
+/**
+ * Sets a new password with the code from the email, signs the seller in, and ends the
+ * sessions on every other device: whoever had the old password is out.
+ */
+export async function resetPassword(email: string, code: string, newPassword: string): Promise<AuthOutcome> {
+  const { auth } = getSupabase();
+
+  return withSessionChangesHeld(async () => {
+    const verified = await auth.verifyOtp({ email: email.trim(), token: code.trim(), type: 'recovery' });
+    // Wrong, expired, or for an email with no account: all the same to the person typing.
+    if (verified.error) return failed(commonFailure(verified.error) ?? 'code');
+
+    const updated = await auth.updateUser({ password: newPassword });
+    if (updated.error) {
+      // The code is spent and the password is unchanged: nobody stays signed in on it.
+      await auth.signOut({ scope: 'local' });
+      if (updated.error.code === 'weak_password') return failed('weakPassword');
+      return failed(commonFailure(updated.error) ?? 'unknown');
+    }
+
+    // The password is changed either way. If the other sessions cannot be ended now, their
+    // access tokens run out within the hour and their refresh needs the old session.
+    await auth.signOut({ scope: 'others' });
+    return OK;
+  });
 }
 
 /**

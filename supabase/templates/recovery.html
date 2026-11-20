@@ -1,0 +1,18 @@
+<!-- The email for a forgotten password. Like the confirmation email, it carries a code to
+     type in the app, not a link. The language is the one stored with the account. -->
+{{ if eq .Data.language "pt-PT" }}
+<h2>O teu código Valan</h2>
+<p>Escreve este código na app para escolheres uma palavra-passe nova:</p>
+<p style="font-size: 28px; letter-spacing: 4px;"><strong>{{ .Token }}</strong></p>
+<p>O código é válido durante dez minutos. Se não pediste para mudar a palavra-passe, ignora este email: ela fica como está.</p>
+{{ else if eq .Data.language "es" }}
+<h2>Tu código Valan</h2>
+<p>Escribe este código en la app para elegir una contraseña nueva:</p>
+<p style="font-size: 28px; letter-spacing: 4px;"><strong>{{ .Token }}</strong></p>
+<p>El código es válido durante diez minutos. Si no has pedido cambiar la contraseña, ignora este email: seguirá como está.</p>
+{{ else }}
+<h2>Your Valan code</h2>
+<p>Enter this code in the app to choose a new password:</p>
+<p style="font-size: 28px; letter-spacing: 4px;"><strong>{{ .Token }}</strong></p>
+<p>The code is valid for ten minutes. If you did not ask to change your password, ignore this email: it stays as it is.</p>
+{{ end }}
