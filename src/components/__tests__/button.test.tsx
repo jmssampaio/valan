@@ -96,4 +96,10 @@ describe('Button', () => {
     expect(screen.getByRole('button', { name: 'Novo anúncio' })).toBeOnTheScreen();
     expect(screen.getByTestId('icon', { includeHiddenElements: true })).toBeOnTheScreen();
   });
+
+  it('keeps a link at least 44 points wide, however short its label', async () => {
+    await render(<Button label="Sim" variant="link" onPress={jest.fn()} />);
+
+    expect(screen.getByRole('button', { name: 'Sim' })).toHaveStyle({ minWidth: 44, minHeight: 44 });
+  });
 });

@@ -80,14 +80,16 @@ export const Size = {
   inlineIcon: 20,
   /** The counter on a tab's symbol. */
   badge: 20,
+  /** A bar of text still to come in a loading row. */
+  skeletonLine: 12,
   /** The symbol inside a platform chip, beside its words. */
   sealIcon: 12,
 } as const;
 
 export const Radius = {
-  /** Seals and chips. */
+  /** Seals (platform chips) and boxes to tick. */
   seal: 8,
-  /** Small controls: the options of a segmented control, a box to tick, a thumbnail. */
+  /** Small controls: the options of a segmented control and the grade buttons; thumbnails. */
   control: 10,
   /** Fields and buttons. */
   field: 14,

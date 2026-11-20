@@ -35,7 +35,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.x1,
     paddingHorizontal: Spacing.x2,
     borderRadius: Radius.seal,
-    borderWidth: BorderWidth.hairline,
+    // The same edge width as a platform chip, so the two seals in use look alike.
+    borderWidth: BorderWidth.control,
     borderColor: Colors.line,
   },
 });

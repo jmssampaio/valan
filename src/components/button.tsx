@@ -103,6 +103,7 @@ const styles = StyleSheet.create({
   },
   link: {
     minHeight: ControlHeight.small,
+    minWidth: ControlHeight.small,
     paddingHorizontal: Spacing.x2,
   },
   label: {

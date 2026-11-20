@@ -17,7 +17,10 @@ export function Logo() {
   return (
     <View accessible accessibilityRole="image" accessibilityLabel={BRAND_NAME} style={styles.logo}>
       <AppIcon size={Size.logo} />
-      <AppText variant="wordmark">{WORDMARK}</AppText>
+      {/* Part of the drawing: it keeps its size with the icon whatever the system text size. */}
+      <AppText variant="wordmark" allowFontScaling={false}>
+        {WORDMARK}
+      </AppText>
     </View>
   );
 }

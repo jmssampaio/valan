@@ -1,8 +1,9 @@
 import { StyleSheet, View } from 'react-native';
 
 import { Card } from './card';
+import { Thumbnail } from './thumbnail';
 
-import { Colors, Radius, Size, Spacing } from '@/constants/theme';
+import { Colors, Size, Spacing } from '@/constants/theme';
 
 const ROWS = 3;
 
@@ -18,7 +19,7 @@ export function SkeletonRows({ accessibilityLabel }: SkeletonRowsProps) {
       <Card>
         {Array.from({ length: ROWS }, (_, index) => (
           <View key={index} testID="skeleton-row" style={styles.row}>
-            <View style={styles.thumbnail} />
+            <Thumbnail source={null} />
             <View style={styles.lines}>
               <View style={[styles.line, styles.long]} />
               <View style={[styles.line, styles.short]} />
@@ -37,20 +38,15 @@ const styles = StyleSheet.create({
     gap: Spacing.x3,
     padding: Spacing.x3,
   },
-  thumbnail: {
-    width: Size.thumbnail,
-    height: Size.thumbnail,
-    borderRadius: Radius.control,
-    backgroundColor: Colors.fill,
-  },
   lines: {
     flex: 1,
     gap: Spacing.x2,
   },
   line: {
-    height: Spacing.x3,
+    height: Size.skeletonLine,
     backgroundColor: Colors.fill,
   },
+  // Two lines of text to come, the second shorter, as in a row's title and detail.
   long: {
     width: '70%',
   },

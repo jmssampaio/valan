@@ -25,6 +25,12 @@ describe('Logo', () => {
       height: 40,
     });
   });
+
+  it('keeps its size whatever the system text size, like the drawing beside it', async () => {
+    await render(<Logo />);
+
+    expect(screen.getByText('VALAN', { includeHiddenElements: true }).props.allowFontScaling).toBe(false);
+  });
 });
 
 describe('AppIcon', () => {
