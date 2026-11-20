@@ -33,9 +33,9 @@ jobs:
       # keeps the system from giving them away.
       - name: Keep the local Supabase ports free
         run: sudo sysctl -w net.ipv4.ip_local_reserved_ports=54320-54329
-      # The local stack with auth and storage, not only the database: the integration tests
-      # sign real users in and store their photos.
-      - run: npx supabase start -x studio,imgproxy,edge-runtime,logflare,vector,realtime,supavisor,postgres-meta
+      # The local stack with auth, storage and the Edge Functions, not only the database: the
+      # integration tests sign real users in, store their photos and delete their accounts.
+      - run: npx supabase start -x studio,imgproxy,logflare,vector,realtime,supavisor,postgres-meta
       - run: npm run test:db
       - name: Services against the local stack
         run: npm run test:integration
