@@ -134,7 +134,7 @@ Para cada ecrã: rota, artboard do canvas, objetivo, conteúdo de cima para baix
 
 Objetivo: dizer o que a app faz numa frase e entrar.
 Conteúdo: `Logo` no topo → a onda a toda a largura do ecrã, linha `primary` de 3 pt, no espaço livre por baixo do logótipo → título em duas linhas "Publica uma vez." / "Vende em várias plataformas."
-Ações: "Continuar com a Apple" (`dark`), "Continuar com email" (`secondary`); por baixo, 12 pt: "Ao continuar aceitas os Termos e a Política de Privacidade." (links).
+Ações: "Continuar com a Apple" (`dark`), "Continuar com o Google" (fundo `surface` com contorno `ink` de 1 pt, a mesma altura e largura que o da Apple), "Continuar com email" (`secondary`); por baixo, 12 pt: "Ao continuar aceitas os Termos e a Política de Privacidade." (links). Na app, Apple e Google usam os botões oficiais de cada um (`AppleAuthenticationButton` e o botão de início de sessão da Google), com o mesmo tamanho e destaque.
 Depois de entrar: sem contas ligadas → `ligar`; com contas → `(tabs)/anuncios`.
 
 ### 7.2 Ligar plataformas — `(auth)/ligar` · artboard "2 · Ligar plataformas"
@@ -207,11 +207,11 @@ Vazio: "Ainda sem vendas neste período."
 
 ### 7.12 Conta — `(tabs)/conta` · artboard "8 · Conta"
 
-Título "Conta" + email → "Plataformas ligadas" (nome, "Ligada como …", "Desligar" com confirmação) e "Ligar outra plataforma" quando houver → "Subscrição": o plano ativo ("Plano anual" ou "Plano mensal") + "Renova a [data]" → `subscricao`; "Restaurar compras" → "Ajuda": "Suporte", "Termos e privacidade" → "Terminar sessão" → "Eliminar conta" em `danger` (confirmação em 2 passos; exigido pela Apple).
+Título "Conta" + email → "Plataformas ligadas" (nome, "Ligada como …", "Desligar" com confirmação) e "Ligar outra plataforma" quando houver → "Subscrição": o plano ativo ("Plano anual", "Plano mensal" ou "Plano semanal") + "Renova a [data]" → `subscricao`; "Restaurar compras" → "Ajuda": "Suporte", "Termos e privacidade" → "Terminar sessão" → "Eliminar conta" em `danger` (confirmação em 2 passos; exigido pela Apple).
 
 ### 7.13 Subscrição — `subscricao` (modal) · artboard "9 · Subscrição"
 
-Fechar (X, 44×44) → `Logo` → título "Vende em várias plataformas sem trabalho a dobrar" → 3 benefícios com visto `primaryPressed` sobre `primaryTint` → planos (rádio): Anual e Mensal, com preço do RevenueCat → "Subscrever" → "Cancelas quando quiseres nas definições da Apple." + "Restaurar compras · Termos · Privacidade".
+Fechar (X, 44×44) → `Logo` → título "Vende em várias plataformas sem trabalho a dobrar" → 3 benefícios com visto `primaryPressed` sobre `primaryTint` → planos (rádio): Anual, Mensal e Semanal, cada um com o período e o preço do RevenueCat (no canvas, 19,90 €/ano, 5,90 €/mês e 2,90 €/semana como exemplo; Mensal pré-selecionado) → "Subscrever" → "Cancelas quando quiseres nas definições da Apple." + "Restaurar compras · Termos · Privacidade".
 Preços e período de teste por definir: nunca escrever preços no código, ler sempre do RevenueCat.
 
 ## 8. Notificações push
