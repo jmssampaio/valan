@@ -1,8 +1,10 @@
 import { useNetworkState } from 'expo-network';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { Alert } from 'react-native';
 
 import {
   confirmEmail,
+  deleteAccount,
   onSessionChange,
   requestPasswordReset,
   resendCode,
@@ -584,5 +586,141 @@ describe('going back from a screen that was opened directly', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
 
     expect(screen).toHavePathname(destination);
+  });
+});
+
+describe('deleting the account', () => {
+  const alert = jest.spyOn(Alert, 'alert');
+
+  /** Presses a button of the confirmation that is on screen. */
+  async function answerConfirmation(label: string) {
+    const buttons = alert.mock.calls.at(-1)?.[2] ?? [];
+    const button = buttons.find(({ text }) => text === label);
+    if (!button) throw new Error(`The confirmation has no "${label}" button.`);
+    await act(async () => button.onPress?.());
+  }
+
+  async function openDeleteAccount() {
+    startWith(ana);
+    await renderRouter(APP_DIR, { initialUrl: '/account' });
+    await fireEvent.press(screen.getByRole('button', { name: 'Eliminar conta' }));
+  }
+
+  const deleteButton = () => screen.getByRole('button', { name: 'Eliminar conta' });
+
+  beforeEach(() => {
+    alert.mockImplementation(() => {});
+    jest.mocked(deleteAccount).mockResolvedValue({ ok: true });
+  });
+
+  it('is reached from the account tab, and says what will be lost', async () => {
+    await openDeleteAccount();
+
+    expect(screen).toHavePathname('/delete-account');
+    expect(screen.getByText(/anúncios, rascunhos, fotos, propostas e histórico de vendas/)).toBeOnTheScreen();
+    expect(screen.getByText(/Não pode ser desfeito/)).toBeOnTheScreen();
+  });
+
+  it('needs the current password before it can be asked for', async () => {
+    await openDeleteAccount();
+
+    expect(deleteButton()).toBeDisabled();
+
+    await fireEvent.changeText(screen.getByLabelText('Palavra-passe atual'), PASSPHRASE);
+
+    expect(deleteButton()).toBeEnabled();
+    expect(screen.getByLabelText('Palavra-passe atual')).toHaveProp('secureTextEntry', true);
+  });
+
+  it('asks once more before deleting, and deletes nothing when the seller cancels', async () => {
+    await openDeleteAccount();
+    await fireEvent.changeText(screen.getByLabelText('Palavra-passe atual'), PASSPHRASE);
+
+    await fireEvent.press(deleteButton());
+
+    expect(alert).toHaveBeenCalledWith('Eliminar a conta de vez?', expect.any(String), expect.any(Array));
+    expect(deleteAccount).not.toHaveBeenCalled();
+
+    await answerConfirmation('Cancelar');
+
+    expect(deleteAccount).not.toHaveBeenCalled();
+    expect(screen).toHavePathname('/delete-account');
+  });
+
+  it('deletes the account once confirmed, and returns to the entry screen', async () => {
+    await openDeleteAccount();
+    await fireEvent.changeText(screen.getByLabelText('Palavra-passe atual'), PASSPHRASE);
+    await fireEvent.press(deleteButton());
+
+    await answerConfirmation('Eliminar');
+    expect(deleteAccount).toHaveBeenCalledWith(PASSPHRASE);
+    await act(async () => changeSession(null));
+
+    expect(screen).toHavePathname('/welcome');
+  });
+
+  it('asks the server once, even if the confirmation is answered twice', async () => {
+    const answer = heldBack();
+    jest.mocked(deleteAccount).mockReturnValue(answer.promise);
+    await openDeleteAccount();
+    await fireEvent.changeText(screen.getByLabelText('Palavra-passe atual'), PASSPHRASE);
+    await fireEvent.press(deleteButton());
+
+    await answerConfirmation('Eliminar');
+    expect(screen.getByText('A eliminar a conta')).toBeOnTheScreen();
+    expect(deleteButton()).toBeDisabled();
+    await answerConfirmation('Eliminar');
+    await act(async () => answer.release({ ok: true }));
+
+    expect(deleteAccount).toHaveBeenCalledTimes(1);
+  });
+
+  it('says the password is wrong and that nothing was deleted', async () => {
+    jest.mocked(deleteAccount).mockResolvedValue({ ok: false, failure: 'credentials' });
+    await openDeleteAccount();
+    await fireEvent.changeText(screen.getByLabelText('Palavra-passe atual'), 'errada');
+    await fireEvent.press(deleteButton());
+
+    await answerConfirmation('Eliminar');
+
+    expect(screen.getByText('Palavra-passe errada. Nada foi apagado.')).toBeOnTheScreen();
+    expect(screen).toHavePathname('/delete-account');
+  });
+
+  it('says so when the server could not delete the account', async () => {
+    jest.mocked(deleteAccount).mockResolvedValue({ ok: false, failure: 'unknown' });
+    await openDeleteAccount();
+    await fireEvent.changeText(screen.getByLabelText('Palavra-passe atual'), PASSPHRASE);
+    await fireEvent.press(deleteButton());
+
+    await answerConfirmation('Eliminar');
+
+    expect(
+      screen.getByText('Não conseguimos eliminar a conta. Tenta de novo dentro de momentos.'),
+    ).toBeOnTheScreen();
+  });
+
+  it('cannot be asked for without a connection, and says why', async () => {
+    setOnline(false);
+    await openDeleteAccount();
+    await fireEvent.changeText(screen.getByLabelText('Palavra-passe atual'), PASSPHRASE);
+
+    expect(deleteButton()).toBeDisabled();
+    expect(screen.getByText('Estás sem ligação. Liga-te à internet e tenta de novo.')).toBeOnTheScreen();
+  });
+
+  it('goes back to the account tab on cancel', async () => {
+    await openDeleteAccount();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancelar' }));
+
+    expect(screen).toHavePathname('/account');
+  });
+
+  it('is out of reach for someone who is not signed in', async () => {
+    startWith(null);
+    await renderRouter(APP_DIR, { initialUrl: '/delete-account' });
+
+    expect(screen).toHavePathname('/welcome');
   });
 });

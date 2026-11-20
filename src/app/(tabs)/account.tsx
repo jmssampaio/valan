@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -11,6 +12,7 @@ import { t } from '@/i18n';
 import { signOut } from '@/services/auth';
 
 export default function AccountScreen() {
+  const router = useRouter();
   const session = useSession();
   const [failure, setFailure] = useState<AuthFailure | null>(null);
   const [isBusy, setIsBusy] = useState(false);
@@ -55,6 +57,13 @@ export default function AccountScreen() {
             {t(failureMessage(failure))}
           </AppText>
         ) : null}
+        {/* Opens its own screen, which explains what is lost and asks for the password. */}
+        <Button
+          label={t('account.delete')}
+          variant="danger"
+          disabled={isBusy}
+          onPress={() => router.push('/delete-account')}
+        />
       </View>
     </Screen>
   );

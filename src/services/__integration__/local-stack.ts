@@ -128,3 +128,10 @@ export async function emailTo(address: string, containing: string): Promise<Mail
   }
   throw new Error(`No email with "${containing}" arrived for ${address}.`);
 }
+
+/** Whether an account still exists, as the server sees it. */
+export async function accountExistsAsServer(userId: string): Promise<boolean> {
+  const { data, error } = await localAdmin().auth.admin.getUserById(userId);
+  if (error) return false;
+  return data.user !== null;
+}

@@ -191,3 +191,26 @@ export function keepSessionFresh(): () => void {
     void auth.stopAutoRefresh();
   };
 }
+
+const WRONG_PASSWORD = 403;
+
+/**
+ * Deletes the seller's account with everything in it, for good. The server does it, and
+ * only for the account the session belongs to; it asks for the current password again,
+ * because an open session alone must not be enough for something that cannot be undone.
+ */
+export async function deleteAccount(password: string): Promise<AuthOutcome> {
+  const supabase = getSupabase();
+  const { error } = await supabase.functions.invoke('delete-account', { body: { password } });
+
+  if (error) {
+    // The request never reached the server.
+    if (error.name === 'FunctionsFetchError') return failed('offline');
+    const status = error.context instanceof Response ? error.context.status : undefined;
+    return failed(status === WRONG_PASSWORD ? 'credentials' : 'unknown');
+  }
+
+  // The account is gone, so its session means nothing: forget it here too.
+  await supabase.auth.signOut({ scope: 'local' });
+  return OK;
+}

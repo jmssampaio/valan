@@ -62,6 +62,7 @@ function Screens() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="new-listing" options={{ presentation: 'modal' }} />
         <Stack.Screen name="subscription" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="delete-account" options={{ presentation: 'modal' }} />
         <Stack.Screen name="listing/[id]" />
         <Stack.Screen name="connect" />
       </Stack.Protected>
