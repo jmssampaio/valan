@@ -12,6 +12,7 @@ export const confirmEmail = jest.fn(ok);
 export const resendCode = jest.fn(ok);
 export const signIn = jest.fn(ok);
 export const signOut = jest.fn(ok);
+export const deleteAccount = jest.fn(ok);
 export const requestPasswordReset = jest.fn(ok);
 export const resetPassword = jest.fn(ok);
 export const currentSession = jest.fn(async (): Promise<AppSession | null> => signedInSeller);
