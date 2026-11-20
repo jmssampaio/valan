@@ -79,7 +79,7 @@ Known gaps in the mockups: loading, offline and error states; the equipment path
 
 ## Brand
 
-Logo: a straight-line zigzag wave on an orange tile, with the wordmark "VALAN" in spaced capitals below. Colours: orange `#B4460F`, cream `#F5EFE6`, ink `#1E1A17` (full token list in section 2 of `docs/design/v3/design-spec.md`). Type: Space Grotesk for titles and big numbers and Inter for the rest (design v3; the app still uses Fraunces and IBM Plex Mono until its theme is migrated).
+Logo: a straight-line zigzag wave on an orange tile, with the wordmark "VALAN" in spaced capitals below. Colours: orange `#B4460F`, cream `#F5EFE6`, ink `#1E1A17` (full token list in section 2 of `docs/design/v3/design-spec.md`). Type: Space Grotesk for titles and big numbers and Inter for the rest (design v3).
 
 ## Suggested build order
 
