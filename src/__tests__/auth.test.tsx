@@ -570,3 +570,19 @@ describe('a forgotten password', () => {
     expect(screen).toHavePathname('/');
   });
 });
+
+// A screen can be the first one shown: the page was reloaded in the browser, or a link
+// opened the app straight into it. Its way back must still lead somewhere.
+describe('going back from a screen that was opened directly', () => {
+  it.each([
+    ['/welcome/email', '/welcome'],
+    ['/welcome/reset', '/welcome'],
+  ])('leads from %s to %s', async (opened, destination) => {
+    startWith(null);
+    await renderRouter(APP_DIR, { initialUrl: opened });
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Voltar' }));
+
+    expect(screen).toHavePathname(destination);
+  });
+});
