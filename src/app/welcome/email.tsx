@@ -40,6 +40,13 @@ export default function EmailAuthScreen() {
   const passwordIsUsable = isSigningUp ? isAcceptablePassword(password) : password !== '';
   const canSubmit = isOnline && !isBusy && isEmail(email) && passwordIsUsable;
 
+  function forgotPassword() {
+    // The address already typed goes along, so the seller does not write it twice. An
+    // address that is not one yet is left behind.
+    setPendingEmail(isEmail(email) ? email.trim() : null);
+    router.push('/welcome/reset');
+  }
+
   function awaitCode() {
     setPendingEmail(email.trim());
     router.push('/welcome/confirm');
@@ -148,6 +155,14 @@ export default function EmailAuthScreen() {
             size="small"
             onPress={() => setShowsPassword((shown) => !shown)}
           />
+          {isSigningUp ? null : (
+            <Button
+              label={t('auth.forgot.link')}
+              variant="text"
+              size="small"
+              onPress={forgotPassword}
+            />
+          )}
         </View>
         {failure ? (
           <AppText variant="rowMeta" color="error" accessibilityRole="alert">

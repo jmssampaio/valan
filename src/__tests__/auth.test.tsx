@@ -4,7 +4,9 @@ import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-librar
 import {
   confirmEmail,
   onSessionChange,
+  requestPasswordReset,
   resendCode,
+  resetPassword,
   signIn,
   signOut,
   signUp,
@@ -77,7 +79,15 @@ afterEach(() => jest.useRealTimers());
 beforeEach(() => {
   jest.clearAllMocks();
   setOnline(true);
-  for (const call of [signIn, signUp, confirmEmail, resendCode, signOut]) {
+  for (const call of [
+    signIn,
+    signUp,
+    confirmEmail,
+    resendCode,
+    signOut,
+    requestPasswordReset,
+    resetPassword,
+  ]) {
     jest.mocked(call).mockResolvedValue({ ok: true });
   }
   jest.mocked(listItems).mockResolvedValue([]);
@@ -377,5 +387,186 @@ describe('the account tab', () => {
 
     expect(screen.getByText('Estás sem ligação. Liga-te à internet e tenta de novo.')).toBeOnTheScreen();
     expect(screen).toHavePathname('/account');
+  });
+});
+
+describe('a forgotten password', () => {
+  const NEW_PASSPHRASE = 'outra frase longa, escolhida agora';
+
+  /** From the sign-in form, with the email already typed, to the screen that asks for a code. */
+  async function openReset(email = 'ana@example.com') {
+    await openEmailForm();
+    await fireEvent.changeText(screen.getByLabelText('Email'), email);
+    await fireEvent.press(screen.getByRole('button', { name: 'Esqueceste-te da palavra-passe?' }));
+  }
+
+  /** Asks for the code, which leads to the screen for the code and the new password. */
+  async function askForCode() {
+    await openReset();
+    await fireEvent.press(screen.getByRole('button', { name: 'Enviar código' }));
+  }
+
+  async function fillNewPassword(code: string, password: string) {
+    await fireEvent.changeText(screen.getByLabelText('Código'), code);
+    await fireEvent.changeText(screen.getByLabelText('Palavra-passe nova'), password);
+  }
+
+  it('is offered when signing in, not when creating an account', async () => {
+    await openEmailForm();
+
+    expect(screen.getByRole('button', { name: 'Esqueceste-te da palavra-passe?' })).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('radio', { name: 'Criar conta' }));
+
+    expect(screen.queryByRole('button', { name: 'Esqueceste-te da palavra-passe?' })).not.toBeOnTheScreen();
+  });
+
+  it('takes along the email already typed', async () => {
+    await openReset(' ana@example.com ');
+
+    expect(screen).toHavePathname('/welcome/reset');
+    expect(screen.getByLabelText('Email')).toHaveProp('value', 'ana@example.com');
+  });
+
+  it('starts with an empty field when what was typed is not an email', async () => {
+    await openReset('ana');
+
+    expect(screen.getByLabelText('Email')).toHaveProp('value', '');
+    expect(screen.getByRole('button', { name: 'Enviar código' })).toBeDisabled();
+  });
+
+  it('says the same whether or not the email has an account', async () => {
+    // The service answers alike for both; the screen has nothing else to go on.
+    await askForCode();
+
+    expect(requestPasswordReset).toHaveBeenCalledWith('ana@example.com');
+    expect(screen).toHavePathname('/welcome/new-password');
+    expect(screen.getByText(/Se ana@example.com tiver conta, enviámos-lhe um código/)).toBeOnTheScreen();
+  });
+
+  it('asks for the code once, however many times the button is pressed', async () => {
+    const answer = heldBack();
+    jest.mocked(requestPasswordReset).mockReturnValue(answer.promise);
+    await openReset();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Enviar código' }));
+    expect(screen.getByRole('button', { name: 'Enviar código' })).toBeDisabled();
+    await fireEvent.press(screen.getByRole('button', { name: 'Enviar código' }));
+    await act(async () => answer.release({ ok: true }));
+
+    expect(requestPasswordReset).toHaveBeenCalledTimes(1);
+  });
+
+  it('says to wait when the code is asked for too often', async () => {
+    jest.mocked(requestPasswordReset).mockResolvedValue({ ok: false, failure: 'rateLimited' });
+    await openReset();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Enviar código' }));
+
+    expect(screen.getByText('Demasiadas tentativas. Espera um minuto e tenta de novo.')).toBeOnTheScreen();
+    expect(screen).toHavePathname('/welcome/reset');
+  });
+
+  it('cannot ask for a code without a connection, and says why', async () => {
+    setOnline(false);
+    await openReset();
+
+    expect(screen.getByRole('button', { name: 'Enviar código' })).toBeDisabled();
+    expect(screen.getByText('Estás sem ligação. Liga-te à internet e tenta de novo.')).toBeOnTheScreen();
+  });
+
+  it('needs the six digits and a password of at least 10 characters', async () => {
+    await askForCode();
+    const save = () => screen.getByRole('button', { name: 'Guardar e entrar' });
+
+    await fillNewPassword('12345', NEW_PASSPHRASE);
+    expect(save()).toBeDisabled();
+
+    await fillNewPassword('123456', '123456789');
+    expect(save()).toBeDisabled();
+
+    await fillNewPassword('123456', NEW_PASSPHRASE);
+    expect(save()).toBeEnabled();
+  });
+
+  it('never shows the new password as it is typed, unless the seller asks', async () => {
+    await askForCode();
+
+    expect(screen.getByLabelText('Palavra-passe nova')).toHaveProp('secureTextEntry', true);
+  });
+
+  it('lands on the listings once the new password is saved', async () => {
+    await askForCode();
+    await fillNewPassword('123456', NEW_PASSPHRASE);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar e entrar' }));
+    expect(resetPassword).toHaveBeenCalledWith('ana@example.com', '123456', NEW_PASSPHRASE);
+    await act(async () => changeSession(ana));
+
+    expect(screen).toHavePathname('/');
+  });
+
+  it('saves once, however many times the button is pressed', async () => {
+    const answer = heldBack();
+    jest.mocked(resetPassword).mockReturnValue(answer.promise);
+    await askForCode();
+    await fillNewPassword('123456', NEW_PASSPHRASE);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar e entrar' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar e entrar' }));
+    await act(async () => answer.release({ ok: true }));
+
+    expect(resetPassword).toHaveBeenCalledTimes(1);
+  });
+
+  it('says so when the code is wrong or expired, and keeps what was typed', async () => {
+    jest.mocked(resetPassword).mockResolvedValue({ ok: false, failure: 'code' });
+    await askForCode();
+    await fillNewPassword('123456', NEW_PASSPHRASE);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar e entrar' }));
+
+    expect(screen.getByText('Código errado ou expirado. Confirma o código ou pede outro.')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Palavra-passe nova')).toHaveProp('value', NEW_PASSPHRASE);
+    expect(screen).toHavePathname('/welcome/new-password');
+  });
+
+  it('says a refused password has used the code, and clears it for the next one', async () => {
+    jest.mocked(resetPassword).mockResolvedValue({ ok: false, failure: 'weakPassword' });
+    await askForCode();
+    await fillNewPassword('123456', NEW_PASSPHRASE);
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Guardar e entrar' }));
+
+    expect(screen.getByText(/O código já foi usado: pede outro e escolhe outra palavra-passe/)).toBeOnTheScreen();
+    expect(screen.getByLabelText('Código')).toHaveProp('value', '');
+  });
+
+  it('offers another code only after a minute', async () => {
+    jest.useFakeTimers();
+    await askForCode();
+
+    expect(screen.getByRole('button', { name: 'Enviar outro código' })).toBeDisabled();
+
+    await act(async () => jest.advanceTimersByTime(60_000));
+    await fireEvent.press(screen.getByRole('button', { name: 'Enviar outro código' }));
+
+    expect(requestPasswordReset).toHaveBeenCalledTimes(2);
+    expect(screen.getByText('Enviámos outro código.')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Enviar outro código' })).toBeDisabled();
+  });
+
+  it('goes to asking for a code when opened with no email waiting for one', async () => {
+    startWith(null);
+    await renderRouter(APP_DIR, { initialUrl: '/welcome/new-password' });
+
+    expect(screen).toHavePathname('/welcome/reset');
+  });
+
+  it('is out of reach for a seller who is signed in', async () => {
+    startWith(ana);
+    await renderRouter(APP_DIR, { initialUrl: '/welcome/reset' });
+
+    expect(screen).toHavePathname('/');
   });
 });

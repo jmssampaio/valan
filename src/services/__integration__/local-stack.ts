@@ -28,11 +28,16 @@ export function uniqueEmail(): string {
 }
 
 /** A user who has already confirmed their email. */
-export async function createConfirmedUser(email = uniqueEmail()): Promise<{ id: string; email: string }> {
+export async function createConfirmedUser(
+  email = uniqueEmail(),
+  language?: string,
+): Promise<{ id: string; email: string }> {
   const { data, error } = await localAdmin().auth.admin.createUser({
     email,
     password: PASSWORD,
     email_confirm: true,
+    // What sign-up stores, and what the emails read to pick their language.
+    user_metadata: language ? { language } : undefined,
   });
   if (error) throw error;
   return { id: data.user.id, email };
@@ -96,4 +101,30 @@ export async function listPhotoFilesAsServer(userId: string, itemId: string): Pr
   const { data, error } = await localAdmin().storage.from('item-photos').list(`${userId}/${itemId}`);
   if (error) throw error;
   return data.map(({ name }) => name).sort();
+}
+
+/** The code a recovery email would carry for this address, without sending one. */
+export async function recoveryCodeFor(email: string): Promise<string> {
+  const { data, error } = await localAdmin().auth.admin.generateLink({ type: 'recovery', email });
+  if (error) throw error;
+  return data.properties.email_otp;
+}
+
+/** Waits for an email to an address whose text has the given words: several may arrive. */
+export async function emailTo(address: string, containing: string): Promise<MailboxMessage> {
+  const mailbox = process.env.LOCAL_MAILBOX_URL;
+  if (!mailbox || !LOCAL_API.test(mailbox)) {
+    throw new Error('The local mailbox is not available.');
+  }
+
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    const search = await fetch(`${mailbox}/api/v1/search?query=${encodeURIComponent(`to:${address}`)}`);
+    const { messages } = (await search.json()) as { messages: { ID: string }[] };
+    for (const { ID } of messages) {
+      const message = (await (await fetch(`${mailbox}/api/v1/message/${ID}`)).json()) as MailboxMessage;
+      if (message.Text.includes(containing)) return message;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  throw new Error(`No email with "${containing}" arrived for ${address}.`);
 }

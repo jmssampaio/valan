@@ -42,6 +42,7 @@ module.exports = async () => {
   process.env.LOCAL_MAILBOX_URL = mailbox;
 
   await waitForOurEmailTemplate({ url, publishableKey, mailbox });
+  await waitForOurRecoveryTemplate({ url, publishableKey, serviceRoleKey, mailbox });
 };
 
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -74,4 +75,42 @@ async function waitForOurEmailTemplate({ url, publishableKey, mailbox }) {
     await pause(500);
   }
   throw new Error('The local auth server never sent the Valan confirmation email.');
+}
+
+/**
+ * The same wait for the password emails: a confirmed throwaway account asks to reset its
+ * password until the email that arrives is ours.
+ */
+async function waitForOurRecoveryTemplate({ url, publishableKey, serviceRoleKey, mailbox }) {
+  if (!mailbox) return;
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const address = `warm-up-recovery-${Date.now()}-${attempt}@example.test`;
+    await fetch(`${url}/auth/v1/admin/users`, {
+      method: 'POST',
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: address, password: 'uma frase longa para aquecer', email_confirm: true }),
+    });
+    await fetch(`${url}/auth/v1/recover`, {
+      method: 'POST',
+      headers: { apikey: publishableKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: address }),
+    });
+
+    for (let look = 0; look < 20; look += 1) {
+      const search = await fetch(`${mailbox}/api/v1/search?query=${encodeURIComponent(`to:${address}`)}`);
+      const { messages } = await search.json();
+      if (messages.length > 0) {
+        if (messages[0].Subject.startsWith('Valan')) return;
+        break;
+      }
+      await pause(250);
+    }
+    await pause(500);
+  }
+  throw new Error('The local auth server never sent the Valan password email.');
 }
